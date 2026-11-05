@@ -22,11 +22,15 @@ Read `AGENTS.md` before adding experiments. Preserve original renderers, stable 
 
 ## Hosting
 
-Serve `dist/` as a static website. For GitHub Pages, deploy that directory as the Pages artifact.
+The site is hosted at https://gqgs.github.io/animation-atlas/.
+
+The [Deploy GitHub Pages workflow](.github/workflows/deploy-pages.yml) publishes `dist/` after every push to `main`, including merged pull requests. It can also be run manually from the Actions tab with `main` selected. Only `main` can deploy, and deployments run one at a time.
+
+The workflow uses GitHub's built-in token; no deployment secrets or build step are required. In repository Settings → Pages → Build and deployment, the source must be **GitHub Actions**.
 
 ## Publish the repository
 
-Commit `README.md`, `AGENTS.md`, and all of `dist/`, then push to the repository. Publishing the repository and hosting the site are separate steps. This checkout does not include a GitHub Pages deployment workflow; add one that uploads `dist/` as the Pages artifact if Pages hosting is wanted.
+Commit `README.md`, `AGENTS.md`, `.github/workflows/`, and all of `dist/`, then push to the repository. Publishing the repository and hosting the site are separate steps; the deployment workflow handles hosting updates when changes reach `main`.
 
 For `gqgs/animation-atlas`, the default Pages address is https://gqgs.github.io/animation-atlas/.
 The app uses relative asset paths so it works under that repository subpath.
