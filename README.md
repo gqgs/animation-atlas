@@ -1,4 +1,4 @@
-# EigenDynamics Animation Atlas
+# Animation Atlas
 
 An interactive collection of geometry, fractal, and Three.js animation experiments. Search or filter the gallery and launch one scene at a time. Favorites are stored in your browser; scene links use `#scene=stable-id`.
 
