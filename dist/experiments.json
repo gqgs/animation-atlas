@@ -418,5 +418,34 @@
         "url": "downloads/mobius-drift-source.zip"
       }
     ]
+  },
+  {
+    "id": "chromatic-chamber",
+    "title": "Chromatic Chamber",
+    "index": 20,
+    "category": "Geometry",
+    "date": "2026-11-06",
+    "url": "experiments/chromatic-chamber/index.html",
+    "description": "Drifting polygon shards multiply between two mirrors into impossible flowers. Explore dihedral symmetry, repeatable seeded arrangements, four palettes and continuous closed loops, inspired by Greg Egan’s Kaleidoscope.",
+    "tags": [
+      "kaleidoscope",
+      "Greg Egan",
+      "dihedral symmetry",
+      "reflection",
+      "generative art"
+    ],
+    "cover": "covers/chromatic-chamber.svg",
+    "source": "downloads/chromatic-chamber-source.zip",
+    "note": "Study 020 · mirrored polygon chamber · seeded replay · PNG & WebM capture",
+    "variants": [
+      {
+        "title": "Greg Egan · Kaleidoscope",
+        "url": "https://www.gregegan.net/APPLETS/13/13.html"
+      },
+      {
+        "title": "Source & geometry checks",
+        "url": "downloads/chromatic-chamber-source.zip"
+      }
+    ]
   }
 ]
