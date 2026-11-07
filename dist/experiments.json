@@ -447,5 +447,35 @@
         "url": "downloads/chromatic-chamber-source.zip"
       }
     ]
+  },
+  {
+    "id": "chromatic-unwinding",
+    "title": "Chromatic Unwinding",
+    "index": 21,
+    "category": "Geometry",
+    "date": "2026-11-07",
+    "url": "experiments/chromatic-unwinding/index.html",
+    "description": "An iridescent turtle spiral unwinds from a square into a line and returns. Sweep the turn angle, layer rainbow filaments, or isolate the original growing-step path.",
+    "tags": [
+      "turtle graphics",
+      "spiral",
+      "generative art",
+      "color",
+      "Snapshot.jl"
+    ],
+    "cover": "covers/chromatic-unwinding.svg",
+    "color": "rainbow",
+    "source": "downloads/chromatic-unwinding-source.zip",
+    "note": "Study 021 · square → spiral → line · angle sweep · PNG & WebM capture",
+    "variants": [
+      {
+        "title": "Reference · Een coole spiraal",
+        "url": "https://grouptherapyorg.github.io/Snapshot.jl/notebooks/turtles-art/"
+      },
+      {
+        "title": "Source & geometry checks",
+        "url": "downloads/chromatic-unwinding-source.zip"
+      }
+    ]
   }
 ]
