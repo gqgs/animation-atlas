@@ -1,6 +1,6 @@
 import {defaults,angleAt,makeField,bounds,colorAt} from './core.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
-const $=id=>document.getElementById(id),canvas=$('scene'),ctx=canvas.getContext('2d',{alpha:false}),p={...defaults};
+const $=id=>document.getElementById(id),canvas=$('scene'),p={...defaults};
 const specs=[['steps','Steps',101,800,1],['filaments','Color filaments',4,64,1],['spread','Angle spread',0,2,.01],['width','Stroke width',.4,4,.1],['duration','Loop duration · seconds',12,120,1],['zoom','Magnification',.5,2,.01]];
 let phase=0,manual=null,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,last=performance.now(),exportController=null;
 const share=new URLSearchParams(location.search);
@@ -23,7 +23,7 @@ function paint(target,angle,scene,{fit=.82}={}) {
  g.setTransform(scale,0,0,scale,w/2-bb.x*scale,h/2-bb.y*scale);
  g.lineCap='round';g.lineJoin='round';
  // Scale strokes with output dimensions rather than preserving viewport pixel sizes.
- const strokePixels=scene.width*Math.min(w,h)/Math.min(innerWidth,innerHeight);
+ const strokePixels=scene.width*Math.min(w,h)/1080; // Pixel width at a 1080px short side.
  g.lineWidth=strokePixels/scale;g.globalAlpha=scene.mode==='original'?1:.8;
  for(let j=0;j<paths.length;j++) {
   const path=paths[j];
@@ -79,7 +79,7 @@ $('record').onclick=async()=>{
  $('status').textContent='Loading deterministic MP4 encoder…';
  try {
   const FrameWrap=await loadFrameWrap();
-  if(controller.signal.aborted)return;
+  if(controller.signal.aborted){$('status').textContent='Export canceled';return;}
   const blob=await exportFrames({
    width:size,height:size,fps,duration:scene.duration,format:'mp4',
    bitrate:Math.round(24000000*(size/1080)**2*(fps/30)),
@@ -91,9 +91,9 @@ $('record').onclick=async()=>{
      $('status').textContent='Encoding '+done+'/'+total+' frames · '+size+'² · '+fps+' fps';
    },
   });
-  if(controller.signal.aborted)return;
+  if(controller.signal.aborted){$('status').textContent='Export canceled';return;}
   download(blob,'chromatic-unwinding-'+size+'p-'+fps+'fps.mp4');
-  download(new Blob([link+'\\n'],{type:'text/plain'}),'chromatic-unwinding-scene-url.txt');
+  download(new Blob([link+'\n'],{type:'text/plain'}),'chromatic-unwinding-scene-url.txt');
   $('status').textContent='MP4 exported · '+size+'×'+size+' · '+fps+' fps · exact frame steps';
  }catch(e){
   $('status').textContent=e.name==='AbortError'?'Export canceled':'Export failed: '+e.message;
