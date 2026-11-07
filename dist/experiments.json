@@ -436,7 +436,7 @@
     ],
     "cover": "covers/chromatic-chamber.svg",
     "source": "downloads/chromatic-chamber-source.zip",
-    "note": "Study 020 · mirrored polygon chamber · seeded replay · PNG & WebM capture",
+    "note": "Study 020 · mirrored polygon chamber · seeded replay · PNG & fixed-frame MP4 export",
     "variants": [
       {
         "title": "Greg Egan · Kaleidoscope",
