@@ -1,0 +1,53 @@
+name: Preview GitHub Pages
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+# Only same-repository PRs are supported by the preview action.
+# Never use pull_request_target to execute or publish untrusted fork changes.
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: pages-preview-${ github.event.pull_request.number }
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout PR
+        if: github.event.action != 'closed'
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Verify static site
+        if: github.event.action != 'closed'
+        run: |
+          test -f dist/index.html
+          python3 -m json.tool dist/experiments.json > /dev/null
+
+      - name: Require Pages publishing token
+        env:
+          PAGES_DEPLOY_TOKEN: ${ secrets.PAGES_DEPLOY_TOKEN }
+        run: |
+          if [ -z "$PAGES_DEPLOY_TOKEN" ]; then
+            echo "::error::Set the PAGES_DEPLOY_TOKEN Actions secret before publishing PR previews."
+            exit 1
+          fi
+
+      - name: Publish or remove PR preview
+        uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
+        with:
+          source-dir: dist
+          preview-branch: gh-pages
+          umbrella-dir: pr-preview
+          token: ${ secrets.PAGES_DEPLOY_TOKEN }
+          wait-for-pages-deployment: 'true'
+          qr-code: 'false'
