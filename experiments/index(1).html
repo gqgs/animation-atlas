@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#050611" />
+<title>Inversion Field — Spiral Galaxy Experiment</title>
+<style>
+:root {color-scheme:dark;--ink:#050611;--muted:#9bafc7;--line:rgba(169,195,232,.15);--accent:#78e0ff;--rose:#ffb9ce}
+*{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#f5f7ff}
+#panelToggle{display:none;position:fixed;right:11px;bottom:12px;z-index:5;background:rgba(8,20,40,.87);border-color:rgba(120,225,255,.4);color:#aff1ff;padding:11px 15px;backdrop-filter:blur(12px)}
+canvas#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}canvas#scene:active{cursor:grabbing}
+.overlay{pointer-events:none;position:fixed;inset:0;background:linear-gradient(90deg,rgba(3,5,17,.65),transparent 36%,transparent 74%,rgba(5,5,20,.12)),linear-gradient(0deg,rgba(2,4,13,.56),transparent 23%,transparent 85%,rgba(2,4,13,.27))}
+.top{position:fixed;top:26px;left:30px;pointer-events:none}
+.eyebrow{font-size:10px;letter-spacing:.26em;font-weight:700;color:#80dfff;text-transform:uppercase;display:flex;align-items:center;gap:9px}
+.dot{width:6px;height:6px;border-radius:50%;background:#84edfa;box-shadow:0 0 12px #64f3ff}
+h1{font-size:clamp(23px,2.4vw,36px);line-height:1.15;letter-spacing:-.055em;margin:10px 0 5px;font-weight:580}
+.subtitle{max-width:350px;font-size:12px;line-height:1.6;color:#9fb2c8;margin:0}
+.panel{position:fixed;right:22px;top:21px;width:266px;max-height:calc(100vh - 44px);overflow:auto;padding:19px 17px 14px;background:rgba(7,12,27,.68);border:1px solid rgba(165,206,247,.13);border-radius:16px;backdrop-filter:blur(22px);box-shadow:0 16px 65px rgba(0,0,0,.28);scrollbar-width:thin;scrollbar-color:#42516a transparent}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.panel-title{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:750;color:#dde8ff}.hint{font-size:10px;color:#749ab5}
+.preset-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:22px}
+button{font:inherit;cursor:pointer;color:inherit;border:1px solid rgba(181,214,247,.15);background:rgba(150,197,238,.06);border-radius:8px;padding:8px 4px;font-size:10px;transition:.18s}
+button:hover{border-color:rgba(151,212,251,.5);background:rgba(126,178,215,.13)}button.active{border-color:rgba(115,222,247,.45);background:rgba(73,151,176,.22);color:#b1f2ff}
+.control{margin-bottom:15px}.control-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}label{font-size:11px;color:#cbd8e8}.value{font-size:11px;color:#8ce4f8;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:3px;accent-color:#8bdbee;appearance:none;background:linear-gradient(90deg,rgba(121,221,250,.7),rgba(103,104,143,.35));border-radius:9px;outline:0;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;background:#a9edfd;border-radius:50%;box-shadow:0 0 10px rgba(73,215,255,.45)}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(165,206,247,.1)}.toggle input{accent-color:#7ae3f3}
+.buttons{display:flex;gap:7px;margin-top:10px}.buttons button{flex:1;padding:9px 5px}
+.readout{font-size:10px;color:#71849c;line-height:1.8;border-top:1px solid rgba(165,206,247,.1);padding-top:11px;margin-top:14px;display:flex;justify-content:space-between}
+.footer{position:fixed;bottom:23px;left:30px;font-size:10px;letter-spacing:.05em;color:#a6b5c7;text-shadow:0 1px 10px rgba(0,0,0,.8);pointer-events:none}
+.footer strong{color:#f7c1d1;font-weight:600}.badge{position:fixed;bottom:23px;right:30px;color:#7a93ad;letter-spacing:.17em;font-size:9px;font-weight:650;pointer-events:none}
+#fallback{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:400px;background:#101b30;border-radius:15px;padding:22px;line-height:1.6}
+@media(max-width:760px){.top{top:16px;left:17px}h1{font-size:24px}.subtitle{font-size:11px;max-width:230px}.panel{right:10px;top:auto;bottom:62px;width:min(275px,84vw);max-height:min(69vh,550px);padding:12px 13px;display:none}body.panel-open .panel{display:block}#panelToggle{display:block}.panel-head{margin-bottom:8px}.preset-row{margin-bottom:10px}.control{margin-bottom:9px}.footer{left:15px;bottom:18px;max-width:140px;font-size:9px}.badge{display:none}}
+</style>
+</head>
+<body>
+<canvas id="scene" aria-label="Interactive simulation of spiral galaxies being carried through a mathematical vortex"></canvas>
+<div class="overlay"></div>
+<header class="top"><div class="eyebrow"><span class="dot"></span>EIGENDYNAMICS / LAB 003</div><h1>Galaxies in the<br>Inversion Field</h1><p class="subtitle">A field of spiral galaxies carried by one coherent, deformable geometric flow.</p></header>
+<aside id="controls" class="panel" aria-label="Experiment controls">
+  <div class="panel-head"><span class="panel-title">Field parameters</span><span class="hint">LIVE ENGINE</span></div>
+  <div class="preset-row"><button data-preset="funnel" class="active">Funnel</button><button data-preset="stream">Stream</button><button data-preset="bloom">Bloom</button></div>
+  <div class="control"><div class="control-head"><label for="density">Galaxy count</label><span class="value" id="densityVal"></span></div><input id="density" type="range" min="8" max="64" step="1" value="42" /></div>
+  <div class="control"><div class="control-head"><label for="twist">Spiral curvature</label><span class="value" id="twistVal"></span></div><input id="twist" type="range" min="0" max="5" step=".05" value="2.7" /></div>
+  <div class="control"><div class="control-head"><label for="flow">Flow speed</label><span class="value" id="flowVal"></span></div><input id="flow" type="range" min="0" max="3" step=".05" value="0.75" /></div>
+  <div class="control"><div class="control-head"><label for="depth">Inversion depth</label><span class="value" id="depthVal"></span></div><input id="depth" type="range" min="0" max="2.3" step=".05" value="1.5" /></div>
+  <div class="control"><div class="control-head"><label for="glow">Stellar luminance</label><span class="value" id="glowVal"></span></div><input id="glow" type="range" min="0.4" max="2.4" step=".05" value="1.4" /></div>
+  <div class="toggle"><label for="wire">Show geometric scaffolding</label><input type="checkbox" id="wire" checked /></div>
+  <div class="buttons"><button id="pause">Pause</button><button id="reset">Reset view</button><button id="shot">Save PNG</button></div>
+  <div class="readout"><span id="perf">Initializing…</span><span id="mode">WEBGL2 · LIVE</span></div>
+</aside>
+<button id="panelToggle" aria-controls="controls" aria-expanded="false">Controls</button>
+<div class="footer">DRAG TO ORBIT · SCROLL TO ZOOM<br><strong>Abstract dynamical visualization, not cosmology.</strong></div>
+<div class="badge">PROCEDURAL · SEEDED · REAL-TIME</div>
+<div id="fallback">WebGL2 is required to render this experiment. Open it in a recent Chrome, Firefox, or Edge browser.</div>
+<script>
+// Canvas2D renderer for environments that deliberately disable WebGL.
+// It uses the same spiral field and orbital dynamics as the primary WebGL2 renderer.
+function startCanvasFallback(canvas){
+ const ctx=canvas.getContext('2d',{alpha:false}), TWO=Math.PI*2;
+ const params={density:42,twist:2.7,flow:.75,depth:1.5,glow:1.4,wire:true};
+ let yaw=-.27,pitch=.88,dist=67,t=0,last=0,running=true,pointer=null,frames=0,avg=16.7;
+ const rseed=i=>{let x=i|0;return ()=>{x=(Math.imul(x,1664525)+1013904223)|0;return (x>>>0)/4294967296;}};
+ const random=rseed(345553);
+ const seeds=Array.from({length:64},(_,i)=>{let r=rseed(432+i*1871);return {phase:r()*TWO,velocity:.72+r()*.55,sz:1+r()*.7,tilt:(r()-.5)*1.65,heat:r(),offset:r()};});
+ const stars=Array.from({length:650},()=>({x:random(),y:random(),r:.25+random()*1.0,k:.15+random()*.85}));
+ const galaxySprites=[];
+ for(let g=0;g<16;g++){
+  const c=document.createElement('canvas');c.width=c.height=300;const b=c.getContext('2d'),R=rseed(1137+g*757),heat=R();
+  let col=heat<.30?[112,189,255]:heat<.55?[212,163,255]:heat<.77?[244,179,200]:[253,186,131];
+  let neb=b.createRadialGradient(150,150,2,150,150,139);neb.addColorStop(0,'rgba(255,244,225,.75)');neb.addColorStop(.08,`rgba(${col.join(',')},.26)`);neb.addColorStop(.4,`rgba(${col.join(',')},.07)`);neb.addColorStop(1,'rgba(0,0,0,0)');b.fillStyle=neb;b.fillRect(0,0,300,300);
+  b.globalCompositeOperation='screen';
+  for(let i=0;i<1720;i++){
+   let core=i<240,r,a;if(core){r=Math.pow(R(),1.7)*.24;a=TWO*R();}
+   else{r=.09+Math.pow(R(),.69)*.91;const arms=g%5===0?3:2; a=i%arms*TWO/arms+4.55*r+(R()+R()+R()-1.5)*(.21+.33*r);}
+   let x=150+124*r*Math.cos(a),y=150+124*r*Math.sin(a),bright=core?.7+R()*.3:.2+R()*.7;
+   b.fillStyle=core?`rgba(255,244,226,${bright})`:`rgba(${col.join(',')},${bright})`;
+   b.beginPath();b.arc(x,y,core?.35+R()*.85:.25+R()*.85,0,TWO);b.fill();
+  }
+  const core=b.createRadialGradient(150,150,0,150,150,24);core.addColorStop(0,'rgba(255,254,237,.98)');core.addColorStop(.13,'rgba(255,245,213,.75)');core.addColorStop(1,'rgba(255,231,211,0)');b.fillStyle=core;b.fillRect(122,122,56,56);
+  galaxySprites.push(c);
+ }
+ function resize(){const scale=Math.min(devicePixelRatio||1,1.35),w=Math.ceil(innerWidth*scale),h=Math.ceil(innerHeight*scale);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}}
+ function render(now){const delta=Math.min(.06,(now-(last||now))/1000);last=now;if(running)t+=delta;avg=.98*avg+.02*delta*1000;resize();const w=canvas.width,h=canvas.height,s=Math.min(w,h),f=s*.5/Math.tan(.5);
+  const cp=Math.cos(pitch),sp=Math.sin(pitch),cy=Math.cos(yaw),sy=Math.sin(yaw);
+  const eye=[dist*cp*sy,-dist*cp*cy,dist*sp],target=[0,0,-2.2];
+  let forward=target.map((v,i)=>v-eye[i]);let norm=Math.hypot(...forward);forward=forward.map(v=>v/norm);
+  let right=[forward[1],-forward[0],0];norm=Math.hypot(...right);right=right.map(v=>v/norm);
+  let up=[right[1]*forward[2]*-1,right[0]*forward[2],right[0]*forward[1]-right[1]*forward[0]];
+  // Correct camera up = cross(right,forward).
+  up=[right[1]*forward[2]-right[2]*forward[1],right[2]*forward[0]-right[0]*forward[2],right[0]*forward[1]-right[1]*forward[0]];
+  function project(x,y,z){let p=[x-eye[0],y-eye[1],z-eye[2]],depth=p[0]*forward[0]+p[1]*forward[1]+p[2]*forward[2];if(depth<.1)return null;return [w/2+(p[0]*right[0]+p[1]*right[1]+p[2]*right[2])*f/depth,h/2-(p[0]*up[0]+p[1]*up[1]+p[2]*up[2])*f/depth,depth];}
+  function field(r,th){th+=params.twist*.52*Math.log(1+r)+t*.008;return project(r*Math.cos(th),r*Math.sin(th),-params.depth*10.5*Math.exp(-r*.122)+Math.sin(th*2+r*.17+t*.07)*.13);}
+  ctx.fillStyle='#040713';ctx.fillRect(0,0,w,h);
+  let haze=ctx.createRadialGradient(w*.5,h*.51,5,w*.5,h*.5,s*.72);haze.addColorStop(0,'rgba(19,25,54,.38)');haze.addColorStop(.5,'rgba(13,13,38,.20)');haze.addColorStop(1,'rgba(8,4,18,0)');ctx.fillStyle=haze;ctx.fillRect(0,0,w,h);
+  for(const star of stars){ctx.beginPath();ctx.fillStyle=`rgba(175,199,255,${star.k*.6})`;ctx.arc(star.x*w,star.y*h,Math.max(.35,star.r*s/900),0,TWO);ctx.fill();}
+  ctx.globalCompositeOperation='screen';
+  if(params.wire){
+   for(let r=3.1;r<36;r+=1.7){ctx.beginPath();let n=170;for(let j=0;j<=n;j++){let p=field(r,TWO*j/n);if(!p)continue;j?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);}ctx.strokeStyle=r<8?'rgba(252,98,160,.25)':'rgba(106,164,218,.16)';ctx.lineWidth=Math.max(.45,s/1400);ctx.stroke();}
+   for(let i=0;i<50;i++){ctx.beginPath();let th=i*TWO/50;for(let j=0;j<=92;j++){let r=3.1+(j/92)*32.7,p=field(r,th);if(!p)continue;j?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);}ctx.strokeStyle=i%5===0?'rgba(231,115,171,.23)':'rgba(90,193,222,.14)';ctx.lineWidth=Math.max(.45,s/1250);ctx.stroke();}
+  }
+  for(let k=0;k<4;k++){ctx.beginPath();for(let i=0;i<=290;i++){let q=i/290,r=3.1+q*33.2,th=q*11.7+k*TWO/4+t*(.035+.10/(1+r)),p=field(r,th);if(!p)continue;i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]);}ctx.lineWidth=1.5;ctx.strokeStyle=k%2===0?`rgba(91,217,255,${.19*params.glow})`:`rgba(255,127,190,${.19*params.glow})`;ctx.stroke();}
+  const throat=project(0,0,-params.depth*10.5),edge=project(3.15,0,-params.depth*10.5);
+  if(throat&&edge){const rad=Math.max(15,Math.hypot(throat[0]-edge[0],throat[1]-edge[1]));let grad=ctx.createRadialGradient(throat[0],throat[1],rad*.25,throat[0],throat[1],rad*1.5);grad.addColorStop(0,'rgba(0,0,5,.98)');grad.addColorStop(.55,'rgba(2,0,7,.95)');grad.addColorStop(.73,'rgba(62,12,42,.88)');grad.addColorStop(.81,'rgba(229,70,145,.25)');grad.addColorStop(1,'rgba(12,11,28,0)');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(throat[0],throat[1],rad*1.5,0,TWO);ctx.fill();}
+  let galaxies=[];
+  for(let i=0;i<params.density;i++){let S=seeds[i],frac=(S.offset+t*params.flow*.003*S.velocity)%1,r=4.1+(1-frac)*29.4,a=S.phase+params.twist*.52*Math.log(1+r)+t*(.05+2.2/(5+r))*params.flow,z=-params.depth*10.5*Math.exp(-r*.122)+.25*Math.sin(a*2+i),p=project(r*Math.cos(a),r*Math.sin(a),z);if(p)galaxies.push({p,i,S,r,a});}
+  galaxies.sort((a,b)=>b.p[2]-a.p[2]);
+  for(let G of galaxies){let {p,i,S,r,a}=G,size=Math.min(205,s*4.2*S.sz*(.65+.55*r/35)/p[2]);ctx.save();ctx.translate(p[0],p[1]);ctx.rotate(a*.55+t*(i%2?-1:1)*.07);ctx.scale(1,.42+.3*Math.abs(Math.sin(S.tilt+a*.7)));ctx.globalAlpha=Math.min(1,params.glow*.75);ctx.drawImage(galaxySprites[i%galaxySprites.length],-size/2,-size/2,size,size);ctx.restore();}
+  ctx.globalCompositeOperation='source-over';
+  if(++frames%55===0)document.querySelector('#perf').textContent=`${Math.min(60,Math.round(1000/Math.max(avg,1)))} FPS · ${params.density} galaxies`;
+  requestAnimationFrame(render);
+ }
+ const show=id=>document.querySelector('#'+id+'Val').textContent=id==='density'?params[id]:Number(params[id]).toFixed(2);
+ for(let id of ['density','twist','flow','depth','glow']){let el=document.querySelector('#'+id);el.addEventListener('input',()=>{params[id]=Number(el.value);show(id);document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));});show(id);}
+ document.querySelector('#wire').addEventListener('change',e=>params.wire=e.target.checked);
+ const presets={funnel:{density:42,twist:2.7,flow:.75,depth:1.5,glow:1.4},stream:{density:56,twist:4.1,flow:1.65,depth:.65,glow:1.65},bloom:{density:32,twist:1.45,flow:.38,depth:2.1,glow:2.0}};
+ for(const b of document.querySelectorAll('[data-preset]'))b.addEventListener('click',()=>{for(const [k,v] of Object.entries(presets[b.dataset.preset])){params[k]=v;document.querySelector('#'+k).value=v;show(k);}document.querySelectorAll('[data-preset]').forEach(x=>x.classList.toggle('active',x===b));});
+ document.querySelector('#pause').addEventListener('click',e=>{running=!running;e.target.textContent=running?'Pause':'Resume';});
+ document.querySelector('#reset').addEventListener('click',()=>{yaw=-.27;pitch=.88;dist=67;});
+ document.querySelector('#shot').addEventListener('click',()=>{let link=document.createElement('a');link.href=canvas.toDataURL('image/png');link.download='eigendynamics-galaxy-field.png';link.click();});
+ canvas.addEventListener('pointerdown',e=>{pointer={x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);});
+ canvas.addEventListener('pointermove',e=>{if(!pointer)return;yaw=pointer.yaw+(e.clientX-pointer.x)*.006;pitch=Math.max(.18,Math.min(1.52,pointer.pitch-(e.clientY-pointer.y)*.006));});
+ canvas.addEventListener('pointerup',()=>pointer=null);canvas.addEventListener('pointercancel',()=>pointer=null);
+ canvas.addEventListener('wheel',e=>{e.preventDefault();dist=Math.max(29,Math.min(124,dist*Math.exp(e.deltaY*.0008)));},{passive:false});
+ window.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();document.querySelector('#pause').click();}if(e.key.toLowerCase()==='r')document.querySelector('#reset').click();});
+ document.querySelector('#mode').textContent='CANVAS2D · FALLBACK';window.__eigenDebug={params,get time(){return t},get frames(){return frames},get glErrors(){return 'WebGL unavailable — Canvas2D active';}};
+ requestAnimationFrame(render);
+}
+</script>
+
+<script>
+'use strict';
+(() => {
+const canvas=document.querySelector('#scene'), gl=canvas.getContext('webgl2',{antialias:true,alpha:false,depth:true,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+if(!gl){startCanvasFallback(canvas);return;}
+const TWO=Math.PI*2, MAX=64, params={density:42,twist:2.7,flow:.75,depth:1.5,glow:1.4,wire:true};
+let running=true,t=0,last=0,preset='funnel',yaw=-.27,pitch=.88,distance=67,drag=null,frame=0,msAvg=16.7,hasResize=true;
+let pixelRatio=Math.min(window.devicePixelRatio||1,1.6);
+const perfs=document.querySelector('#perf');
+function rng(seed){let a=seed>>>0;return ()=>{a+=0x6D2B79F5;let v=a;v=Math.imul(v^(v>>>15),v|1);v^=v+Math.imul(v^(v>>>7),v|61);return ((v^(v>>>14))>>>0)/4294967296;}}
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+function program(vs,fs){const p=gl.createProgram();gl.attachShader(p,shader(gl.VERTEX_SHADER,vs));gl.attachShader(p,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));return p;}
+const screenVS=`#version 300 es
+precision highp float; out vec2 uv;
+void main(){ vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2); uv=p; gl_Position=vec4(p*2.-1.,0,1); }`;
+const bgFS=`#version 300 es
+precision highp float;in vec2 uv;out vec4 color;uniform vec2 resolution;uniform float time;uniform float glow;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1)),f.x),f.y);}
+void main(){
+ vec2 p=(gl_FragCoord.xy-.5*resolution)/min(resolution.x,resolution.y);
+ float v=length(p); float a=atan(p.y,p.x);
+ vec3 col=vec3(.005,.008,.024);
+ float neb=noise(vec2(a*4.3,v*7.0)+vec2(time*.006,0.));
+ float mist=pow(max(0.,noise(p*4.4+time*.006)-.4),2.)*.5;
+ col+=vec3(.016,.022,.062)*mist+vec3(.034,.014,.040)*max(0.,neb-.42)*exp(-v*1.8);
+ // Small, sparse multi-scale background stars, stable in screen space.
+ for(int i=0;i<3;i++){
+  float cell= i==0?54.:i==1?121.:236.; vec2 g=gl_FragCoord.xy/cell;
+  vec2 id=floor(g), f=fract(g);vec2 seed=vec2(hash(id+float(i)*19.3),hash(id+float(i)*7.1+41.));
+  float h=hash(id*1.3+float(i)*9.);vec2 d=(f-seed)*cell;
+  float br=step(i==0?.79:.66,h)*pow(max(0.,(h-.5)*2.),4.);
+  float st=br*exp(-dot(d,d)/(i==2?6.:1.65));
+  col+=mix(vec3(.21,.38,.62),vec3(.98,.85,.84),hash(id+15.))*st*(i==2?.8:.5);
+ }
+ // Ambient concentric glow. Actual throat geometry is drawn in 3D.
+ col+=vec3(.006,.012,.018)*exp(-v*3.);
+ color=vec4(col,1.);
+}`;
+const geomVS=`#version 300 es
+precision highp float;layout(location=0) in vec3 aParam;uniform mat4 viewProj;uniform float time,twist,depth;out float intensity;out float gradient;
+void main(){
+ float r=aParam.x;float th=aParam.y+twist*log(1.+r)*.52+time*.008;
+ float z=-depth*10.5*exp(-r*.122);
+ z+=sin(th*2.+r*.17+time*.07)*.13;
+ vec3 pos=vec3(r*cos(th),r*sin(th),z);
+ gl_Position=viewProj*vec4(pos,1.);
+ gradient=clamp(r/35.,0.,1.);intensity=aParam.z;
+}`;
+const geomFS=`#version 300 es
+precision highp float;in float intensity,gradient;out vec4 color;uniform float glow;
+void main(){
+ vec3 inside=vec3(.90,.29,.56),outside=vec3(.17,.64,.78);
+ vec3 hue=mix(inside,outside,gradient);
+ float alpha=(.11+.19*(1.-gradient))*intensity;
+ color=vec4(hue*glow,alpha);
+}`;
+const galVS=`#version 300 es
+precision highp float;layout(location=0) in vec4 aLocal;layout(location=1) in vec4 aInfo;
+uniform mat4 viewProj,view;uniform vec4 galaxies[64];uniform vec4 orientations[64];uniform float time,luminosity,dpr;out vec3 vColor;out float vAlpha;
+void main(){
+ int id=int(aInfo.x+.5);vec4 data=galaxies[id],orient=orientations[id];
+ float spin=time*(.07+float(id%7)*.009)*(id%2==0?1.:-1.);
+ float sn=sin(spin),cs=cos(spin);
+ vec3 pos=vec3(aLocal.x*cs-aLocal.y*sn,aLocal.x*sn+aLocal.y*cs,aLocal.z);
+ float tilt=orient.x;pos=vec3(pos.x,pos.y*cos(tilt)-pos.z*sin(tilt),pos.y*sin(tilt)+pos.z*cos(tilt));
+ float turn=orient.y;pos=vec3(pos.x*cos(turn)-pos.y*sin(turn),pos.x*sin(turn)+pos.y*cos(turn),pos.z);
+ pos*=data.w;pos+=data.xyz;
+ vec4 eye=view*vec4(pos,1.);gl_Position=viewProj*vec4(pos,1.);
+ float depth=max(2.,-eye.z);
+ float halo=aInfo.y,heat=orient.z;
+ vec3 cold=vec3(.28,.67,1.), warm=vec3(1.,.48,.34), violet=vec3(.74,.52,1.);
+ vec3 arm=mix(cold,warm,heat);arm=mix(arm,violet,max(0.,(heat-.65)*1.1));
+ vColor=mix(arm,vec3(1.,.93,.80),halo);
+ vAlpha=aLocal.w*(.76+halo*.45)*luminosity;
+ float size=aInfo.z*(.82+halo*.6)*dpr*72./depth;
+ gl_PointSize=clamp(size,1.,25.);
+ if(gl_Position.w<=0.)gl_PointSize=0.;
+}`;
+const galFS=`#version 300 es
+precision highp float;in vec3 vColor;in float vAlpha;out vec4 color;
+void main(){
+ vec2 d=gl_PointCoord-.5;float rr=dot(d,d)*4.;
+ float core=exp(-rr*5.8),halo=exp(-rr*1.4)*.23;
+ float a=(core+halo)*vAlpha;
+ color=vec4(vColor*a,a);
+}`;
+const ribbonVS=`#version 300 es
+precision highp float;layout(location=0) in vec3 aParam;uniform mat4 viewProj;uniform float time,twist,depth;out float lum;out float hue;
+void main(){
+ float r=aParam.x;float k=aParam.z;
+ float th=aParam.y+twist*.52*log(1.+r)+time*(.035+.1/(1.+r));
+ float z=-depth*10.5*exp(-r*.122)+.25*sin(r*.8+time*.5+k*3.);
+ gl_Position=viewProj*vec4(r*cos(th),r*sin(th),z,1.);
+ lum=(.4+.6*sin(aParam.y*8.-time*1.7+k)*sin(aParam.y*8.-time*1.7+k));
+ hue=k;
+}`;
+const ribbonFS=`#version 300 es
+precision highp float;in float lum,hue;uniform float glow;out vec4 color;
+void main(){vec3 c=mix(vec3(.26,.72,.98),vec3(1.,.48,.72),hue);color=vec4(c*glow,lum*.24);}`;
+const coreVS=`#version 300 es
+precision highp float;layout(location=0) in vec3 point;uniform mat4 viewProj;uniform float depth;out float radial;
+void main(){radial=point.z;gl_Position=viewProj*vec4(point.xy,-depth*10.5*exp(-3.1*.122)-.2,1.);}`;
+const coreFS=`#version 300 es
+precision highp float;in float radial;out vec4 color;uniform float time;
+void main(){float edge=smoothstep(.76,1.,radial);vec3 c=mix(vec3(.003,.003,.011),vec3(.42,.08,.26),edge);color=vec4(c,1.);}`;
+const P={bg:program(screenVS,bgFS),grid:program(geomVS,geomFS),gal:program(galVS,galFS),ribbon:program(ribbonVS,ribbonFS),core:program(coreVS,coreFS)};
+function loc(p,n){return gl.getUniformLocation(p,n);}let U={};for(const [k,p] of Object.entries(P)){U[k]={};for(const n of ['resolution','time','glow','luminosity','dpr','viewProj','view','twist','depth','galaxies[0]','orientations[0]'])U[k][n]=loc(p,n);}
+function vaoFrom(data,attributes,usage=gl.STATIC_DRAW){const vao=gl.createVertexArray(),buf=gl.createBuffer();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,data,usage);let offset=0;const stride=attributes.reduce((s,a)=>s+a,0)*4;for(let i=0;i<attributes.length;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,attributes[i],gl.FLOAT,false,stride,offset);offset+=attributes[i]*4;}gl.bindVertexArray(null);return {vao,buf,count:data.length/attributes.reduce((a,b)=>a+b,0)};}
+function gridGeometry(){const out=[];
+ function add(r,th,k){out.push(r,th,k)}
+ const radial=35.5;
+ for(let r=3.1;r<=35.6;r+=1.7){for(let j=0;j<270;j++){let a=j*TWO/270,b=(j+1)*TWO/270;add(r,a,r<7?1.25:.85);add(r,b,r<7?1.25:.85);}}
+ for(let i=0;i<50;i++){let th=i*TWO/50;for(let j=0;j<100;j++){let a=3.1+j*(radial-3.1)/100,b=3.1+(j+1)*(radial-3.1)/100;add(a,th,1.1);add(b,th,1.1);}}
+ return vaoFrom(new Float32Array(out),[3]);}
+function ribbonsGeometry(){const out=[];for(let k=0;k<4;k++){for(let i=0;i<530;i++){let a=i/530,b=(i+1)/530;function add(q){const r=3.1+q*33.2,th=q*11.7+k*TWO/4;out.push(r,th,k/3);}add(a);add(b);}}return vaoFrom(new Float32Array(out),[3]);}
+function throatGeometry(){const out=[];for(let i=0;i<180;i++){const a=i*TWO/180,b=(i+1)*TWO/180;out.push(0,0,0,3.22*Math.cos(a),3.22*Math.sin(a),1,3.22*Math.cos(b),3.22*Math.sin(b),1);}return vaoFrom(new Float32Array(out),[3]);}
+let grid=gridGeometry(), ribbons=ribbonsGeometry(),throat=throatGeometry();
+const rand=rng(813924), stars=[];
+for(let g=0;g<MAX;g++){
+ let R=rng(41989+g*9137),arms=g%5===0?3:2;
+ // The concentrated nucleus remains visible even if the outer arms are diffuse.
+ for(let i=0;i<480;i++){
+  let nucleus=i<95,halo=i>424,r,a,z,bright;
+  if(nucleus){r=Math.pow(R(),1.5)*.23;a=TWO*R();z=(R()-.5)*.10;bright=.7+R()*1.1;}
+  else if(halo){r=Math.sqrt(R())*.95;a=TWO*R();z=(R()-.5)*.21;bright=.28+R()*.35;}
+  else {r=.13+Math.pow(R(),.65)*.91;let arm=i%arms; a=arm*TWO/arms+4.45*r+((R()+R()+R())-1.5)*(.2+.3*r); z=(R()+R()+R()-1.5)*(.05+.055*r);bright=.32+R()*.75;}
+  let size=nucleus?2.0+R()*2.7:halo?1+R()*1.4:1.25+R()*2.4;
+  stars.push(r*Math.cos(a),r*Math.sin(a),z,bright,g,nucleus?(.75+R()*.25):halo?.2:R()*.17,size,R());
+ }
+}
+const starsVao=vaoFrom(new Float32Array(stars),[4,4]);
+const centers=new Float32Array(MAX*4),orientations=new Float32Array(MAX*4),seeds=Array.from({length:MAX},(_,i)=>{const r=rng(2381+i*7328);return {phase:r()*TWO,velocity:.72+r()*.55,sz:1.0+r()*.70,tilt:(r()-.5)*1.65,heat:r(),offset:r(),seed:r()};});
+// Basic column-major matrices.
+function perspective(fov,aspect,near,far){let f=1/Math.tan(fov/2),nf=1/(near-far);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)*nf,-1,0,0,2*far*near*nf,0]);}
+function lookAt(eye,target,up){let z=[eye[0]-target[0],eye[1]-target[1],eye[2]-target[2]],l=Math.hypot(...z);z=z.map(v=>v/l);let x=[up[1]*z[2]-up[2]*z[1],up[2]*z[0]-up[0]*z[2],up[0]*z[1]-up[1]*z[0]];l=Math.hypot(...x);x=x.map(v=>v/l);let y=[z[1]*x[2]-z[2]*x[1],z[2]*x[0]-z[0]*x[2],z[0]*x[1]-z[1]*x[0]];return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x.reduce((s,v,i)=>s+v*eye[i],0),-y.reduce((s,v,i)=>s+v*eye[i],0),-z.reduce((s,v,i)=>s+v*eye[i],0),1]);}
+function mul(a,b){let o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)for(let k=0;k<4;k++)o[c*4+r]+=a[k*4+r]*b[c*4+k];return o;}
+function resize(){const w=Math.max(1,Math.floor(innerWidth*pixelRatio)),h=Math.max(1,Math.floor(innerHeight*pixelRatio));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}}
+function animateGalaxyCenters(){for(let i=0;i<MAX;i++){
+ const S=seeds[i];const f=(S.offset+ t*params.flow*.003*S.velocity)%1;
+ // Galaxies move toward the throat; crossing it returns them to the outer field.
+ const r=4.1+(1.-f)*29.4;
+ const a=S.phase+params.twist*.52*Math.log(1+r)+t*(.05+2.2/(5+r))*params.flow;
+ centers[i*4]=r*Math.cos(a);centers[i*4+1]=r*Math.sin(a);centers[i*4+2]=-params.depth*10.5*Math.exp(-r*.122)+.25*Math.sin(a*2+i);centers[i*4+3]=S.sz*1.35*(.65+.55*r/35);
+ orientations[i*4]=S.tilt;orientations[i*4+1]=a*.55;orientations[i*4+2]=S.heat;orientations[i*4+3]=1;
+ }}
+function common(k,p,VP,V){const u=U[k];gl.useProgram(p);if(u.viewProj)gl.uniformMatrix4fv(u.viewProj,false,VP);if(u.view)gl.uniformMatrix4fv(u.view,false,V);if(u.time)gl.uniform1f(u.time,t);if(u.twist)gl.uniform1f(u.twist,params.twist);if(u.depth)gl.uniform1f(u.depth,params.depth);if(u.glow)gl.uniform1f(u.glow,params.glow);}
+function drawMesh(mesh,mode){gl.bindVertexArray(mesh.vao);gl.drawArrays(mode,0,mesh.count);}
+function render(now){if(!last)last=now;let delta=Math.min(.055,(now-last)/1000);last=now;if(running)t+=delta;resize();msAvg=msAvg*.975+(delta*1000)*.025;
+ gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(P.bg);gl.uniform2f(U.bg.resolution,canvas.width,canvas.height);gl.uniform1f(U.bg.time,t);gl.uniform1f(U.bg.glow,params.glow);gl.drawArrays(gl.TRIANGLES,0,3);
+ const eye=[distance*Math.cos(pitch)*Math.sin(yaw),-distance*Math.cos(pitch)*Math.cos(yaw),distance*Math.sin(pitch)];
+ const V=lookAt(eye,[0,0,-2.2],[0,0,1]);const VP=mul(perspective(1.00,canvas.width/canvas.height,.1,300),V);
+ gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+ common('core',P.core,VP,V);drawMesh(throat,gl.TRIANGLES);
+ gl.blendFunc(gl.SRC_ALPHA,gl.ONE);
+ if(params.wire){common('grid',P.grid,VP,V);drawMesh(grid,gl.LINES);}
+ common('ribbon',P.ribbon,VP,V);drawMesh(ribbons,gl.LINES);
+ animateGalaxyCenters();common('gal',P.gal,VP,V);gl.uniform4fv(U.gal['galaxies[0]'],centers);gl.uniform4fv(U.gal['orientations[0]'],orientations);gl.uniform1f(U.gal.luminosity,params.glow);gl.uniform1f(U.gal.dpr,pixelRatio);
+ gl.bindVertexArray(starsVao.vao);gl.drawArrays(gl.POINTS,0,params.density*480);
+ gl.bindVertexArray(null);
+ if(++frame%50===0){let fps=Math.round(1000/Math.max(msAvg,4));perfs.textContent=`${fps} FPS · ${params.density} galaxies`;if(fps<32&&pixelRatio>.85){pixelRatio=Math.max(.85,pixelRatio-.10);}}
+ requestAnimationFrame(render);
+}
+window.addEventListener('resize',()=>{hasResize=true;});
+const show=(id)=>{const v=params[id];document.querySelector('#'+id+'Val').textContent=id==='density'?v:id==='twist'||id==='flow'||id==='depth'||id==='glow'?Number(v).toFixed(2):v;};
+for(let id of ['density','twist','flow','depth','glow']){const input=document.querySelector('#'+id);input.addEventListener('input',()=>{params[id]=Number(input.value);show(id);document.querySelectorAll('[data-preset]').forEach(b=>b.classList.remove('active'));});show(id);}
+document.querySelector('#wire').addEventListener('change',e=>params.wire=e.target.checked);
+const presets={funnel:{density:42,twist:2.7,flow:.75,depth:1.5,glow:1.4},stream:{density:56,twist:4.1,flow:1.65,depth:.65,glow:1.65},bloom:{density:32,twist:1.45,flow:.38,depth:2.1,glow:2.0}};
+for(const b of document.querySelectorAll('[data-preset]'))b.addEventListener('click',()=>{preset=b.dataset.preset;for(const [k,v] of Object.entries(presets[preset])){params[k]=v;document.querySelector('#'+k).value=v;show(k);}document.querySelectorAll('[data-preset]').forEach(x=>x.classList.toggle('active',x===b));});
+document.querySelector('#pause').addEventListener('click',e=>{running=!running;e.target.textContent=running?'Pause':'Resume';});
+document.querySelector('#reset').addEventListener('click',()=>{yaw=-.27;pitch=.88;distance=67;});
+document.querySelector('#shot').addEventListener('click',()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='eigendynamics-spiral-galaxies.png';a.click();});
+canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointermove',e=>{if(!drag)return;yaw=drag.yaw+(e.clientX-drag.x)*.006;pitch=Math.min(1.52,Math.max(.18,drag.pitch-(e.clientY-drag.y)*.006));});
+canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('pointercancel',()=>drag=null);
+canvas.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(29,Math.min(124,distance*Math.exp(e.deltaY*.0008)));},{passive:false});
+window.addEventListener('keydown',e=>{if(e.key===' '){e.preventDefault();document.querySelector('#pause').click();}if(e.key.toLowerCase()==='r')document.querySelector('#reset').click();});
+window.__eigenDebug={params,get time(){return t},get frames(){return frame},get glErrors(){let e=gl.getError();return e===gl.NO_ERROR?'none':e;}};
+requestAnimationFrame(render);
+})();
+</script>
+<script>document.querySelector('#panelToggle').addEventListener('click',e=>{const open=document.body.classList.toggle('panel-open');e.target.textContent=open?'Hide controls':'Controls';e.target.setAttribute('aria-expanded',String(open));});</script>
+</body>
+</html>
