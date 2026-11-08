@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101114"><title>Coalescing Saddles · EigenDynamics</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><a href="../../#scene=coalescing-saddles" target="_top" class="brand">∿ EIGENDYNAMICS <span>/ STUDY 015</span></a><button id="quiet" aria-pressed="false">Hide controls</button></header>
+<main>
+<section class="art" aria-label="Elliptic umbilic interference field">
+<div class="eyebrow">CATASTROPHE INTERFERENCE <span>ELLIPTIC UMBILIC</span></div>
+<div class="plot" id="plot"><canvas id="field" width="640" height="640" role="img" aria-label="Animated phase of the elliptic umbilic canonical integral; horizontal x and vertical y both run from about −15 to 15"></canvas><canvas id="overlay" width="1000" height="1000" aria-hidden="true"></canvas><div id="loading" role="status"><b>Preparing the interference field</b><span id="progress">Loading numerical samples…</span><button id="retry" hidden>Retry loading</button></div><div class="axis y">y</div><div class="axis x">x</div><div class="extent top">+15</div><div class="extent bottom">−15</div><div class="extent left">−15</div><div class="extent right">+15</div></div>
+<div class="caption"><span id="view-caption">Hue = phase · one turn = 2π</span><span id="sample-readout">x, y ∈ [−15.05, 15.05]</span></div>
+</section>
+<aside id="controls">
+<div class="eyebrow">INTEGRALS WITH COALESCING SADDLES</div><h1>Coalescing<br><em>Saddles.</em></h1><p class="intro">A triangular caustic opens. Interference folds around it. Follow the points where the field disappears.</p>
+<div class="tabs" role="group" aria-label="Field display"><button data-view="phase" aria-pressed="true">Phase</button><button data-view="luminous" aria-pressed="false">Luminous</button><button data-view="intensity" aria-pressed="false">Intensity</button></div>
+<div class="phase-key"><i></i><div><span>−π</span><span>0</span><span>+π</span></div></div>
+<div class="transport"><button id="play" disabled>Pause</button><div><label for="z">Parameter <em>z</em></label><output id="z-value" for="z">4.000</output></div></div>
+<input id="z" aria-label="Parameter z" type="range" min="-4" max="4" step="0.001" value="4">
+<div class="ticks"><span>−4</span><span>coalescence · 0</span><span>+4</span></div>
+<div class="presets" role="group" aria-label="NIST reference slices"><button data-z="0">z = 0</button><button data-z="2">z = 2</button><button data-z="4">z = 4 <span>↗ NIST</span></button></div>
+<div class="row"><label for="speed">Sweep</label><select id="speed"><option value="100">Slow · 100 s</option><option value="60" selected>Gentle · 60 s</option><option value="30">Fast · 30 s</option></select></div>
+<div class="row"><label for="exposure">Exposure</label><input id="exposure" type="range" min="0.2" max="2.5" step="0.05" value="1"></div>
+<div class="overlays"><label><input id="caustic" type="checkbox"><span>Caustic geometry</span><i class="line"></i></label><label><input id="zeros" type="checkbox"><span>Phase zeros</span><i class="dot"></i></label><label><input id="contours" type="checkbox"><span>Phase contours · π/4</span></label></div>
+<p id="zero-count" class="micro">Stationary-point mergers and field zeros are different objects.</p>
+<div class="actions"><button id="copy">Copy state link</button><button id="save" disabled>Save PNG ↓</button></div><p id="notice" role="status" class="micro"></p><input id="state-link" aria-label="State link" readonly hidden>
+<details><summary>The mathematics & numerical limits</summary><p>Every point is the complex integral Ψ(x,y,z) = ∬ exp(iΦ) ds dt, with</p><div class="formula">Φ = s³ − 3st² + z(s² + t²) + xs + yt.</div><p>The gold caustic marks where stationary points merge. Rings mark isolated zeros of Ψ; phase is undefined there. At z = 0 the integral is real and nodal curves replace isolated phase vortices.</p><p>Time sweeps a parameter; this is not a simulation of physical time. Negative z is obtained by complex conjugation. Color mapping stays fixed.</p><p>Precomputed 231 × 231 complex samples, Δz = 0.025, finite smooth aperture; interpolation in the complex field, never in hue. Zero markers are grid-resolved estimates and can miss close pairs. Fine fringes and the phase near zeros are resolution-limited. Intensity is |Ψ|² with fixed exposure tone mapping.</p><p><a href="https://dlmf.nist.gov/36.2#E2" target="_blank" rel="noopener">NIST definitions ↗</a> · <a href="https://dlmf.nist.gov/36.3#F17" target="_blank" rel="noopener">Reference phase plot ↗</a> · <a href="https://dlmf.nist.gov/36.4#E10" target="_blank" rel="noopener">Caustic ↗</a></p><p><a href="../../downloads/coalescing-saddles-source.zip" download>Source & reproduction scripts ↓</a> · <a href="validation.json" target="_blank">Numerical checks ↗</a></p></details>
+</aside>
+</main><footer><span>ONE FIELD. MANY INTERFERING PATHS.</span><span>EigenDynamics / 2026</span></footer>
+<script type="module" src="app.mjs"></script></body></html>
