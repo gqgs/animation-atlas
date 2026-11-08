@@ -23,6 +23,8 @@ jobs:
         run: node --test $(find dist -name '*.test.mjs' -print)
       - name: Install isolated browser-test dependency
         run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
           npm install --prefix "$RUNNER_TEMP/spiral-qa" --no-save playwright@1.62.1
           "$RUNNER_TEMP/spiral-qa/node_modules/.bin/playwright" install --with-deps chromium
       - name: Test rendering, interactions, PNG and actual MP4
