@@ -10,7 +10,7 @@ node --check dist/experiments/spiral-julia/main.mjs
 node --check dist/experiments/spiral-julia/renderer.mjs
 ```
 
-The 10 focused tests cover independent complex-tangent formula agreement, poles and large imaginary values, conjugation and periodicity, bounded iteration counts, half-turn symmetry, the two requested parameter anchors, loop closure, source-state immutability, link parsing and round trips, isotropic camera mapping, deterministic frame timestamps, dimensions, recorder cleanup and cancellation.
+The 22 focused tests cover independent complex-tangent formula agreement, poles and large imaginary values, conjugation and periodicity, bounded iteration counts, half-turn symmetry, the two requested parameter anchors, loop closure, source-state immutability, link parsing and round trips, isotropic camera mapping, deterministic frame timestamps, dimensions, recorder cleanup, cancellation during pending work, and emitted codec errors.
 
 ## Browser checks
 
@@ -18,16 +18,16 @@ Serve `dist/` and open `experiments/spiral-julia/tests/browser.html`. It checks 
 
 ## Recorded verification
 
-On 2026-11-08, all 22 repository `*.test.mjs` tests passed, including the 10 focused tests above. JavaScript syntax, catalog paths, unique scene IDs and byte-for-byte source ZIP parity passed. An independent source review checked numerical stability and output integration; effective-camera gesture mapping and the touch-mode return button were corrected.
+On 2026-11-08, all 34 repository `*.test.mjs` tests passed, including the 22 focused tests above. JavaScript syntax, catalog paths, unique scene IDs and byte-for-byte source ZIP parity passed. An independent source review checked numerical stability and output integration; effective-camera gesture mapping and the touch-mode return button were corrected. A repeated-export cancellation hang found in browser CI led to abort-aware waits and codec-error propagation in the shared exporter, with regression tests.
 
-The [browser CI run](https://github.com/gqgs/animation-atlas/actions/runs/42509693441) runs Chromium with SwiftShader through pinned Playwright 1.62.1. The workflow is `.github/workflows/test-spiral-julia.yml`; its full integration check is `tests/browser-test.cjs`. It verifies:
+The [browser CI run](https://github.com/gqgs/animation-atlas/actions/workflows/test-spiral-julia.yml) runs Chromium with SwiftShader through pinned Playwright 1.62.1. The workflow is `.github/workflows/test-spiral-julia.yml`; its full integration check is `tests/browser-test.cjs`. It verifies:
 
 - Actual shader compilation, non-black rendering, pixel-identical loop endpoints and distinct primary presets.
 - Pixel-exact GPU-to-2D export copying, requested dimensions, exact phase sampling and mocked encoder cleanup/cancellation.
 - Preset changes, playback pause/resume, hide/show, double-click camera mapping at nonzero Breathe phase, palette changes and replay-link controls.
 - A downloaded 1080 × 1080 PNG, independent of viewport size.
 - A real H.264 MP4 at 720 × 720, 30 FPS, exactly 240 frames and 8 seconds. FFprobe checks its metadata; FFmpeg decodes the beginning, midpoint and final frame to check nonblank imagery and visible motion. This short test uses 32 iterations to keep software-rendered CI practical.
-- Cancellation of a real export without a partial MP4, restoration of controls, mobile-width layout with a visible touch return button, and gallery launch/close/reopen.
+- Repeated cancellation of real exports without a partial MP4, restoration of controls, mobile-width layout with a visible touch return button, and gallery launch/close/reopen.
 - No uncaught page errors.
 
 Rendered screenshots of Pearl spirals, Ember lace, Into the spiral, Nylander's crop and the mobile layout were visually inspected. The [live PR preview](https://gqgs.github.io/animation-atlas/pr-preview/pr-6/) serves the gallery and nested experiment paths.
