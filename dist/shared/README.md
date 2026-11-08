@@ -21,11 +21,11 @@ const video = await exportFrames({
 });
 ```
 
-The returned Blob is not downloaded automatically. The consumer owns file naming and saving. A `signal: AbortSignal` cancels without saving a partial video. For unsupported browsers, `loadFrameWrap` or encoding may reject; surface that error to the UI.
+The returned Blob is not downloaded automatically. The consumer owns file naming and saving. A `signal: AbortSignal` cancels without saving a partial video. Cancellation interrupts pending rendering, recorder operations and cleanup without waiting for an encoder to respond. Cleanup is best-effort: adapters should implement prompt, repeatable `dispose()` that closes their resources, and report failures by rejecting or emitting an `error` event through an optional `on(event, handler)` method. If interrupted setup finishes later, disposal runs again. Late save callbacks are ignored. For unsupported browsers, `loadFrameWrap` or encoding may reject; surface that error to the UI.
 
 ## Why CCapture.js v2?
 
-It already provides MP4/WebM WebCodecs encoding and a backpressured `FrameWrap` that does **not** monkeypatch time. This module avoids modifying the page's `requestAnimationFrame` or `Date`. Browser-only CDN loading is optional: `createRecorder` can inject an npm-installed `FrameWrap` (or another compatible encoder).
+It already provides MP4/WebM WebCodecs encoding and a `FrameWrap` that does **not** monkeypatch time. `FrameWrap` itself does not apply encoder queue backpressure; it should not be confused with the time-warping `CCapture` wrapper. This module avoids modifying the page's `requestAnimationFrame` or `Date`. Browser-only CDN loading is optional: `createRecorder` can inject an npm-installed `FrameWrap` (or another compatible encoder).
 
 For future reuse, keep render callbacks pure in `(time, phase)`; derive deterministic random seeds if randomness is involved. Frame sampling is repeatable; compressed bytes are not guaranteed identical across encoders, operating systems and GPU drivers.
 
