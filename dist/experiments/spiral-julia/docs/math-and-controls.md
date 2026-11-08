@@ -2,7 +2,7 @@
 
 ## Sources and interpretation
 
-The requested reference is [Paul Bourke, Spiral Julia (March 2022)](https://paulbourke.net/fractals/spiraljulia/), inspired by Paul Nylander. The user supplied the equation and the preferred first/last images after direct automated access to the reference page was unavailable. The formula matches [Nylander's original Spiral-Shaped Julia Set Fractal (March 14, 2004)](https://nylander.wordpress.com/2004/03/14/spiral-shaped-julia-set-fractal/).
+The requested reference is [Paul Bourke, Spiral Julia (March 2022)](https://paulbourke.net/fractals/spiraljulia/), inspired by Paul Nylander. The formula and traditional parameter follow [Nylander's original Spiral-Shaped Julia Set Fractal (March 14, 2004)](https://nylander.wordpress.com/2004/03/14/spiral-shaped-julia-set-fractal/).
 
 This study independently computes the field. No reference images, source code, or palettes are bundled. The two primary compositions use the reference parameter families, with original framing and color design rather than claiming a pixel-identical reproduction:
 
