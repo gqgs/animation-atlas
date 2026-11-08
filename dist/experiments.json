@@ -477,5 +477,34 @@
         "url": "downloads/chromatic-unwinding-source.zip"
       }
     ]
+  },
+  {
+    "id": "spiral-julia",
+    "title": "Spiral Julia",
+    "index": 22,
+    "category": "Dynamics",
+    "date": "2026-11-08",
+    "url": "experiments/spiral-julia/index.html",
+    "description": "Pearl spirals and ember lace emerge from the complex tangent map. Explore two reference parameter families, drift through seamless loops, and capture deterministic high-resolution frames.",
+    "tags": [
+      "Julia set",
+      "spiral",
+      "complex dynamics",
+      "Paul Bourke",
+      "WebGL2"
+    ],
+    "cover": "covers/spiral-julia.svg",
+    "source": "downloads/spiral-julia-source.zip",
+    "note": "Study 022 · tan(z² + c) · finite threshold study · PNG & fixed-frame MP4",
+    "variants": [
+      {
+        "title": "Paul Bourke · reference",
+        "url": "https://paulbourke.net/fractals/spiraljulia/"
+      },
+      {
+        "title": "Source & math notes",
+        "url": "downloads/spiral-julia-source.zip"
+      }
+    ]
   }
 ]
