@@ -22,16 +22,31 @@ Read `AGENTS.md` before adding experiments. Preserve original renderers, stable 
 
 ## Hosting
 
-The site is hosted at https://gqgs.github.io/animation-atlas/.
+Production: https://gqgs.github.io/animation-atlas/
 
-The [Deploy GitHub Pages workflow](.github/workflows/deploy-pages.yml) publishes `dist/` after every push to `main`, including merged pull requests. It can also be run manually from the Actions tab with `main` selected. Only `main` can deploy, and deployments run one at a time.
+The [production workflow](.github/workflows/deploy-pages.yml) publishes `dist/` from `main` to the root of `gh-pages`. The [PR preview workflow](.github/workflows/preview-pages.yml) publishes a copy of `dist/` for each same-repository pull request to `gh-pages/pr-preview/pr-<number>/`, posts the URL to the PR, updates it when commits are pushed, and deletes it when the PR closes. Both workflows preserve other deployments and never force-push.
 
-The workflow uses GitHub's built-in token; no deployment secrets or build step are required. In repository Settings → Pages → Build and deployment, the source must be **GitHub Actions**.
+No build or Node.js installation is required. Site assets use relative paths, so a preview works under its nested URL. Previews are **public**; do not commit secrets to preview branches.
+
+### One-time migration from Actions-hosted Pages
+
+The old site deploys directly with the official GitHub Pages artifact action. These previews require switching to **Deploy from a branch**. Follow this order to preserve the existing production site:
+
+1. Create a **fine-grained GitHub personal access token** scoped only to `gqgs/animation-atlas`, with **Contents: Read and write**. Add it under **Settings → Secrets and variables → Actions** as repository secret `PAGES_DEPLOY_TOKEN`. The token's owner must have permission to publish Pages from this repository. Keep the token private and rotate it before expiration.
+2. Merge the workflow change. The push to `main` publishes `dist/` to a new `gh-pages` branch while the existing Pages deployment remains live. In **Actions → Publish GitHub Pages**, confirm the run succeeded and the `gh-pages` branch now exists. If necessary, rerun the workflow manually with `main` selected.
+3. Under **Settings → Pages → Build and deployment**, change **Source** to **Deploy from a branch**, select **gh-pages**, choose **/(root)**, and save.
+4. Confirm https://gqgs.github.io/animation-atlas/ still works. Open or update a same-repository PR to test a preview such as `https://gqgs.github.io/animation-atlas/pr-preview/pr-42/`. After closing the test PR, confirm its preview is removed.
+
+A normal `GITHUB_TOKEN` push does **not** trigger a Pages build when deploying from a branch, which is why both workflows explicitly require `PAGES_DEPLOY_TOKEN`. See [GitHub's documentation](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#troubleshooting-publishing-from-a-branch). GitHub Pages does not provide access controls for preview URLs. The preview action does not support pull requests from forks.
+
+If the secret is not yet configured, the preview workflow on this migration PR can fail its token check. This is expected until step 1 is complete. GitHub Actions and Pages settings cannot be changed by merging a workflow file alone.
+
+### Routine publishing
+
+Push or merge into `main` to update production. Production deployments preserve `pr-preview/`, and each preview deployment preserves production and the other previews. Both publishing actions use non-force pushes to reduce concurrent update conflicts.
 
 ## Publish the repository
 
-Commit `README.md`, `AGENTS.md`, `.github/workflows/`, and all of `dist/`, then push to the repository. Publishing the repository and hosting the site are separate steps; the deployment workflow handles hosting updates when changes reach `main`.
+Commit the repository's source and the entire maintained `dist/` tree, then push to `main`. The publishing workflow copies the site into `gh-pages`; the `gh-pages` branch is a deployment output and should not be edited manually.
 
-For `gqgs/animation-atlas`, the default Pages address is https://gqgs.github.io/animation-atlas/.
-The app uses relative asset paths so it works under that repository subpath.
-No Node.js installation or build step is required.
+The production URL is https://gqgs.github.io/animation-atlas/. All assets are relative to the current site path, so the same files run locally, at production, and under PR preview paths.
