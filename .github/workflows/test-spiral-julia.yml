@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'dist/experiments/spiral-julia/**'
-      - 'dist/shared/frame-export.mjs'
+      - 'dist/shared/frame-export*.mjs'
       - '.github/workflows/test-spiral-julia.yml'
   workflow_dispatch:
 
