@@ -1,39 +1,52 @@
-name: Deploy GitHub Pages
+name: Publish GitHub Pages
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# This workflow and PR previews both write to gh-pages. The deploy action
+# rebases instead of force-pushing so neither deployment wipes out the other.
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: pages-production
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  publish:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v4
         with:
-          path: dist
+          persist-credentials: false
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Verify static site
+        run: |
+          test -f dist/index.html
+          test -f dist/.nojekyll
+          python3 -m json.tool dist/experiments.json > /dev/null
+
+      # GITHUB_TOKEN pushes do not trigger a branch-based Pages rebuild.
+      # Use a dedicated, least-privilege PAT stored as a repository secret.
+      - name: Require Pages publishing token
+        env:
+          PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$PAGES_DEPLOY_TOKEN" ]; then
+            echo "::error::Set the PAGES_DEPLOY_TOKEN Actions secret before publishing to gh-pages."
+            exit 1
+          fi
+
+      - name: Publish production site
+        uses: JamesIves/github-pages-deploy-action@4a3abc783e1a24aeb44c16e869ad83caf6b4cc23 # v4.7.4
+        with:
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          branch: gh-pages
+          folder: dist
+          clean-exclude: pr-preview
+          force: false
