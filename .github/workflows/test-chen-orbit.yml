@@ -43,6 +43,7 @@ jobs:
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
           QA_OUTPUT: ${{ runner.temp }}/chen-qa-output
+          QA_EXPORT_ONLY: '1'
         run: node dist/experiments/chen-orbit/tests/browser-test.cjs
       - name: Preserve visual evidence
         if: always()
