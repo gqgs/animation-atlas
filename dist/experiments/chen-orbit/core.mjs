@@ -28,7 +28,8 @@ export function buildAttractor({count=180000, burn=6000, dt=.002}={}) {
 }
 export function cameraAt(p, phase) {
   const t=TAU*wrap(phase),moving=p.motion==='orbit';
-  return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:Math.max(-80*Math.PI/180,Math.min(80*Math.PI/180,p.elevation*Math.PI/180+(moving?.11*Math.sin(t):0))),distance:4.4/p.zoom};
+  const pitch=p.elevation*Math.PI/180,amplitude=Math.min(.11,Math.max(0,(80-Math.abs(p.elevation))*Math.PI/180));
+  return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:pitch+(moving?amplitude*Math.sin(t):0),distance:4.4/p.zoom};
 }
 export function readSettings(search) {
   const q=new URLSearchParams(search),p={...defaults};

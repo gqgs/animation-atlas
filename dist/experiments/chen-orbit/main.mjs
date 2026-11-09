@@ -69,7 +69,7 @@ $('record').onclick=async()=>{
  const controls=[...document.querySelectorAll('aside input,aside select,aside button')].filter(el=>!['record','hide','full'].includes(el.id));controls.forEach(el=>el.disabled=true);
  $('record').textContent='Cancel export';$('status').textContent='Loading MP4 encoder…';let output;
  try{
-  const FrameWrap=await loadFrameWrap();if(controller.signal.aborted)return;
+  const FrameWrap=await waitForEncoder(controller.signal);if(controller.signal.aborted)return;
   // Dedicated output-sized GPU canvas, copied 1:1 into the shared encoder canvas.
   const gpu=document.createElement('canvas');output=createRenderer(gpu);
   const blob=await exportFrames({width:size,height:size,fps,duration:scene.duration,format:'mp4',bitrate:Math.round(24000000*(size/1080)**2*(fps/30)),
@@ -84,3 +84,12 @@ $('record').onclick=async()=>{
  }catch(error){$('status').textContent=error.name==='AbortError'?'Export canceled.':'Export failed: '+error.message;}
  finally{output?.dispose();if(controller.signal.aborted)$('status').textContent='Export canceled.';exportController=null;playing=wasPlaying;controls.forEach(el=>el.disabled=false);$('record').textContent='Export MP4';last=performance.now();sync();}
 };
+
+// Loading a remote codec must never hold cancellation hostage to the network.
+function waitForEncoder(signal){
+ return new Promise((resolve,reject)=>{
+  const abort=()=>{const e=new Error('Export canceled');e.name='AbortError';reject(e);};
+  if(signal.aborted){abort();return;}signal.addEventListener('abort',abort,{once:true});
+  loadFrameWrap().then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort));
+ });
+}
