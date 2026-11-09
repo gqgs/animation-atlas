@@ -12,8 +12,8 @@ let browser,page;const errors=[];
  await page.goto(study+'?study=sweep&phase=0&elevation=16');await page.waitForFunction(()=>document.querySelector('#meter').textContent.includes('512-ANGLE'),{timeout:90000});
  await page.screenshot({path:path.join(output,'sweep-ui.png')});
  const metrics=await page.evaluate(async()=>{
-  const {createRenderer}=await import('./renderer.mjs?v=sweep-1'),{defaults,readSettings,settingsQuery}=await import('./core.mjs?v=sweep-1');
-  const {loadSweepDensity}=await import('./sweep-renderer.mjs?v=sweep-1');await loadSweepDensity();
+  const {createRenderer}=await import('./renderer.mjs?v=camera-1'),{defaults,readSettings,settingsQuery}=await import('./core.mjs?v=camera-1');
+  const {loadSweepDensity}=await import('./sweep-renderer.mjs?v=camera-1');await loadSweepDensity();
   const canvas=document.createElement('canvas'),r=createRenderer(canvas),gl=canvas.getContext('webgl2');
   const frame=(p,t,size=360)=>{r.draw(p,t,size,size);const bytes=new Uint8Array(size*size*4);gl.readPixels(0,0,size,size,gl.RGBA,gl.UNSIGNED_BYTE,bytes);return bytes;};
   const diff=(a,b)=>a.reduce((s,v,i)=>s+(i%4===3?0:Math.abs(v-b[i])),0),original=frame(defaults,0),p={...defaults,study:'sweep',elevation:16};
@@ -27,7 +27,7 @@ let browser,page;const errors=[];
  await page.locator('#study').selectOption('sweep');await page.waitForFunction(()=>document.querySelector('#meter').textContent.includes('512-ANGLE'));await page.locator('summary',{hasText:'Capture the light'}).click();await page.locator('#exportSize').selectOption('720');
  const [download]=await Promise.all([page.waitForEvent('download',{timeout:120000}),page.locator('#png').click()]);const png=path.join(output,'sweep-export-720.png');await download.saveAs(png);const bytes=await fs.readFile(png);assert.equal(bytes.readUInt32BE(16),720);assert.equal(bytes.readUInt32BE(20),720);
  const movie=await page.evaluate(async()=>{
-  const {createRenderer}=await import('./renderer.mjs?v=sweep-1'),{defaults}=await import('./core.mjs?v=sweep-1'),{exportFrames,loadFrameWrap}=await import('../../shared/frame-export.mjs');
+  const {createRenderer}=await import('./renderer.mjs?v=camera-1'),{defaults}=await import('./core.mjs?v=camera-1'),{exportFrames,loadFrameWrap}=await import('../../shared/frame-export.mjs');
   const FrameWrap=await loadFrameWrap(),canvas=document.createElement('canvas'),renderer=createRenderer(canvas),p={...defaults,study:'sweep',elevation:16};
   try{const blob=await exportFrames({width:720,height:720,fps:30,duration:1,format:'mp4',createRecorder:o=>new FrameWrap(o),draw:({ctx,phase})=>{renderer.draw(p,phase,720,720);ctx.drawImage(canvas,0,0);},yieldEvery:1});return Array.from(new Uint8Array(await blob.arrayBuffer()));}finally{renderer.dispose();}
  });const moviePath=path.join(output,'sweep-720.mp4');await fs.writeFile(moviePath,Buffer.from(movie));const probe=JSON.parse(execFileSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=codec_name,width,height,nb_frames,duration','-of','json',moviePath],{encoding:'utf8'})).streams[0];assert.equal(probe.codec_name,'h264');assert.equal(probe.width,720);assert.equal(probe.height,720);assert.equal(Number(probe.nb_frames),30);console.log('SWEEP_MP4 '+JSON.stringify(probe));

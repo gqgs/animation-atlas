@@ -1,4 +1,4 @@
-import {cameraAt,palettes} from './core.mjs';
+import {cameraAt,palettes} from './core.mjs?v=camera-1';
 
 let loadedDensity,loadingDensity;
 
