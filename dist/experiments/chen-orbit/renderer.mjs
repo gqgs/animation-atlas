@@ -1,7 +1,7 @@
-import {buildAttractor,cameraAt,palettes,TAU,wrap} from './core.mjs';
-import {createSweepRenderer} from './sweep-renderer.mjs?v=sweep-1';
+import {buildAttractor,cameraAt,palettes,TAU,wrap} from './core.mjs?v=camera-1';
+import {createSweepRenderer} from './sweep-renderer.mjs?v=camera-1';
 import {buildLightTrail} from './patterns.mjs';
-import {createProjectionRenderer} from './projection-renderer.mjs?v=density-2';
+import {createProjectionRenderer} from './projection-renderer.mjs?v=camera-1';
 let cached;
 export const vertexShader=`#version 300 es
 precision highp float;

@@ -2,9 +2,10 @@
 export const TAU = 2 * Math.PI;
 export const parameters = Object.freeze({a:36, b:3, c:20});
 export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons', cameraOffset:0, study:'trajectory', level:2, guides:false, stride:8, lines:false, opacity:'scaled', sweepGain:1, sweepCutoff:.02});
-export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-80,80], zoom:[.65,1.65], glow:[.4,1.8], sweepGain:[.3,3], sweepCutoff:[0,.5]};
+export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-180,180], zoom:[.65,1.65], glow:[.4,1.8], sweepGain:[.3,3], sweepCutoff:[0,.5]};
 export const palettes = ['ember','glacier','pearl'];
 export const wrap = t => ((t % 1) + 1) % 1;
+export const wrapDegrees = degrees => ((degrees+180)%360+360)%360-180;
 export function derivative([x,y,z], {a,b,c}=parameters) { return [a*(y-x), c*y-x*z, x*y-b*z]; }
 export function rk4(p, dt=.002) {
   const add=(v,k,s)=>v.map((x,i)=>x+s*k[i]);
@@ -29,7 +30,15 @@ export function buildAttractor({count=180000, burn=6000, dt=.002}={}) {
 export function cameraAt(p, phase) {
   const t=TAU*wrap(phase+(p.cameraOffset||0)),moving=p.motion==='orbit';
   const pitch=p.elevation*Math.PI/180,amplitude=Math.min(.11,Math.max(0,(80-Math.abs(p.elevation))*Math.PI/180));
-  return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:pitch+(moving?amplitude*Math.sin(t):0),distance:4.4/p.zoom};
+  return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:pitch+(p.motion==='vertical'?t:moving?amplitude*Math.sin(t):0),distance:4.4/p.zoom};
+}
+// Keep the full camera frame and light phase when changing paths, including
+// the inverted back half of the vertical circuit. Euler angles may wrap, but
+// their rotation matrix stays continuous through both poles.
+export function switchCameraMotion(p,motion,phase){
+ if(!['orbit','vertical','still'].includes(motion))throw new RangeError('Invalid camera motion');
+ const camera=cameraAt(p,phase);
+ return {...p,motion,azimuth:wrapDegrees(camera.azimuth*180/Math.PI),elevation:wrapDegrees(camera.elevation*180/Math.PI),cameraOffset:wrap(-phase)};
 }
 export function readSettings(search) {
   const q=new URLSearchParams(search),p={...defaults};
@@ -43,7 +52,7 @@ export function readSettings(search) {
   if(q.get('lines')==='true')p.lines=true;
   if(q.get('guides')==='true')p.guides=true;
   if(palettes.includes(q.get('palette')))p.palette=q.get('palette');
-  if(['orbit','still'].includes(q.get('motion')))p.motion=q.get('motion');
+  if(['orbit','vertical','still'].includes(q.get('motion')))p.motion=q.get('motion');
   const v=Number(q.get('phase'));return {parameters:p,phase:Number.isFinite(v)?wrap(v):0,paused:q.has('phase')};
 }
 export function settingsQuery(p,phase){return new URLSearchParams({...p,phase:wrap(phase)}).toString();}

@@ -1,6 +1,6 @@
-import {cameraAt,palettes,TAU,wrap} from './core.mjs';
+import {cameraAt,palettes,TAU,wrap} from './core.mjs?v=camera-1';
 import {buildLightTrail} from './patterns.mjs';
-import {projectionSamples,guideVertices} from './projections.mjs?v=density-2';
+import {projectionSamples,guideVertices} from './projections.mjs?v=camera-1';
 export const vertexShader=`#version 300 es
 precision highp float;
 precision highp int;
