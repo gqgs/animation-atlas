@@ -514,20 +514,24 @@
     "category": "Dynamics",
     "date": "2026-11-09",
     "url": "experiments/chen-orbit/index.html",
-    "description": "The Chen–Čelikovský attractor, held in light. Circle a luminous 3D trajectory through violet, coral and amber, with seamless camera loops and deterministic high-resolution capture.",
+    "description": "A closed genus-2 sculpture with two real tunnels, asymmetrical lobes, illuminated rims and Chen-attractor grain. Circle the solid or compare it with the original chaotic trajectory.",
     "tags": [
-      "attractor",
+      "genus 2",
+      "surface",
       "3D",
-      "chaos",
+      "attractor",
       "Chen–Čelikovský",
-      "Paul Bourke",
       "WebGL2"
     ],
     "cover": "covers/chen-orbit.svg",
     "source": "downloads/chen-orbit-source.zip",
     "source_library_id": "libfile_3301184d2b9081919bb4d426d99b8f7e",
-    "note": "Study 023 · 180,000 samples · full-circle orbit · PNG & fixed-frame MP4",
+    "note": "Study 023 · closed genus-2 surface · two tunnels · original trace comparison",
     "variants": [
+      {
+        "title": "Original trajectory · comparison",
+        "url": "experiments/chen-orbit/index.html?form=trace&azimuth=0&elevation=12&phase=0"
+      },
       {
         "title": "Paul Bourke · reference",
         "url": "https://paulbourke.net/fractals/chen_celi/"
