@@ -6,10 +6,11 @@ import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {vertexShader,fragmentShader} from '../renderer.mjs';
 import {vertexShader as projectionVertex,fragmentShader as projectionFragment} from '../projection-renderer.mjs';
+import {vertexShader as sweepVertex,fragmentShader as sweepFragment} from '../sweep-renderer.mjs';
 const directory=mkdtempSync(join(tmpdir(),'chen-shaders-'));
 try{
  const vertex=join(directory,'chen.vert'),fragment=join(directory,'chen.frag');
- for(const [vs,fs] of [[vertexShader,fragmentShader],[projectionVertex,projectionFragment]]){
+ for(const [vs,fs] of [[vertexShader,fragmentShader],[projectionVertex,projectionFragment],[sweepVertex,sweepFragment]]){
   writeFileSync(vertex,vs);writeFileSync(fragment,fs);
   execFileSync('glslangValidator',['-l',vertex,fragment],{stdio:'inherit'});
  }
