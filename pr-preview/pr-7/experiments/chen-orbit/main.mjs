@@ -1,5 +1,5 @@
-import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs';
-import {createRenderer} from './renderer.mjs?v=precision-2';
+import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs?v=planes-1';
+import {createRenderer} from './renderer.mjs?v=planes-1';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
 const restored=readSettings(location.search),p=restored.parameters;
@@ -20,7 +20,9 @@ for(const [key,title,step,,group] of specs){
 function markCustom(){dirty=true;}
 function sync(){
  for(const [key,,,digits] of specs){$(key).value=p[key];$(key+'Value').value=p[key].toFixed(digits);}
- for(const key of ['motion','palette','pattern'])$(key).value=p[key];
+ for(const key of ['motion','palette','pattern','study','level'])$(key).value=p[key];
+ $('projection-controls').hidden=p.study!=='planes';$('guides').checked=p.guides;
+ $('intro').textContent=p.study==='planes'?'The same orbit, projected onto a growing fan of vertical planes. Each step bisects the angles between the previous planes.':'Two light trains follow the chaotic orbit, sweeping through its lobes and leaving soft trails. The original point cloud stays beneath them.';
  $('play').textContent=playing?'Pause animation':'Play animation';
  $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';dirty=true;
 }
@@ -33,7 +35,7 @@ function render(){
  if(!dirty&&key===previousKey)return;
  try{
   renderer.draw(p,phase,w,h);
-  $('meter').textContent=`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
+  $('meter').textContent=p.study==='planes'?`${2**p.level} PLANES / ${180/2**p.level}° SPACING / SAME SAMPLES`:`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
   $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';previousKey=key;dirty=false;
  }catch(error){graphicsFailure(error);renderer=null;sync();}
 }
@@ -42,6 +44,9 @@ requestAnimationFrame(animate);
 function togglePlay(){if(exportController||!renderer)return;playing=!playing;sync();}
 $('play').onclick=togglePlay;
 $('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
+$('study').onchange=()=>{p.study=$('study').value;sync();};
+$('level').onchange=()=>{p.level=Number($('level').value);sync();};
+$('guides').onchange=()=>{p.guides=$('guides').checked;sync();};
 $('pattern').onchange=()=>{p.pattern=$('pattern').value;sync();};
 $('palette').onchange=()=>{p.palette=$('palette').value;sync();};
 $('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;p.cameraOffset=wrap(-phase);sync();};

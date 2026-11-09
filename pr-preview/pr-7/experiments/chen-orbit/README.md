@@ -13,6 +13,12 @@ Serve `dist` with `python3 -m http.server 8080 --directory dist` and open `/expe
 - Light follows samples 36,000–47,999 in their actual order, with soft heads and fading tails. Both finite ends fade; no invented last-to-first connector. The complete cloud preserves the silhouette beneath the light.
 - Camera and illumination are deterministic functions of loop phase. The illumination is designed, not a claim that the chaotic trajectory is periodic.
 
+## Projection study
+
+Choose **Bisecting projection planes** to compare 1, 2, 4, 8 or 16 vertical planes through the original z axis. Start at xz (0°), add yz (90°), then insert 45°/135° and keep bisecting angular gaps modulo 180°. “Equidistant” means equal angular spacing: intersecting planes have zero physical distance.
+
+For angle θ, use d=(cos θ,sin θ,0) and project each original point to (x cos θ+y sin θ)d+(0,0,z). These are different orthogonal views of the same orbit, not rotated copies of one silhouette. A fixed every-eighth-sample subset controls cost; the original ordered light segment is shared by every plane. Guides reveal the construction. This is a superposition of projections, not a new attractor or invariant surface. The original 3D mode remains the default.
+
 ## Capture and checks
 
 Drag/scroll to compose; Space pauses; H hides controls. Scene links preserve settings. Reduced motion starts paused. PNG and MP4 render to a dedicated output-size canvas, at 720/1080/2160 square and 30/60 fps, using `../../shared/frame-export.mjs`; MP4 lazily loads FrameWrap and supports cancellation.

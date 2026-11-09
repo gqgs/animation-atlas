@@ -1,5 +1,6 @@
 import {buildAttractor,cameraAt,palettes,TAU,wrap} from './core.mjs';
 import {buildLightTrail} from './patterns.mjs';
+import {createProjectionRenderer} from './projection-renderer.mjs?v=planes-1';
 let cached;
 export const vertexShader=`#version 300 es
 precision highp float;
@@ -60,6 +61,7 @@ export function createRenderer(canvas) {
  const program=gl.createProgram(),vs=compile(gl.VERTEX_SHADER,vertexShader),fs=compile(gl.FRAGMENT_SHADER,fragmentShader);
  gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);
  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
+ let projectionRenderer;
  const model=cached||(cached=buildAttractor()),trail=buildLightTrail(model),resources=[];
  function upload(data){const buffer=gl.createBuffer(),vao=gl.createVertexArray();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);const loc=gl.getAttribLocation(program,'point');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,4,gl.FLOAT,false,0,0);resources.push({buffer,vao});return vao;}
  const vao=upload(model.data),trailVao=upload(trail.data);
@@ -68,6 +70,7 @@ export function createRenderer(canvas) {
  return {
   draw(p,phase,width=canvas.width,height=canvas.height){
    if(gl.isContextLost())throw new Error('Graphics context lost. Reload to restore the study.');
+   if(p.study==='planes'){projectionRenderer ||= createProjectionRenderer(canvas,model);return projectionRenderer.draw(p,phase,width,height);}
    if(canvas.width!==width)canvas.width=width;if(canvas.height!==height)canvas.height=height;
    gl.viewport(0,0,width,height);gl.clearColor(.012,.009,.021,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(program);gl.bindVertexArray(vao);
    const camera=cameraAt(p,phase);gl.uniform2f(uniforms.resolution,width,height);
@@ -85,6 +88,6 @@ export function createRenderer(canvas) {
    }
    return camera;
   },
-  dispose(){for(const {buffer,vao} of resources){gl.deleteBuffer(buffer);gl.deleteVertexArray(vao);}gl.deleteProgram(program);gl.getExtension('WEBGL_lose_context')?.loseContext();},
+  dispose(){projectionRenderer?.dispose();for(const {buffer,vao} of resources){gl.deleteBuffer(buffer);gl.deleteVertexArray(vao);}gl.deleteProgram(program);gl.getExtension('WEBGL_lose_context')?.loseContext();},
  };
 }

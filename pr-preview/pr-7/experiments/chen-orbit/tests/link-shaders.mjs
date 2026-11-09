@@ -5,11 +5,14 @@ import {join} from 'node:path';
 import {execFileSync,spawnSync} from 'node:child_process';
 import assert from 'node:assert/strict';
 import {vertexShader,fragmentShader} from '../renderer.mjs';
+import {vertexShader as projectionVertex,fragmentShader as projectionFragment} from '../projection-renderer.mjs';
 const directory=mkdtempSync(join(tmpdir(),'chen-shaders-'));
 try{
  const vertex=join(directory,'chen.vert'),fragment=join(directory,'chen.frag');
- writeFileSync(vertex,vertexShader);writeFileSync(fragment,fragmentShader);
- execFileSync('glslangValidator',['-l',vertex,fragment],{stdio:'inherit'});
+ for(const [vs,fs] of [[vertexShader,fragmentShader],[projectionVertex,projectionFragment]]){
+  writeFileSync(vertex,vs);writeFileSync(fragment,fs);
+  execFileSync('glslangValidator',['-l',vertex,fragment],{stdio:'inherit'});
+ }
  console.log('PASS · Independent GLSL ES shader compile/link');
  // A deliberately broken, active shared uniform verifies strict precision checks.
  writeFileSync(vertex,vertexShader.replace('in highp vec4 point;','uniform highp int layer;\nin highp vec4 point;').replace('gl_Position=vec4(xy*z,0.,z);','gl_Position=vec4(xy*z,0.,z); gl_Position.x+=float(layer)*1e-30;'));

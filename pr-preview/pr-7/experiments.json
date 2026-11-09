@@ -528,6 +528,10 @@
     "note": "Study 023 · traveling light · original Chen trajectory",
     "variants": [
       {
+        "title": "Projection planes · angular bisection",
+        "url": "experiments/chen-orbit/index.html?study=planes&level=2&elevation=24&azimuth=12&motion=still"
+      },
+      {
         "title": "Hold camera · traveling light",
         "url": "experiments/chen-orbit/index.html?motion=still"
       },
