@@ -19,7 +19,8 @@ export function step(x,y,a) {
 function escaped(x,y,limit=100) {
   return !Number.isFinite(x)||!Number.isFinite(y)||Math.abs(x)>limit||Math.abs(y)>limit;
 }
-export function inspectSeed(seed,{steps=3200,burn=500}={}) {
+export function inspectSeed(seed,{steps=3200,burn=500,filter='chaos',withPoints=false}={}) {
+  if(!['chaos','geometry'].includes(filter))throw new RangeError('Unknown seed filter');
   if(steps<=burn||burn<0) throw new RangeError('Invalid sampling window');
   const a=decodeSeed(seed),points=new Float64Array((steps-burn)*2);
   let x=.05,y=.05,tx=1,ty=0,logExpansion=0,samples=0;
@@ -51,9 +52,15 @@ export function inspectSeed(seed,{steps=3200,burn=500}={}) {
     const iy=Math.min(23,Math.floor(24*(points[2*i+1]-minY)/height));
     const idx=iy*24+ix;if(!grid[idx]){grid[idx]=1;occupancy++;}
   }
-  const accepted=lambda>.012&&occupancy>=65&&width<25&&height<25;
-  return {accepted,reason:accepted?'Promising candidate':'Periodic, insufficiently varied, or weak stretching',
+  // Geometric search deliberately accepts neutral/nonpositive exponents:
+  // invariant circles may have a largest Lyapunov exponent near zero.
+  // Occupancy still excludes short periodic cycles and trivial fixed points.
+  const accepted=occupancy>=65&&width<25&&height<25&&(filter==='geometry'||lambda>.012);
+  const result={accepted,
+    reason:accepted?'Promising candidate':'Periodic, insufficiently varied, or weak stretching',
     lambda,occupancy,width,height};
+  if(withPoints&&accepted)result.points=points;
+  return result;
 }
 export function buildOrbit(seed,count=52000,burn=1500){
   const a=decodeSeed(seed),points=new Float32Array(count*2),stretch=new Float32Array(count);

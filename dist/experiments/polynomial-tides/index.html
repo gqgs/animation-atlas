@@ -9,10 +9,22 @@
   <div class="actions"><button id="play">Pause</button><button id="hide">Hide UI · H</button></div>
   <label>Reference seed<select id="references"><option value="">Custom / discovered</option></select></label>
   <label>12-letter Sprott code<input id="seed" type="text" maxlength="12" spellcheck="false" autocomplete="off" value="GLXOESFTTPSV" aria-label="Attractor seed code"></label>
+  <label>Discovery target<select id="discoveryMode"><option value="chaos">Strange attractors · original</option><option value="ring">Round rings</option><option value="symmetry">Rotational symmetry</option><option value="balanced">Balanced geometry</option></select></label>
   <div class="actions"><button id="apply">Load seed</button><button id="discover" class="primary">Discover new</button></div>
+  <label>Top candidates from last search<select id="ranked"><option value="">Run a shape search to rank seeds…</option></select></label>
   <div class="actions"><button id="favorite">Save seed ★</button><button id="copySeed">Copy seed</button></div>
   <label>Saved discoveries<select id="saved"><option value="">Choose a saved seed…</option></select></label>
-  <div class="stats"><div>Finite-time λ <strong id="lambda">—</strong></div><div>24² occupancy <strong id="occupancy">—</strong></div><div>Seeds tested <strong id="attempts">0</strong></div></div>
+  <div class="stats">
+    <div>Finite-time λ <strong id="lambda">—</strong></div>
+    <div>24² occupancy <strong id="occupancy">—</strong></div>
+    <div>Isotropy <strong id="isotropy">—</strong></div>
+    <div>Radial consistency <strong id="radial">—</strong></div>
+    <div>Rotational similarity <strong id="symmetry">—</strong></div>
+    <div>Apparent symmetry <strong id="order">—</strong></div>
+    <div>Linear rotation residual <strong id="rotationResidual">—</strong></div>
+    <div>Shape / residual correlation <strong id="association">—</strong></div>
+    <div>Seeds tested <strong id="attempts">0</strong></div>
+  </div>
   <label>Palette<select id="palette"><option value="porcelain">Porcelain / indigo / copper</option><option value="nocturne">Nocturne / aurora</option><option value="ember">Ember / sea glass</option></select></label>
   <label>Filaments <output id="strandsValue"></output><input id="strands" type="range" min="8" max="44" step="1" value="22"></label>
   <label>Trail length <output id="trailValue"></output><input id="trail" type="range" min="100" max="720" step="10" value="300"></label>
@@ -28,7 +40,7 @@
   <p id="status" role="status">Space to pause · H to hide · Discover searches for bounded, expanding orbits.</p>
   <details><summary>What is this?</summary>
   <p>Each seed identifies twelve coefficients for Sprott's quadratic map. The field is drawn from actual iterates. Cached filaments gently drift and brighten with continuous closed-loop motion; the underlying recurrence never changes.</p>
-  <p>Discovery draws random codes from A–Y, tests for bounded orbits, positive finite-time stretching and spatial coverage, and confirms promising candidates with a longer run. Passing these tests does not prove mathematical chaos or that a seed is historically new.</p>
+  <p>The original search requires bounded orbits, positive finite-time stretching and spatial coverage. Shape search also admits near-neutral Lyapunov exponents, ranks confirmed orbits by covariance isotropy, radial consistency and rotational similarity (2–8 fold), and offers the best eight results. Metrics describe the actual sampled orbit, not the rendered drift. These are heuristics, not mathematical proofs of chaos, exact symmetry, or historical novelty.</p>
   <p>Based on <a href="https://paulbourke.net/fractals/sprott/" target="_blank" rel="noreferrer">Paul Bourke's polynomial attractors</a> and J. C. Sprott's 1993 paper. The exported MP4 samples the scene at fixed timestamps. Filaments are cached once per resolution and control change; frames only composite the cached images. Dragging sliders avoids costly repeated rebuilds.</p>
   <a href="./README.md">Source notes</a></details>
 </aside>
