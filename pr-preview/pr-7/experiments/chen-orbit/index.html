@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#030205"><title>Chen Orbit · Animation Atlas</title><link rel="stylesheet" href="style.css"></head>
+<body><main id="stage"><canvas id="scene" tabindex="0" aria-label="Three-dimensional Chen–Čelikovský attractor. Drag to orbit and scroll to zoom."></canvas>
+<header><a class="eyebrow" href="../../">ANIMATION ATLAS <span>/ 023</span></a><h1>Chen <em>Orbit</em></h1><p>Two wings. One restless trajectory.</p></header>
+<div class="caption"><span class="dot"></span><span>CHAOS, HELD IN LIGHT</span></div>
+<div class="stage-footer"><span>CHEN–ČELIKOVSKÝ<br><small>a 36 &nbsp; b 3 &nbsp; c 20</small></span><span id="meter">INTEGRATING ORBIT…</span></div>
+<button id="show" hidden>Show controls · H</button></main>
+<aside aria-label="Study controls"><div class="panel-heading"><span class="eyebrow">THE OBSERVATORY</span><button id="hide" title="Hide controls" aria-label="Hide controls">↗</button></div>
+<p class="intro">A single chaotic path becomes a luminous sculpture. Circle it to see the folds hiding between the wings.</p>
+<div class="buttons"><button id="play" class="primary">Pause orbit</button><button id="reset">Reset view</button></div>
+<label>Light<select id="palette"><option value="ember">01 / Ember & violet</option><option value="glacier">02 / Glacial light</option><option value="pearl">03 / Silver & gold</option></select></label>
+<label>Camera<select id="motion"><option value="orbit">Slow, full-circle orbit</option><option value="still">Hold this viewpoint</option></select></label>
+<div id="primary-sliders"></div>
+<label>Loop position <output id="phaseValue">0%</output><input id="phase" type="range" min="0" max="1" step=".0001" value="0"></label>
+<details><summary>Compose the view</summary><p>Drag to orbit. Scroll to move closer. These controls also work by keyboard.</p><div id="camera-sliders"></div></details>
+<details><summary>Capture the light</summary><div class="buttons"><label>Square size<select id="exportSize"><option value="720">720 × 720</option><option value="1080" selected>1080 × 1080</option><option value="2160">2160 × 2160</option></select></label><label>Frame rate<select id="exportFps"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select></label></div><div class="buttons"><button id="png">Save PNG</button><button id="record">Export MP4</button><button id="link">Copy scene link</button><button id="full">Fullscreen</button></div><p id="status" role="status">Direct-resolution capture. MP4 encoder loads only when requested. Export may take longer than playback.</p></details>
+<details><summary>The underlying system</summary><p>Not a flat image in space. These are 180,000 samples of the actual three-dimensional Chen–Čelikovský system, integrated with a fixed-step fourth-order Runge–Kutta method.</p><p class="equations">ẋ = 36(y − x)<br>ẏ = 20y − xz<br>ż = xy − 3z</p><p>Inspired by <a href="https://paulbourke.net/fractals/chen_celi/" target="_blank" rel="noreferrer">Paul Bourke's October 2010 reference</a>. Height colors the orbit; luminous pulses are an artistic lighting effect, not physical particles. The chaotic trajectory is fixed. The camera and light return smoothly every loop.</p><a href="README.md">Notes & source</a></details>
+<p class="hint">Space pauses · H hides controls<br>Drag to orbit · scroll to zoom</p></aside><script type="module" src="main.mjs"></script></body></html>

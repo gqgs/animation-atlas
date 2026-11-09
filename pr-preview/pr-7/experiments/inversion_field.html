@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#080812">
+<title>Inversion Field — Prismatic Tunnel</title>
+<style>
+  :root { color-scheme: dark; --edge:rgba(183,180,255,.20); --panel:rgba(9,9,24,.73); --text:#eeeafa; --muted:#aaa7c6; --pink:#f25bd8; --blue:#62a2ff; }
+  * { box-sizing: border-box; }
+  html,body { margin:0; width:100%; height:100%; overflow:hidden; background:#05030c; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--text); }
+  #scene { width:100%; height:100%; display:block; touch-action:none; cursor:grab; }
+  #scene:active { cursor:grabbing; }
+  .vignette { position:fixed;inset:0;pointer-events:none; background: radial-gradient(ellipse 65% 70% at 50% 48%, transparent 37%, rgba(4,2,13,.17) 73%,rgba(2,1,8,.73) 100%); }
+  .topline { position:fixed;left:26px;top:22px;pointer-events:none;display:flex;align-items:center;gap:10px;letter-spacing:.19em;text-transform:uppercase;font-size:10px;font-weight:700;color:#c8b6ff;text-shadow:0 0 12px #d348d988; }
+  .topline .mark { width:10px;height:10px;border:1px solid var(--pink);transform:rotate(45deg);box-shadow:0 0 14px #f44bc4aa; }
+  .controls { position:fixed;left:24px;top:60px;width:min(304px,calc(100vw - 48px)); background:var(--panel);border:1px solid var(--edge);border-radius:17px;padding:20px 19px 18px;box-shadow:0 16px 65px #0008, inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(18px);max-height:calc(100vh - 140px);overflow:auto; scrollbar-width:thin; scrollbar-color:#625479 transparent;transition:transform .2s,opacity .2s; }
+  .controls.collapsed { opacity:0;transform:translateX(-120%);pointer-events:none; }
+  .title {font-size:23px;font-weight:650;letter-spacing:-.045em;line-height:1.12;margin:1px 0 7px;}
+  .description { font-size:12px;line-height:1.55;color:#b1afc7;margin:0 0 20px; }
+  .chip { font-size:9px;letter-spacing:.14em;color:#ef8ce7;border:1px solid #f867df44;padding:3px 6px;border-radius:4px;vertical-align:3px;margin-left:3px; }
+  .divider {height:1px;background:linear-gradient(90deg,#9180dd66,transparent);margin:16px 0;}
+  .control {margin:15px 0;}
+  .control .lbl { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;font-size:12px;color:#dcd8f0; }
+  .control output { color:#8ed0ff;font:11px ui-monospace,SFMono-Regular,monospace; }
+  input[type="range"] {appearance:none;-webkit-appearance:none;width:100%;height:3px;border-radius:100px;outline:none;background:linear-gradient(90deg,#854adf 0%,#ed57c9 65%,#45366b 65%);cursor:pointer;}
+  input[type="range"]::-webkit-slider-thumb {appearance:none;width:13px;height:13px;border-radius:50%;background:#f8e3ff;border:2px solid #dd7fe8;box-shadow:0 0 9px #da43e766;}
+  input[type="range"]::-moz-range-thumb {width:10px;height:10px;border-radius:50%;background:#f8e3ff;border:2px solid #dd7fe8;}
+  .row {display:flex;gap:8px;flex-wrap:wrap;}
+  button {cursor:pointer;font:inherit;font-size:11px;font-weight:600;border-radius:9px;padding:10px 12px;background:rgba(94,73,160,.18);color:#e6dffc;border:1px solid rgba(173,153,239,.27);transition:.15s background,.15s border-color;}
+  button:hover {background:rgba(155,79,194,.27);border-color:#db88ed90;}
+  button.active {background:linear-gradient(135deg,#8f3b9a77,#514cb777);border-color:#e188f99c;}
+  button:focus-visible, input:focus-visible {outline:2px solid #9eb8ff;outline-offset:3px;}
+  .row button { flex:1;white-space:nowrap; }
+  .micro {color:#918cab;font-size:10px;line-height:1.6;margin:13px 0 0;}
+  .help {position:fixed;right:22px;bottom:20px;color:#cdc1eeaa;text-align:right;font-size:10px;line-height:1.7;pointer-events:none;text-shadow:0 1px 8px #000;}
+  .help strong {color:#f4dafc;font-weight:600;}
+  .status {position:fixed;left:25px;bottom:20px;font:10px ui-monospace,SFMono-Regular,monospace;color:#cdafeec9;pointer-events:none;text-shadow:0 1px 8px #000;}
+  #hudToggle {position:fixed;top:17px;right:20px;padding:8px 11px;border-radius:99px;background:#0b0a1c88;backdrop-filter:blur(10px);}
+  .loading {position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;font-size:12px;letter-spacing:.09em;color:#d6c0ff;pointer-events:none;text-shadow:0 0 15px #c432ef;}
+  .loading .ring {width:39px;height:39px;border-radius:50%;border:2px solid #a656f377;border-top-color:#ff93dc;animation:spin 1s linear infinite;margin:0 auto 15px;}
+  @keyframes spin {to{transform:rotate(360deg)}}
+  #notice {display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:410px;width:calc(100vw - 50px);background:#141024e8;border:1px solid #ef93e1aa;border-radius:15px;padding:20px;font-size:13px;line-height:1.7;text-align:center;}
+  @media(max-width:650px) {
+    .topline {left:15px;top:13px;font-size:9px;}
+    .controls {top:auto;bottom:54px;left:12px;width:min(280px,calc(100vw - 24px));max-height:min(66vh,540px);padding:15px 15px 14px;border-radius:15px;}
+    .controls.collapsed {transform:translateY(120%);}
+    .title {font-size:20px;}
+    .description {font-size:11px;margin-bottom:12px;}
+    .control {margin:12px 0;}
+    .help {bottom:10px;right:13px;max-width:42%;font-size:9px;}
+    .status {bottom:10px;left:12px;font-size:9px;}
+    #hudToggle {top:9px;right:12px;}
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "../vendor/0.169.0/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="scene" aria-label="Interactive Three.js prismatic fractal tunnel"></canvas>
+<div class="vignette"></div>
+<div class="topline"><span class="mark"></span> Generative geometry · Experiment 001</div>
+<section class="controls" id="controls" aria-label="Simulation controls">
+  <div class="title">INVERSION FIELD <span class="chip">3D</span></div>
+  <p class="description">A prismatic tunnel blooming from the inside out. Radial symmetry + helical repetition + travelling expansion waves.</p>
+  <div class="row">
+    <button id="pause" class="active">Ⅱ Pause</button>
+    <button id="reverse">↔ Reverse flow</button>
+  </div>
+  <div class="divider"></div>
+  <div class="control"><div class="lbl"><label for="speed">Flow velocity</label><output id="speedOut">1.0×</output></div><input id="speed" type="range" min="0" max="3" step="0.05" value="1.0"></div>
+  <div class="control"><div class="lbl"><label for="pulse">Explosion strength</label><output id="pulseOut">85%</output></div><input id="pulse" type="range" min="0" max="2.0" step="0.05" value="0.85"></div>
+  <div class="control"><div class="lbl"><label for="twist">Helical twist</label><output id="twistOut">0.29 rad</output></div><input id="twist" type="range" min="-0.8" max="0.8" step="0.01" value="0.29"></div>
+  <div class="control"><div class="lbl"><label for="petals">Rotational sectors</label><output id="petalsOut">14</output></div><input id="petals" type="range" min="6" max="24" step="2" value="14"></div>
+  <div class="control"><div class="lbl"><label for="shells">Nested shells</label><output id="shellsOut">24</output></div><input id="shells" type="range" min="10" max="34" step="2" value="24"></div>
+  <div class="divider"></div>
+  <div class="row">
+    <button id="presetBlast" class="active">Inside → Out</button>
+    <button id="presetStill">Kaleidoscope</button>
+  </div>
+  <div class="row" style="margin-top:8px"><button id="reset">↺ Reset camera</button><button id="fullscreen">⛶ Fullscreen</button></div>
+  <p class="micro">Drag to look · Scroll or pinch to fly · WASD / arrow keys to move · Space to pause · H to hide controls</p>
+</section>
+<button id="hudToggle" aria-label="Show or hide the controls">Hide controls</button>
+<div class="status" id="status">INITIALIZING GEOMETRY…</div>
+<div class="help"><strong>PROCEDURAL · NO TEXTURES</strong><br>Observe the wave moving from core to rim.</div>
+<div class="loading" id="loading"><div class="ring"></div>CONSTRUCTING THE TUNNEL</div>
+<div id="notice"></div>
+<script>
+  // A failed CDN import prevents the module from executing, so handle that case outside it.
+  window.setTimeout(() => {
+    const spinner = document.getElementById('loading');
+    if (spinner && spinner.style.display !== 'none') {
+      spinner.style.display = 'none';
+      const alert = document.getElementById('notice');
+      alert.style.display = 'block';
+      alert.textContent = 'The Three.js module could not load. This simulation needs an internet connection to retrieve Three.js from jsDelivr. Try opening this file in Chrome or Firefox while online.';
+    }
+  }, 12000);
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('scene');
+const loading = document.getElementById('loading');
+const statusEl = document.getElementById('status');
+const opts = { speed:1, pulse:.85, twist:.29, petals:14, shells:24, paused:false, reverse:false };
+let time = 2.1, flow = 0, allRings = [], scene, camera, renderer, stars, dustCoords, previous = 0;
+let yaw=0, pitch=0, pointer=null, pinch=null;
+const pressed=new Set();
+const tmpForward = new THREE.Vector3(), tmpRight = new THREE.Vector3(), tmpUp = new THREE.Vector3(0,1,0);
+const frontZ = 9.5, spacing = 2.82;
+const mod = (n,m) => ((n % m)+m)%m;
+const rng = (seed) => () => {seed=(Math.imul(1664525,seed)+1013904223)|0; return (seed>>>0)/4294967296};
+const rand = rng(142857);
+
+function init(){
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x040310);
+  scene.fog = new THREE.FogExp2(0x090317, 0.011);
+  camera = new THREE.PerspectiveCamera(69,1,0.05,180);
+  camera.position.set(0,0,18);
+  camera.rotation.order='YXZ';
+  renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.4;
+  resize();
+  window.addEventListener('resize',resize);
+  makeStars();
+  createShells();
+  bindUI();
+  bindNavigation();
+  loading.style.display='none';
+  requestAnimationFrame(animate);
+}
+function resize(){
+  const w=Math.max(window.innerWidth,1),h=Math.max(window.innerHeight,1);
+  camera.aspect=w/h;
+  camera.fov= w/h<.7 ? 72 : 65;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);
+}
+
+function color(h,s,l,lum=1){return new THREE.Color().setHSL(mod(h,1),s,l).multiplyScalar(lum)}
+function polar(r,angle,z){return new THREE.Vector3(r*Math.cos(angle),r*Math.sin(angle),z)}
+function makeShell(index,nPetals){
+  const group=new THREE.Group();
+  const verts=[],colors=[],glowVerts=[],glowColors=[],beamVerts=[],beamColors=[];
+  const section=2*Math.PI/nPetals;
+  const near=Math.max(0,1-index/10);
+  const middle = Math.exp(-Math.pow((index-11)/8,2));
+  let baseHue=.65 + .16*Math.sin(index*.31);
+  const beamHue = mod((index<5 ? .91 : .78) + .12*Math.sin(index*.45),1);
+  function triangle(a,b,c,col,variant){
+    const palette=[.84,1.03,.63,1.3,.95,1.14,.72,.78,1.17];
+    const mult=palette[variant%palette.length];
+    const shade=[1.05,.61,1.3];
+    for(let j=0;j<3;j++) {
+      const v=[a,b,c][j]; verts.push(v.x,v.y,v.z);
+      const cc=col.clone().multiplyScalar(mult*shade[j]);
+      colors.push(cc.r,cc.g,cc.b);
+    }
+  }
+  function ribbon(a,b,width,rgbaV,rgbaC){
+    const dx=b.x-a.x,dy=b.y-a.y,dl=Math.hypot(dx,dy)||1;
+    const nx=dy/dl*width*.5,ny=-dx/dl*width*.5;
+    const zOff=.025;
+    const pts=[a.x-nx,a.y-ny,a.z+zOff,a.x+nx,a.y+ny,a.z+zOff,b.x+nx,b.y+ny,b.z+zOff,a.x-nx,a.y-ny,a.z+zOff,b.x+nx,b.y+ny,b.z+zOff,b.x-nx,b.y-ny,b.z+zOff];
+    rgbaV.push(...pts);
+    for(let j=0;j<6;j++)rgbaC.push(ribbonColor.r,ribbonColor.g,ribbonColor.b);
+  }
+  let ribbonColor = new THREE.Color();
+  for(let j=0;j<nPetals;j++){
+    const a=(j+.5)*section;
+    const variation=Math.sin(j*2.7+index*.84);
+    const innerR=2.4+0.12*Math.sin(j*2.2+index*.5);
+    const outerR=8.15+.38*Math.sin(j*1.8+index*.37);
+    const midR=5.35+.18*variation;
+    const L=polar(innerR,a-section*.45,+.16);
+    const R=polar(innerR,a+section*.45,+.16);
+    const C=polar(midR,a,+.85+.16*variation);
+    const OL=polar(outerR,a-section*.56,-.42);
+    const OR=polar(outerR,a+section*.56,-.42);
+    const M=polar(outerR*.79,a,+.58);
+    const ML=polar(midR*.94,a-section*.45,+.07);
+    const MR=polar(midR*.94,a+section*.45,+.07);
+    const nearTint=(index<5) ? .93 : .67;
+    const h=mod(baseHue+.045*Math.sin(j*1.4+index*.2),1);
+    const dark=color(near ? mod(.91+ j*.014,1): h, .83, .135 + .06*middle);
+    const contrast=color(mod(h+.17+.04*variation,1),.92,.21+.03*middle);
+    const magenta=color(mod(.77+.025*Math.sin(index*.32+j),1),.89,.19+.04*middle);
+    const cyan=color(.54+.065*Math.sin(index*.1+j*.3),.89,.16+.02*middle);
+    // The unequal facet luminances create the folded, iridescent glass effect.
+    triangle(L,C,R,dark,1);
+    triangle(L,ML,C,contrast,3);
+    triangle(ML,OL,C,nearTint>.8? magenta:cyan,2);
+    triangle(OL,M,C,dark,4);
+    triangle(M,OR,C,magenta,5);
+    triangle(OR,MR,C,contrast,1);
+    triangle(MR,R,C,dark,7);
+    triangle(OL,OR,M,contrast,0);
+    triangle(OL,ML,L,dark,8);
+    triangle(OR,R,MR,cyan,6);
+    ribbonColor = color(mod(beamHue + .1*(j%3===0),1),.97,.49 + .06*middle,1.55);
+    const edges=[[OL,ML],[ML,L],[L,C],[C,R],[R,MR],[MR,OR],[OL,M],[M,OR],[M,C]];
+    edges.forEach(([p,q],e)=>{
+      if(e === 2 || e === 3 || e === 6 || e === 7 || j%3===0){
+        ribbon(p,q,.15,glowVerts,glowColors);
+        ribbon(p,q,.023,beamVerts,beamColors);
+      }
+    });
+    // A broken neon zigzag between neighboring petals, suggestive of an energy lattice.
+    ribbonColor=color(.81+.17*(j%4===0),.99,.53,1.95);
+    if(index>2 && index<21){
+      ribbon(ML,MR,.095,glowVerts,glowColors);
+      ribbon(ML,MR,.018,beamVerts,beamColors);
+    }
+  }
+  function geo(pos,col){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));g.computeBoundingSphere();return g}
+  const faces = new THREE.Mesh(geo(verts,colors),new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,transparent:true,opacity:index<3?.91:.83,depthWrite:true}));
+  const blur = new THREE.Mesh(geo(glowVerts,glowColors),new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,transparent:true,opacity:.17,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,toneMapped:false}));
+  const beam = new THREE.Mesh(geo(beamVerts,beamColors),new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,transparent:true,opacity:.77,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,toneMapped:false}));
+  blur.renderOrder=20; beam.renderOrder=21;
+  group.add(faces,blur,beam);
+  group.userData={blur,beam,faces,index};
+  return group;
+}
+function disposeGroup(group){group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose()});scene.remove(group)}
+function createShells(){
+  allRings.forEach(disposeGroup);
+  allRings=[];
+  for(let i=0;i<opts.shells;i++){
+    const g=makeShell(i,opts.petals);
+    scene.add(g);
+    allRings.push(g);
+  }
+  statusEl.textContent=`${opts.shells} SHELLS · ${opts.petals}-FOLD SYMMETRY · LIVE`;
+}
+function makeStars(){
+  const count=1100, pos=new Float32Array(count*3),col=new Float32Array(count*3);dustCoords=pos;
+  for(let i=0;i<count;i++){
+    const a=rand()*Math.PI*2, r=Math.sqrt(rand())*16;
+    pos[i*3]=Math.cos(a)*r;
+    pos[i*3+1]=Math.sin(a)*r;
+    pos[i*3+2]=rand()*(-85)+12;
+    const c=color((rand()>.45?.78:.57)+rand()*.07,.9,.45+rand()*.34);
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const texCanvas=document.createElement('canvas');texCanvas.width=32;texCanvas.height=32;
+  const ctx=texCanvas.getContext('2d'),grad=ctx.createRadialGradient(16,16,0,16,16,16);
+  grad.addColorStop(0,'rgba(255,255,255,1)');grad.addColorStop(.2,'rgba(255,255,255,.86)');grad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,32,32);
+  const tex=new THREE.CanvasTexture(texCanvas);
+  stars=new THREE.Points(g,new THREE.PointsMaterial({size:.25,map:tex,transparent:true,opacity:.73,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,sizeAttenuation:true}));
+  scene.add(stars);
+}
+function animate(now){
+  requestAnimationFrame(animate);
+  let dt=previous?Math.min((now-previous)/1000,.055):0;
+  previous=now;
+  if(!opts.paused){time+=dt*(.24+opts.speed*.62)* (opts.reverse?-1:1);flow+=dt*opts.speed*4.0*(opts.reverse?-1:1);}
+  navigate(dt);
+  const length=opts.shells*spacing;
+  // One travelling Gaussian growth wave runs from the distant center toward the camera.
+  const wavePosition=mod((opts.shells-1)-time*1.85,opts.shells+3);
+  for(let i=0;i<allRings.length;i++){
+    const g=allRings[i],d=g.userData;
+    const depth=mod(i*spacing-flow,length);
+    g.position.z=frontZ-depth;
+    const wrapIndex=depth/spacing;
+    const pulseDist=Math.min(Math.abs(wrapIndex-wavePosition), Math.abs(wrapIndex-wavePosition+opts.shells), Math.abs(wrapIndex-wavePosition-opts.shells));
+    const pulse=Math.exp(-.5*Math.pow(pulseDist/2.1,2));
+    const breathing=.024*Math.sin(time*1.7+i*.48);
+    const expansion=1+opts.pulse*.52*pulse+breathing;
+    g.scale.set(expansion, expansion, 1 + pulse*.13*opts.pulse);
+    g.rotation.z=i*opts.twist + time*(.12 + i*.007) * (opts.reverse?-1:1);
+    d.beam.material.opacity=.62+.27*pulse;
+    d.blur.material.opacity=.12+.17*pulse;
+  }
+  stars.rotation.z=time*.016;
+  renderer.render(scene,camera);
+  if(now%650<17){statusEl.textContent=`${opts.shells} SHELLS · ${opts.petals}-FOLD · ${opts.paused?'PAUSED':opts.reverse?'INWARD':'OUTWARD'} FLOW`}
+}
+function clampCamera(){ camera.position.z=THREE.MathUtils.clamp(camera.position.z,-46,42); camera.position.x=THREE.MathUtils.clamp(camera.position.x,-32,32); camera.position.y=THREE.MathUtils.clamp(camera.position.y,-32,32); }
+function navigate(dt){
+  const f=tmpForward.set(0,0,-1).applyQuaternion(camera.quaternion);
+  const r=tmpRight.set(1,0,0).applyQuaternion(camera.quaternion);
+  const velocity=(pressed.has('Shift')?17:6.7)*dt;
+  if(pressed.has('w')||pressed.has('ArrowUp'))camera.position.addScaledVector(f,velocity);
+  if(pressed.has('s')||pressed.has('ArrowDown'))camera.position.addScaledVector(f,-velocity);
+  if(pressed.has('a')||pressed.has('ArrowLeft'))camera.position.addScaledVector(r,-velocity);
+  if(pressed.has('d')||pressed.has('ArrowRight'))camera.position.addScaledVector(r,velocity);
+  clampCamera();
+}
+function cameraRotation(){camera.rotation.set(pitch,yaw,0,'YXZ')}
+function resetCamera(){camera.position.set(0,0,18);yaw=0;pitch=0;cameraRotation()}
+function bindNavigation(){
+  canvas.addEventListener('pointerdown',e=>{
+    canvas.setPointerCapture(e.pointerId);
+    pointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+  });
+  canvas.addEventListener('pointermove',e=>{
+    if(!pointer||e.pointerId!==pointer.id||pinch!==null)return;
+    const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;
+    yaw-=dx*.004; pitch-=dy*.004;
+    pitch=THREE.MathUtils.clamp(pitch,-1.47,1.47);
+    cameraRotation(); pointer.x=e.clientX;pointer.y=e.clientY;
+  });
+  canvas.addEventListener('pointerup',()=>pointer=null);
+  canvas.addEventListener('pointercancel',()=>pointer=null);
+  canvas.addEventListener('wheel',e=>{e.preventDefault();
+    tmpForward.set(0,0,-1).applyQuaternion(camera.quaternion);
+    camera.position.addScaledVector(tmpForward,e.deltaY*-.015);clampCamera();
+  },{passive:false});
+  // Native mobile pinch navigation.
+  canvas.addEventListener('touchstart',e=>{if(e.touches.length===2){pinch=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);pointer=null;}},{passive:true});
+  canvas.addEventListener('touchmove',e=>{if(e.touches.length===2&&pinch!==null){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);tmpForward.set(0,0,-1).applyQuaternion(camera.quaternion);camera.position.addScaledVector(tmpForward,(d-pinch)*.045);clampCamera();pinch=d;}},{passive:true});
+  canvas.addEventListener('touchend',e=>{if(e.touches.length<2)pinch=null;},{passive:true});
+  window.addEventListener('keydown',e=>{
+    if(e.target instanceof HTMLInputElement) return;
+    if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+    if(e.code==='Space'&&!e.repeat)togglePause();
+    if(e.key.toLowerCase()==='r'&&!e.repeat)resetCamera();
+    if(e.key.toLowerCase()==='h'&&!e.repeat)toggleHUD();
+    pressed.add(e.key.length===1?e.key.toLowerCase():e.key);
+  });
+  window.addEventListener('keyup',e=>pressed.delete(e.key.length===1?e.key.toLowerCase():e.key));
+  window.addEventListener('blur',()=>pressed.clear());
+}
+function updateSlider(id,val){const el=document.getElementById(id);el.value=val;el.dispatchEvent(new Event('input'));}
+function togglePause(){opts.paused=!opts.paused;document.getElementById('pause').textContent=opts.paused?'▶ Resume':'Ⅱ Pause';document.getElementById('pause').classList.toggle('active',!opts.paused)}
+function toggleHUD(){let c=document.getElementById('controls');c.classList.toggle('collapsed');document.getElementById('hudToggle').textContent=c.classList.contains('collapsed')?'Show controls':'Hide controls';}
+function bindUI(){
+  const settings=[['speed',v=>`${v.toFixed(2)}×`,false],['pulse',v=>`${Math.round(v*100)}%`,false],['twist',v=>`${v.toFixed(2)} rad`,false],['petals',v=>`${v}`,true],['shells',v=>`${v}`,true]];
+  settings.forEach(([id,fmt,rebuild])=>{const el=document.getElementById(id),out=document.getElementById(id+'Out');const update=()=>{opts[id]=rebuild?Number.parseInt(el.value):Number.parseFloat(el.value);out.textContent=fmt(opts[id]);const p=(el.value-el.min)/(el.max-el.min)*100;el.style.background=`linear-gradient(90deg,#8854e9 0%,#eb62ce ${p}%,#45366b ${p}%)`;if(rebuild)createShells();};el.addEventListener('input',update);updateSliderStyle(el);});
+  document.getElementById('pause').addEventListener('click',togglePause);
+  document.getElementById('reverse').addEventListener('click',()=>{opts.reverse=!opts.reverse;const b=document.getElementById('reverse');b.classList.toggle('active',opts.reverse);b.textContent=opts.reverse?'↔ Flow inward':'↔ Reverse flow';});
+  document.getElementById('reset').addEventListener('click',resetCamera);
+  document.getElementById('hudToggle').addEventListener('click',toggleHUD);
+  document.getElementById('presetBlast').addEventListener('click',()=>{updateSlider('speed',1.0);updateSlider('pulse',.85);updateSlider('twist',.29);setPreset('presetBlast');});
+  document.getElementById('presetStill').addEventListener('click',()=>{updateSlider('speed',.2);updateSlider('pulse',.15);updateSlider('twist',.06);setPreset('presetStill');});
+  document.getElementById('fullscreen').addEventListener('click',()=>{if(document.fullscreenElement)document.exitFullscreen?.();else document.documentElement.requestFullscreen?.();});
+}
+function updateSliderStyle(el){const p=(el.value-el.min)/(el.max-el.min)*100;el.style.background=`linear-gradient(90deg,#8854e9 0%,#eb62ce ${p}%,#45366b ${p}%)`;}
+function setPreset(active){for(const id of ['presetBlast','presetStill'])document.getElementById(id).classList.toggle('active',id===active)}
+try {init();} catch(error) {loading.style.display='none';const box=document.getElementById('notice');box.style.display='block';box.textContent='Unable to initialize WebGL: '+error.message;console.error(error);}
+</script>
+</body>
+</html>
