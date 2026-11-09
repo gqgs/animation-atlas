@@ -506,5 +506,36 @@
         "url": "downloads/spiral-julia-source.zip"
       }
     ]
+  },
+  {
+    "id": "chen-orbit",
+    "title": "Chen Orbit",
+    "index": 23,
+    "category": "Dynamics",
+    "date": "2026-11-09",
+    "url": "experiments/chen-orbit/index.html",
+    "description": "The Chen–Čelikovský attractor, held in light. Circle a luminous 3D trajectory through violet, coral and amber, with seamless camera loops and deterministic high-resolution capture.",
+    "tags": [
+      "attractor",
+      "3D",
+      "chaos",
+      "Chen–Čelikovský",
+      "Paul Bourke",
+      "WebGL2"
+    ],
+    "cover": "covers/chen-orbit.svg",
+    "source": "downloads/chen-orbit-source.zip",
+    "source_library_id": "libfile_3301184d2b9081919bb4d426d99b8f7e",
+    "note": "Study 023 · 180,000 samples · full-circle orbit · PNG & fixed-frame MP4",
+    "variants": [
+      {
+        "title": "Paul Bourke · reference",
+        "url": "https://paulbourke.net/fractals/chen_celi/"
+      },
+      {
+        "title": "Source & math notes",
+        "url": "downloads/chen-orbit-source.zip"
+      }
+    ]
   }
 ]
