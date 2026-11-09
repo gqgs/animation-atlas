@@ -24,6 +24,18 @@ jobs:
           sudo apt-get install -y ffmpeg
           npm install --prefix "$RUNNER_TEMP/chen-qa" --no-save playwright@1.62.1
           "$RUNNER_TEMP/chen-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Render early visual review
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/chen-visual-output
+          QA_VISUAL_ONLY: '1'
+        run: node dist/experiments/chen-orbit/tests/browser-test.cjs
+      - name: Publish early visual evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: chen-orbit-visual
+          path: ${{ runner.temp }}/chen-visual-output
+          retention-days: 14
       - name: Test render, controls, PNG and actual MP4
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright

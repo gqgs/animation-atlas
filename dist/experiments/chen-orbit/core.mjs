@@ -1,7 +1,7 @@
 // Chen–Čelikovský system, parameters from Paul Bourke's October 2010 reference.
 export const TAU = 2 * Math.PI;
 export const parameters = Object.freeze({a:36, b:3, c:20});
-export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit'});
+export const defaults = Object.freeze({duration:48, azimuth:-24, elevation:18, zoom:1, glow:1, palette:'ember', motion:'orbit', form:'sculpture'});
 export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-80,80], zoom:[.65,1.65], glow:[.4,1.8]};
 export const palettes = ['ember','glacier','pearl'];
 export const wrap = t => ((t % 1) + 1) % 1;
@@ -34,6 +34,7 @@ export function cameraAt(p, phase) {
 export function readSettings(search) {
   const q=new URLSearchParams(search),p={...defaults};
   for(const [key,[lo,hi]] of Object.entries(limits))if(q.has(key)&&q.get(key).trim()&&Number.isFinite(Number(q.get(key))))p[key]=Math.max(lo,Math.min(hi,Number(q.get(key))));
+  if(['sculpture','trace'].includes(q.get('form')))p.form=q.get('form');
   if(palettes.includes(q.get('palette')))p.palette=q.get('palette');
   if(['orbit','still'].includes(q.get('motion')))p.motion=q.get('motion');
   const v=Number(q.get('phase'));return {parameters:p,phase:Number.isFinite(v)?wrap(v):0,paused:q.has('phase')};

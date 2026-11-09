@@ -20,7 +20,7 @@ for(const [key,title,step,,group] of specs){
 function markCustom(){dirty=true;}
 function sync(){
  for(const [key,,,digits] of specs){$(key).value=p[key];$(key+'Value').value=p[key].toFixed(digits);}
- for(const key of ['motion','palette'])$(key).value=p[key];
+ for(const key of ['motion','palette','form'])$(key).value=p[key];
  $('play').textContent=playing?'Pause orbit':'Play orbit';
  $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';dirty=true;
 }
@@ -33,7 +33,7 @@ function render(){
  if(!dirty&&key===previousKey)return;
  try{
   renderer.draw(p,phase,w,h);
-  $('meter').textContent=`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
+  $('meter').textContent=`${p.form==='sculpture'?'CLOSED SURFACE / GENUS 2':'180,000 SAMPLES'} / ${Math.round(phase*360)}° ORBIT`;
   $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';previousKey=key;dirty=false;
  }catch(error){graphicsFailure(error);renderer=null;sync();}
 }
@@ -42,6 +42,7 @@ requestAnimationFrame(animate);
 function togglePlay(){if(exportController||!renderer)return;playing=!playing;sync();}
 $('play').onclick=togglePlay;
 $('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
+$('form').onchange=()=>{p.form=$('form').value;sync();};
 $('palette').onchange=()=>{p.palette=$('palette').value;sync();};
 $('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;phase=0;sync();};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;sync();};
