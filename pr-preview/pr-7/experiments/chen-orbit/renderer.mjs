@@ -1,6 +1,6 @@
 import {buildAttractor,cameraAt,palettes,TAU,wrap} from './core.mjs';
 import {buildLightTrail} from './patterns.mjs';
-import {createProjectionRenderer} from './projection-renderer.mjs?v=planes-1';
+import {createProjectionRenderer} from './projection-renderer.mjs?v=density-1';
 let cached;
 export const vertexShader=`#version 300 es
 precision highp float;
