@@ -6,14 +6,14 @@ precision highp float;
 precision highp int;
 in highp vec4 point;
 uniform highp vec2 resolution;
-uniform highp float azimuth,elevation,distance,phase,pointScale;
+uniform highp float azimuth,elevation,cameraDistance,phase,pointScale;
 out highp float height,depth,flow,light;
 float packet(float age){return smoothstep(0.,.008,age)*exp(-pow(age/.065,2.));}
 void main(){
  float c=cos(azimuth),s=sin(azimuth),ce=cos(elevation),se=sin(elevation);
  vec3 p=vec3(c*point.x+s*point.z,point.y,-s*point.x+c*point.z);
  p=vec3(p.x,ce*p.y-se*p.z,se*p.y+ce*p.z);
- float z=distance-p.z;
+ float z=cameraDistance-p.z;
  vec2 xy=p.xy*2.55/z;
  xy*=min(resolution.x,resolution.y)/resolution;
  gl_Position=vec4(xy*z,0.,z);
@@ -63,7 +63,7 @@ export function createRenderer(canvas) {
  const model=cached||(cached=buildAttractor()),trail=buildLightTrail(model),resources=[];
  function upload(data){const buffer=gl.createBuffer(),vao=gl.createVertexArray();gl.bindVertexArray(vao);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);const loc=gl.getAttribLocation(program,'point');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,4,gl.FLOAT,false,0,0);resources.push({buffer,vao});return vao;}
  const vao=upload(model.data),trailVao=upload(trail.data);
- const uniforms=Object.fromEntries(['resolution','azimuth','elevation','distance','phase','pointScale','palette','pass','glow','layer','pattern'].map(k=>[k,gl.getUniformLocation(program,k)]));
+ const uniforms=Object.fromEntries(['resolution','azimuth','elevation','distance','phase','pointScale','palette','pass','glow','layer','pattern'].map(k=>[k,gl.getUniformLocation(program,k==='distance'?'cameraDistance':k)]));
  gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.disable(gl.DEPTH_TEST);
  return {
   draw(p,phase,width=canvas.width,height=canvas.height){

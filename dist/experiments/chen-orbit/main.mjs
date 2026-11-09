@@ -1,5 +1,5 @@
 import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs';
-import {createRenderer} from './renderer.mjs?v=precision-1';
+import {createRenderer} from './renderer.mjs?v=precision-2';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
 const restored=readSettings(location.search),p=restored.parameters;
