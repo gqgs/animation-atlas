@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {shapeMetrics,scoreShape,rankCandidates,coefficientResidual} from './shape.mjs';
+import {shapeMetrics,scoreShape,rankCandidates,coefficientResidual,coefficientAssociation} from './shape.mjs';
 import {inspectSeed} from './core.mjs';
 
 const TAU=2*Math.PI;
@@ -98,4 +98,17 @@ test('geometric filter does not require a positive Lyapunov exponent',()=>{
   assert.equal(geometry.accepted,true);
   assert.equal(geometry.points.length,(4000-500)*2);
   assert.throws(()=>inspectSeed(seed,{filter:'garbage'}),RangeError);
+});
+
+test('coefficient / geometry association is diagnostic only',()=>{
+  const samples=[
+    {seed:'GLXOESFTTPSV',metrics:shapeMetrics(circular)},
+    {seed:'MCRBIPOPHTBN',metrics:shapeMetrics(elongated)},
+    {seed:'VBWNBDELYHUL',metrics:shapeMetrics(threefold)},
+    {seed:'FIRCDERRPVLD',metrics:shapeMetrics(irregular)},
+  ];
+  assert.equal(coefficientAssociation(samples.slice(0,3)),null);
+  const association=coefficientAssociation(samples);
+  assert.equal(association.n,4);
+  assert.ok(association.r===null||(Number.isFinite(association.r)&&Math.abs(association.r)<=1));
 });

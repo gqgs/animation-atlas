@@ -41,6 +41,12 @@ candidate is shown and saved locally; other finalists can be selected and saved.
 Scores are computed from *unaltered dynamical orbit points*, not the moving
 visual treatment. A seeded URL can reproduce any chosen shape.
 
+The live **shape-score / rotation-residual correlation** is the Pearson r
+across the confirmed candidates from the last geometric search. A negative
+value would be consistent with lower residual predicting higher shape scores
+*within that selected batch*. Pool sizes are small, and this is exploratory
+rather than evidence of a causal or global relationship.
+
 The displayed **linear rotation residual** is
 `sqrt((a1-a10)^2 + (a4+a7)^2)`, equal to zero for the linear matrix
 `[[p,-q],[q,p]]`. It is a diagnostic to explore potential relationships

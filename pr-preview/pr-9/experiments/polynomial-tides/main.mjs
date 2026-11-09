@@ -1,6 +1,6 @@
 import {references,decodeSeed,inspectSeed,buildOrbit,randomSeed} from './core.mjs';
 import {makePainter} from './painter.mjs';
-import {shapeMetrics,scoreShape,rankCandidates,coefficientResidual} from './shape.mjs';
+import {shapeMetrics,scoreShape,rankCandidates,coefficientResidual,coefficientAssociation} from './shape.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 
 const $=id=>document.getElementById(id);
@@ -13,7 +13,7 @@ const specs=[
 const params=new URLSearchParams(location.search);
 let discoveryMode=['chaos','ring','symmetry','balanced'].includes(params.get('discovery'))
   ?params.get('discovery'):'chaos';
-let rankedResults=[],currentMetrics=null,stopDiscovery=false;
+let rankedResults=[],candidatePool=[],currentMetrics=null,stopDiscovery=false;
 for(const [key,min,max,step] of specs)if(params.has(key)){
   const value=Number(params.get(key));
   if(Number.isFinite(value))settings[key]=Math.max(min,Math.min(max,step===1?Math.round(value):value));
@@ -34,6 +34,13 @@ function refreshRanked(){
     const order=metrics.order===null?'ring':metrics.order+'-fold';
     selector.add(new Option(code+' · '+score.toFixed(3)+' · '+order,code));
   }
+}
+function showAssociation(){
+  const objective=discoveryMode==='chaos'?'ring':discoveryMode;
+  const association=coefficientAssociation(candidatePool,objective);
+  $('association').textContent=!association?'— (need 4+)'
+    :association.r===null?'undefined (n='+association.n+')'
+    :(association.r>=0?'+':'')+association.r.toFixed(2)+' (n='+association.n+')';
 }
 function showMetrics(){
   if(!orbit||!currentMetrics)return;
@@ -170,9 +177,9 @@ $('discoveryMode').onchange=()=>{
   if(exportController)return;
   searchToken++;$('discover').textContent='Discover new';
   discoveryMode=$('discoveryMode').value;
-  rankedResults=rankCandidates(rankedResults,
+  rankedResults=rankCandidates(candidatePool,
     discoveryMode==='chaos'?'ring':discoveryMode);
-  refreshRanked();showMetrics();
+  refreshRanked();showMetrics();showAssociation();
 };
 $('ranked').onchange=()=>{
   if($('ranked').value&&!exportController){
@@ -244,8 +251,9 @@ $('discover').onclick=async()=>{
     if(token!==searchToken)return;
     if(geometry){
       if(pool.length){
+        candidatePool=pool;
         rankedResults=rankCandidates(pool,mode,8);
-        refreshRanked();
+        refreshRanked();showAssociation();
         const top=rankedResults[0];
         if(load(top.seed,{announce:false})){
           remember(top.seed);phase=0;playing=true;sync();
