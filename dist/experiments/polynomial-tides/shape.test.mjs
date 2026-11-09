@@ -73,6 +73,23 @@ test('linear rotation residual diagnoses, but does not filter, seeds',()=>{
   assert.ok(coefficientResidual(letters)<1e-9);
   assert.ok(coefficientResidual('GLXOESFTTPSV')>=0);
 });
+test('neutral irrational rotation is retained by shape search but excluded by chaos search',()=>{
+  // cos(theta)=3/5 and sin(theta)=4/5: an exact unit-modulus
+  // rotation, with an irrational angle/π (Niven's theorem).
+  const a=[0,.6,0,0,-.8,0,0,.8,0,0,.6,0];
+  const seed=a.map(x=>String.fromCharCode(77+Math.round(x*10))).join('');
+  const opts={steps:3800,burn:500};
+  const classic=inspectSeed(seed,{...opts,filter:'chaos'});
+  const shape=inspectSeed(seed,{...opts,filter:'geometry',withPoints:true});
+  assert.ok(Math.abs(shape.lambda)<1e-8,shape.lambda);
+  assert.equal(classic.accepted,false);
+  assert.equal(shape.accepted,true,JSON.stringify({...shape,points:undefined}));
+  const metrics=shapeMetrics(shape.points);
+  assert.ok(metrics.isotropy>.9);
+  assert.ok(metrics.radial>.95);
+  assert.equal(metrics.order,null);
+});
+
 test('geometric filter does not require a positive Lyapunov exponent',()=>{
   const seed='GLXOESFTTPSV';
   const chaos=inspectSeed(seed,{steps:4000,burn:500,filter:'chaos'});
