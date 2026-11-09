@@ -1,14 +1,18 @@
-import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs?v=density-2';
-import {createRenderer} from './renderer.mjs?v=density-2';
+import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs?v=sweep-1';
+import {loadSweepDensity} from './sweep-renderer.mjs?v=sweep-1';
+import {createRenderer} from './renderer.mjs?v=sweep-1';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
-const restored=readSettings(location.search),p=restored.parameters;
+const restored=readSettings(location.search),p=restored.parameters,initialStudy=p.study;
+if(initialStudy==='sweep')p.study='trajectory';
+let studyRequest=0;
 let phase=restored.phase,playing=!restored.paused&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer,exportController=null,last=performance.now(),dirty=true,previousKey='';
 function graphicsFailure(error){playing=false;$('status').textContent=error.message;$('error').hidden=false;$('error').textContent=error.message;$('meter').textContent='GRAPHICS UNAVAILABLE';for(const id of ['play','png','record'])$(id).disabled=true;}
 try {renderer=createRenderer(canvas);}catch(error){graphicsFailure(error);}
 const specs=[
  ['duration','Loop · seconds',1,0,'primary'],['glow','Luminance',.01,2,'primary'],
+ ['sweepGain','Density exposure',.01,2,'sweep'],['sweepCutoff','Low-density cutoff',.005,3,'sweep'],
  ['azimuth','Azimuth · degrees',1,0,'camera'],['elevation','Elevation · degrees',1,0,'camera'],['zoom','Closeness',.01,2,'camera'],
 ];
 for(const [key,title,step,,group] of specs){
@@ -21,8 +25,8 @@ function markCustom(){dirty=true;}
 function sync(){
  for(const [key,,,digits] of specs){$(key).value=p[key];$(key+'Value').value=p[key].toFixed(digits);}
  for(const key of ['motion','palette','pattern','study','level','stride','opacity'])$(key).value=p[key];
- $('projection-controls').hidden=p.study!=='planes';$('guides').checked=p.guides;$('lines').checked=p.lines;
- $('intro').textContent=p.study==='planes'?'The same orbit, projected onto a growing fan of vertical planes. Each step bisects the angles between the previous planes.':'Two light trains follow the chaotic orbit, sweeping through its lobes and leaving soft trails. The original point cloud stays beneath them.';
+ $('projection-controls').hidden=p.study!=='planes';$('sweep-controls').hidden=p.study!=='sweep';$('pattern-control').hidden=p.study==='sweep';$('guides').checked=p.guides;$('lines').checked=p.lines;
+ $('intro').textContent=p.study==='sweep'?'The fan becomes a continuous, luminous density. Each point has swept a circle around the shared axis; their overlaps reveal the angular average.':p.study==='planes'?'The same orbit, projected onto a growing fan of vertical planes. Each step bisects the angles between the previous planes.':'Two light trains follow the chaotic orbit, sweeping through its lobes and leaving soft trails. The original point cloud stays beneath them.';
  $('play').textContent=playing?'Pause animation':'Play animation';
  $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';dirty=true;
 }
@@ -35,7 +39,7 @@ function render(){
  if(!dirty&&key===previousKey)return;
  try{
   renderer.draw(p,phase,w,h);
-  $('meter').textContent=p.study==='planes'?`${2**p.level} PLANES / ${(180000/p.stride).toLocaleString('en-US')} SAMPLES / LINES ${p.lines?'ON':'OFF'}`:`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
+  $('meter').textContent=p.study==='sweep'?'180,000 SAMPLES / 512-ANGLE AVERAGE / 160³ GRID':p.study==='planes'?`${2**p.level} PLANES / ${(180000/p.stride).toLocaleString('en-US')} SAMPLES / LINES ${p.lines?'ON':'OFF'}`:`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
   $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';previousKey=key;dirty=false;
  }catch(error){graphicsFailure(error);renderer=null;sync();}
 }
@@ -43,8 +47,15 @@ function animate(now){const dt=Math.min((now-last)/1000,.1);last=now;if(playing&
 requestAnimationFrame(animate);
 function togglePlay(){if(exportController||!renderer)return;playing=!playing;sync();}
 $('play').onclick=togglePlay;
-$('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
-$('study').onchange=()=>{p.study=$('study').value;sync();};
+$('reset').onclick=()=>{studyRequest++;Object.assign(p,defaults);phase=0;sync();};
+async function selectStudy(value){
+ const request=++studyRequest;
+ try{
+  if(value==='sweep'){$('intro').textContent='Loading the precomputed angular density…';$('status').textContent='Loading the precomputed angular density…';await loadSweepDensity();}
+  if(request!==studyRequest)return;p.study=value;sync();$('status').textContent=value==='sweep'?'Angular-average density ready. Camera motion loops; the field is static.':'Scene ready.';
+ }catch(error){if(request!==studyRequest)return;sync();$('intro').textContent='Density could not load. The other studies remain available.';$('status').textContent='Density could not load: '+error.message;}
+}
+$('study').onchange=()=>selectStudy($('study').value);
 $('level').onchange=()=>{p.level=Number($('level').value);sync();};
 $('stride').onchange=()=>{p.stride=Number($('stride').value);sync();};
 $('opacity').onchange=()=>{p.opacity=$('opacity').value;sync();};
@@ -102,3 +113,5 @@ function waitForEncoder(signal){
   loadFrameWrap().then(resolve,reject).finally(()=>signal.removeEventListener('abort',abort));
  });
 }
+
+if(initialStudy==='sweep')selectStudy(initialStudy);

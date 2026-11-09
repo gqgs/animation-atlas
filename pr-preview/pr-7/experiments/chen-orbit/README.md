@@ -19,6 +19,14 @@ Choose **Bisecting projection planes** to compare 1, 2, 4, 8 or 16 vertical plan
 
 For angle θ, use d=(cos θ,sin θ,0) and project each original point to (x cos θ+y sin θ)d+(0,0,z). These are different orthogonal views of the same orbit, not rotated copies of one silhouette. Compare 1/8, 1/4, 1/2 or all 180,000 samples per plane, independently enabling connecting lines. Compare scaled opacity (divided by relative sample count) with fixed individual point opacity. Scaled opacity can darken faint points because of framebuffer rounding; fixed opacity reveals the raw density change, including increased brightness and clipping. Line opacity is unchanged because the path length is approximately the same. Lines join selected samples in time order, with no last-to-first connector. The original ordered light segment is shared by every plane. Dense settings increase GPU work; all densities remain available for comparison. Guides reveal the construction. This is a superposition of projections, not a new attractor or invariant surface. The original 3D mode remains the default.
 
+## Continuous angular sweep
+
+**Continuous angular sweep** displays a precomputed, voxel-smoothed angular-average density. As a vertical projection plane turns, each original point sweeps the circumference of a circle whose diameter runs from the shared axis to that point. Accumulating those circles avoids drawing thousands of planes in real time. The density is normalized by sample and angle count; an unnormalized infinite additive sum would diverge.
+
+The finite approximation uses all 180,000 samples, 512 angles, trilinear deposition on a padded 160³ grid, and one separable binomial smoothing pass. A 16-bit logarithmic texture retains faint densities; front-to-back raymarching shows overlap and depth. Exposure and cutoff change the display transfer function, not the dynamics. The field is static and the camera loops. No topology or new invariant attractor is claimed.
+
+Rebuild with `node dist/experiments/chen-orbit/tools/precompute-sweep.mjs`. `sweep-density.json` records input/data hashes, angular convergence against 1,024 angles on the same grid, mass and encoding error. These checks do not establish convergence of spatial resolution or trajectory sampling.
+
 ## Capture and checks
 
 Drag/scroll to compose; Space pauses; H hides controls. Scene links preserve settings. Reduced motion starts paused. PNG and MP4 render to a dedicated output-size canvas, at 720/1080/2160 square and 30/60 fps, using `../../shared/frame-export.mjs`; MP4 lazily loads FrameWrap and supports cancellation.
