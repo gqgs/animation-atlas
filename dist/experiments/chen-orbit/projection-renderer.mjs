@@ -1,6 +1,6 @@
 import {cameraAt,palettes,TAU,wrap} from './core.mjs';
 import {buildLightTrail} from './patterns.mjs';
-import {projectionSamples,guideVertices} from './projections.mjs?v=density-1';
+import {projectionSamples,guideVertices} from './projections.mjs?v=density-2';
 export const vertexShader=`#version 300 es
 precision highp float;
 precision highp int;
@@ -74,7 +74,7 @@ export function createProjectionRenderer(canvas,model){
    gl.viewport(0,0,width,height);gl.clearColor(.012,.009,.021,1);gl.clear(gl.COLOR_BUFFER_BIT);gl.useProgram(program);gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE);gl.disable(gl.DEPTH_TEST);
    const camera=cameraAt(p,phase),count=2**p.level,samples=variant(p.stride??8);
    gl.uniform2f(uniforms.resolution,width,height);gl.uniform1f(uniforms.azimuth,camera.azimuth);gl.uniform1f(uniforms.elevation,camera.elevation);gl.uniform1f(uniforms.cameraDistance,camera.distance);
-   gl.uniform1f(uniforms.sampleWeight,(p.stride??8)/8);gl.uniform1f(uniforms.phase,TAU*wrap(phase));gl.uniform1f(uniforms.glow,p.glow);gl.uniform1i(uniforms.palette,palettes.indexOf(p.palette));gl.uniform1i(uniforms.planeCount,count);gl.uniform1i(uniforms.pattern,p.pattern==='original'?0:1);
+   gl.uniform1f(uniforms.sampleWeight,p.opacity==='fixed'?1:(p.stride??8)/8);gl.uniform1f(uniforms.phase,TAU*wrap(phase));gl.uniform1f(uniforms.glow,p.glow);gl.uniform1i(uniforms.palette,palettes.indexOf(p.palette));gl.uniform1i(uniforms.planeCount,count);gl.uniform1i(uniforms.pattern,p.pattern==='original'?0:1);
    const draw=(mode,n)=>gl.drawArraysInstanced(mode,0,n,count);
    if(p.guides){gl.bindVertexArray(guideVao);gl.uniform1i(uniforms.guide,1);draw(gl.LINES,guides.length/4);}
    gl.uniform1i(uniforms.guide,0);gl.uniform1i(uniforms.layer,0);gl.bindVertexArray(samples.vao);

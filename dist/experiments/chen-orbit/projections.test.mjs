@@ -36,7 +36,7 @@ test('all sample densities preserve exact source samples and nested order',()=>{
  for(const stride of [0,3,16,-1,NaN])assert.throws(()=>projectionSamples(model,stride),RangeError);
 });
 test('density and connecting lines round-trip without changing default mode',()=>{
- for(const stride of [8,4,2,1])for(const lines of [false,true]){const p={...defaults,study:'planes',stride,lines};assert.deepEqual(readSettings(settingsQuery(p,.25)).parameters,p);}
+ for(const stride of [8,4,2,1])for(const lines of [false,true])for(const opacity of ['scaled','fixed']){const p={...defaults,study:'planes',stride,lines,opacity};assert.deepEqual(readSettings(settingsQuery(p,.25)).parameters,p);}
  for(const stride of ['0','3','9','1.5','Infinity','bad',''])assert.equal(readSettings('?stride='+stride).parameters.stride,8);
- assert.equal(defaults.stride,8);assert.equal(defaults.lines,false);assert.equal(readSettings('?lines=yes').parameters.lines,false);assert.equal(defaults.study,'trajectory');
+ assert.equal(readSettings('?opacity=bad').parameters.opacity,'scaled');assert.equal(defaults.stride,8);assert.equal(defaults.lines,false);assert.equal(readSettings('?lines=yes').parameters.lines,false);assert.equal(defaults.study,'trajectory');
 });
