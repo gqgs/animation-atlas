@@ -121,3 +121,17 @@ test('codec error interrupts an unresolved capture',async()=>{
   await assert.rejects(result,cause=>cause===error);assert.deepEqual(f.events,['start','stop','dispose']);
   blocked.resolve();await tick();
 });
+
+
+test('awaits encoder backpressure before drawing the next frame',async()=>{
+ const events=[],f=fixture({capture:async()=>events.push('capture'),encoder:{backpressure:async()=>{events.push('pressure');await tick();events.push('ready');}}});
+ await exportFrames({...f.options,fps:2,draw:()=>events.push('draw')});
+ assert.deepEqual(events,['draw','capture','pressure','ready','draw','capture','pressure','ready']);
+});
+test('abort interrupts an unresolved encoder backpressure wait',async()=>{
+ const entered=deferred(),blocked=deferred(),abort=new AbortController();
+ const f=fixture({encoder:{backpressure:()=>{entered.resolve();return blocked.promise;}}});
+ const result=exportFrames({...f.options,signal:abort.signal});await entered.promise;abort.abort();
+ await assert.rejects(Promise.race([result,new Promise((_,reject)=>{const timer=setTimeout(()=>reject(new Error('Backpressure cancellation hung')),250);timer.unref();})]),{name:'AbortError'});
+ assert.ok(f.events.includes('dispose'));assert.ok(!f.events.includes('save'));blocked.resolve();
+});

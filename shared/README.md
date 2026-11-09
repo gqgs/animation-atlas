@@ -25,7 +25,7 @@ The returned Blob is not downloaded automatically. The consumer owns file naming
 
 ## Why CCapture.js v2?
 
-It already provides MP4/WebM WebCodecs encoding and a `FrameWrap` that does **not** monkeypatch time. `FrameWrap` itself does not apply encoder queue backpressure; it should not be confused with the time-warping `CCapture` wrapper. This module avoids modifying the page's `requestAnimationFrame` or `Date`. Browser-only CDN loading is optional: `createRecorder` can inject an npm-installed `FrameWrap` (or another compatible encoder).
+It already provides MP4/WebM WebCodecs encoding and a `FrameWrap` that does **not** monkeypatch time. `FrameWrap` itself does not apply encoder queue backpressure. This adapter invokes its optional `encoder.backpressure()` hook after each capture and requests a two-frame queue limit, preventing a whole clip from piling up in native codec/GPU work. The wait is abortable. It should not be confused with the time-warping `CCapture` wrapper. This module avoids modifying the page's `requestAnimationFrame` or `Date`. Browser-only CDN loading is optional: `createRecorder` can inject an npm-installed `FrameWrap` (or another compatible encoder).
 
 For future reuse, keep render callbacks pure in `(time, phase)`; derive deterministic random seeds if randomness is involved. Frame sampling is repeatable; compressed bytes are not guaranteed identical across encoders, operating systems and GPU drivers.
 
