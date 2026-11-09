@@ -103,3 +103,25 @@ export function rankCandidates(candidates,mode='ring',keep=8){
   return [...candidates].sort((a,b)=>scoreShape(b.metrics,mode)-scoreShape(a.metrics,mode)
     ||a.seed.localeCompare(b.seed)).slice(0,keep);
 }
+
+/**
+ * Descriptive Pearson correlation between the objective score and linear
+ * rotation residual among *confirmed* geometric candidates.
+ * A negative correlation means lower residual tended to score higher.
+ * Small, selected discovery pools cannot establish population-level effects.
+ */
+export function coefficientAssociation(candidates,mode='ring'){
+  const n=candidates.length;
+  if(n<4)return null;
+  const xs=candidates.map(c=>coefficientResidual(c.seed));
+  const ys=candidates.map(c=>scoreShape(c.metrics,mode));
+  const mx=xs.reduce((a,b)=>a+b,0)/n;
+  const my=ys.reduce((a,b)=>a+b,0)/n;
+  let cross=0,varX=0,varY=0;
+  for(let i=0;i<n;i++){
+    const x=xs[i]-mx,y=ys[i]-my;
+    cross+=x*y;varX+=x*x;varY+=y*y;
+  }
+  if(varX<1e-12||varY<1e-12)return {n,r:null};
+  return {n,r:Math.max(-1,Math.min(1,cross/Math.sqrt(varX*varY)))};
+}
