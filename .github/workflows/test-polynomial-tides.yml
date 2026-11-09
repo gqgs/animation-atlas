@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'dist/experiments/polynomial-tides/**'
+      - 'dist/downloads/polynomial-tides-source.zip'
       - 'dist/shared/frame-export*.mjs'
       - '.github/workflows/test-polynomial-tides.yml'
   workflow_dispatch:
