@@ -218,8 +218,7 @@ $('discover').onclick=async()=>{
         if(!first.accepted)continue;
         secondPass++;
         const confirmed=inspectSeed(candidate,{
-          steps:9000,burn:1000,filter:geometry?'geometry':'chaos',
-          withPoints:geometry
+          steps:9000,burn:1000,filter:geometry?'geometry':'chaos'
         });
         if(!confirmed.accepted)continue;
         if(!geometry){
@@ -232,7 +231,15 @@ $('discover').onclick=async()=>{
           }
           continue;
         }
-        const metrics=shapeMetrics(confirmed.points);
+        // The displayed scene uses 52k orbit points. Rank the same trajectory
+        // and discard candidates that escape after the short confirmation.
+        let fullOrbit;
+        try{fullOrbit=buildOrbit(candidate);}
+        catch(error){
+          if(error instanceof RangeError)continue;
+          throw error;
+        }
+        const metrics=shapeMetrics(fullOrbit.points);
         pool.push({seed:candidate,metrics,lambda:confirmed.lambda});
       }
       $('attempts').textContent=String(attempts);
