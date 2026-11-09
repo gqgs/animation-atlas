@@ -532,9 +532,10 @@
         "url": "https://paulbourke.net/fractals/sprott/"
       },
       {
-        "title": "Source and numerical checks",
-        "url": "experiments/polynomial-tides/README.md"
+        "title": "Source & numerical checks",
+        "url": "downloads/polynomial-tides-source.zip"
       }
-    ]
+    ],
+    "source": "downloads/polynomial-tides-source.zip"
   }
 ]
