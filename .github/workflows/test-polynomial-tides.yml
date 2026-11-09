@@ -1,0 +1,32 @@
+name: Test Polynomial Tides
+
+on:
+  pull_request:
+    paths:
+      - 'dist/experiments/polynomial-tides/**'
+      - 'dist/downloads/polynomial-tides-source.zip'
+      - 'dist/shared/frame-export*.mjs'
+      - '.github/workflows/test-polynomial-tides.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  numerical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Check map coefficients, boundedness, discovery filters, and export timing
+        run: node --test dist/experiments/polynomial-tides/*.test.mjs dist/shared/frame-export.test.mjs
+      - name: Verify archived source is a valid ZIP
+        run: unzip -t dist/downloads/polynomial-tides-source.zip
+      - name: Syntax-check browser modules
+        run: |
+          node --check dist/experiments/polynomial-tides/main.mjs
+          node --check dist/experiments/polynomial-tides/painter.mjs
+          node --check dist/experiments/polynomial-tides/core.mjs
+          node --check dist/experiments/polynomial-tides/painter.test.mjs
