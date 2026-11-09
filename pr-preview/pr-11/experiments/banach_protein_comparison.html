@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Banach / Protein — Geometric Comparison Lab</title>
+<style>
+:root{color-scheme:dark;--bg:#101318;--panel:#191e26;--line:#323a47;--fg:#e7ecf3;--muted:#a0adbf;--accent:#b1d3e9}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 system-ui,sans-serif}main{max-width:1450px;margin:auto;padding:30px}header{display:flex;justify-content:space-between;gap:25px;margin-bottom:22px}.eyebrow{font-size:11px;letter-spacing:.2em;color:var(--accent);font-weight:700}h1{font-size:31px;letter-spacing:-.035em;margin:7px 0}p{margin:8px 0;color:var(--muted)}.flag{align-self:center;border:1px solid var(--line);border-radius:30px;padding:9px 16px;white-space:nowrap;font-size:11px;letter-spacing:.05em}.toolbar{display:flex;flex-wrap:wrap;align-items:end;gap:12px;background:var(--panel);padding:18px;border:1px solid var(--line);border-radius:12px;margin-bottom:16px}label{display:block;font-size:11px;color:var(--muted)}select,input,button{font:inherit;color:var(--fg);background:#232b36;border:1px solid #485267;border-radius:6px;padding:8px 10px}select{min-width:170px}input[type=number]{width:90px}button{cursor:pointer}button:hover{background:#344152}button.primary{background:#d5e6f2;color:#101318;font-weight:650}button:disabled{opacity:.5;cursor:wait}.views{display:grid;grid-template-columns:1fr 1fr;gap:16px}.view{background:#090c11;border:1px solid var(--line);border-radius:12px;overflow:hidden}.view-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}.view-head strong{font-size:15px}.type{font-size:10px;letter-spacing:.1em;color:var(--muted)}canvas{display:block;width:100%;height:350px;touch-action:none;cursor:grab}.stats{padding:13px 18px;font:12px/1.7 ui-monospace,monospace;background:var(--panel);min-height:77px;border-top:1px solid var(--line)}.nav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 20px}.nav button{font-size:12px;padding:6px 12px}.nav span{font-size:12px;color:var(--muted)}.bottom{display:grid;grid-template-columns:1.15fr 1fr;gap:18px}.card{padding:20px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}h2{font-size:17px;margin:0 0 9px}h3{font-size:14px;margin:17px 0 6px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:9px 6px}th{font-size:11px;color:var(--muted);font-weight:600}td.num{text-align:right;font-family:ui-monospace,monospace}tr[data-key]{cursor:pointer}tr[data-key]:hover{background:#293240}tr.selected{background:#2a3542}.tag{font-size:10px;display:inline-block;padding:1px 6px;border:1px solid #535f73;border-radius:4px;margin-left:6px;color:#c2ccda}.unloaded{opacity:.65}.notice{border-left:3px solid #8dabc1;padding:11px 15px;background:#1d2731;margin:12px 0;font-size:13px;color:#d2dfec}.errors{font-size:12px;color:#edc0ac;white-space:pre-wrap;margin-top:8px}.small{font-size:12px}.metrics{font:12px/1.8 ui-monospace,monospace;margin:12px 0;padding:10px;background:#111720;border-radius:6px}details{margin-top:14px}summary{cursor:pointer;color:#d8e4ed}a{color:#a4cde9}code{font-family:ui-monospace,monospace;color:#d0e5f2}footer{margin-top:20px;font-size:11px;color:#8c9aaf}.upload{display:flex;gap:8px;align-items:center;margin:13px 0;flex-wrap:wrap}.upload label{font-size:12px}.upload input[type=checkbox]{accent-color:#c9ddeb}.busy{color:#b6d4ea}#status{min-height:20px;font-size:12px}.filebtn{display:inline-block;cursor:pointer;color:#d5e4ee;font-size:12px!important;padding:7px 11px;border:1px solid #485267;border-radius:6px}#file{display:none}
+@media(max-width:900px){main{padding:17px}.views,.bottom{grid-template-columns:1fr}header{display:block}.flag{display:inline-block;margin-top:10px}canvas{height:320px}h1{font-size:27px}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">BANACH / PROTEIN</div><h1>Is the resemblance in the geometry?</h1><p>Compare the original particle generator with real protein assemblies and simple geometric controls.</p></div><div class="flag">EXPLORATORY SHAPE TEST · NOT FOLD IDENTIFICATION</div></header>
+<section class="toolbar">
+<div><label for="scope">SOURCE REGION</label><select id="scope"><option value="full">Full field · 12 layers</option><option value="layer">One layer · 4 clusters</option><option value="cluster">One IFS cluster</option></select></div>
+<div><label for="rho">CONTRACTION ρ</label><input id="rho" type="number" min=".28" max=".62" step=".01" value=".49"></div>
+<div><label for="twist">TWIST</label><input id="twist" type="number" min=".02" max=".15" step=".01" value=".05"></div>
+<button id="rebuild">Rebuild source</button>
+<div><label for="target">COMPARISON TARGET</label><select id="target"></select></div>
+<button id="load" class="primary">Load 4 PDB references</button>
+</section>
+<div id="status" role="status">Preparing the source geometry…</div><div class="errors" id="errors" role="alert"></div>
+<section class="views">
+<div class="view"><div class="view-head"><strong id="sourceTitle">Banach field</strong><span class="type">IFS PARTICLES ONLY</span></div><canvas id="left" aria-label="3D source point cloud; drag to rotate, scroll to zoom"></canvas><div class="stats" id="sourceStats"></div></div>
+<div class="view"><div class="view-head"><strong id="targetTitle">Reference</strong><span class="type" id="targetType">GEOMETRIC CONTROL</span></div><canvas id="right" aria-label="3D reference point cloud; drag to rotate, scroll to zoom"></canvas><div class="stats" id="targetStats"></div></div>
+</section>
+<div class="nav"><div><button id="front">Front</button> <button id="side">Side</button> <button id="oblique">Oblique</button> <button id="spin">Rotate: off</button> <button id="axes">Axes: original</button> <button id="resetZoom">Reset zoom</button></div><span>Linked camera · orthographic projection · equal RMS radius · monochrome points</span></div>
+<section class="bottom">
+<div class="card"><h2>Nearest among the loaded references</h2><p class="small">Lower is closer under these coarse descriptors. This is not a percentage, a probability, or a protein-fold score. Click a row to inspect it.</p>
+<table><thead><tr><th>Reference</th><th style="text-align:right">Distance ↓</th></tr></thead><tbody id="ranking"></tbody></table>
+<div class="metrics" id="scoreDetail">Choose a reference.</div>
+<div class="upload"><label class="filebtn" for="file">Import PDB / PDB1 / PDB.GZ</label><input id="file" type="file" accept=".pdb,.pdb1,.ent,.gz"><label><input id="assemblyModels" type="checkbox"> MODEL blocks are assembly copies</label></div>
+<p class="small">For a normal PDB or NMR file, leave this unchecked: only the first model is used. For a biological-assembly PDB1, check it. Import does not expand BIOMT symmetry from an asymmetric-unit file. Local imports should contain proteins only; this small parser does not classify nucleic-acid ATOM records.</p>
+<button id="export">Export results JSON</button> <button id="exportSource">Export source XYZ</button>
+</div>
+<div class="card"><h2>What this experiment actually measures</h2>
+<div class="notice">The full field is a stack extending into depth. One IFS cluster is shallow in Z. Check the side view before interpreting a head-on resemblance.</div>
+<p>Protein references use actual <strong>protein heavy-atom coordinates</strong>, not a generated illustration. Both objects are centered and uniformly scaled to RMS radius 1. No stretching, nonrigid warping, chemical inference, or target-specific fitting is performed.</p>
+<p>Simple controls ask whether a match is more specific than “roughly a ring, shell, ball, or tube.” A control winning is informative, not a failure.</p>
+<details open><summary>Distance definition and limitations</summary><p class="small">Each object is described by its three principal RMS radii, its radial-distance quantiles, and its pairwise-distance quantiles. The distance is the unweighted mean of the three mean absolute differences:</p><div class="metrics">D = (D_axes + D_radial + D_pairwise) / 3</div><p class="small">Principal radii use all points. Radial and pairwise quantiles use seeded Monte Carlo samples (8,192 radii; 32,768 pairs; 128 quantiles). These descriptors are rotation- and translation-invariant, and size is deliberately normalized away. They are coarse and non-unique: different shapes, mirror images, connectivities, and topologies can receive similar scores. Sampling error remains. The score is uncalibrated; rankings are limited to this tiny reference set.</p></details>
+<details><summary>Source reconstruction and scope</summary><p class="small">Particle equations and random-number consumption follow <code>banach_spiral_world.html</code>, recovered from the original source. Defaults here use the screenshot’s ρ = 0.49, twist = 0.05, density = 1.2; assumed original seed = 1729. Layers are frozen at t = 0 using the source rotation law. This is not recovery of the exact recorded frame: its seed and absolute animation time are unknown.</p><p class="small">Only the IFS particle positions are scored. Decorative recursive spiral lines, background stars, torus shells, fixed-point markers, glow, and the macro-helical guide tubes are excluded. The recursion slider in the original affects the decorative spiral lines, not the particle IFS. Source scopes are fixed in advance: all 12 layers, first layer, or its first arm.</p></details>
+<details><summary>PDB references and provenance</summary><p class="small"><a href="https://www.rcsb.org/structure/1MBN" target="_blank" rel="noreferrer">1MBN · myoglobin</a> — one protein chain.<br><a href="https://www.rcsb.org/structure/1AON" target="_blank" rel="noreferrer">1AON · GroEL/GroES</a> — biological assembly with 21 protein chains.<br><a href="https://www.rcsb.org/structure/1FHA" target="_blank" rel="noreferrer">1FHA · human H ferritin</a> — biological assembly with 24 protein chains.<br><a href="https://www.rcsb.org/structure/1G0U" target="_blank" rel="noreferrer">1G0U · yeast proteasome core</a> — biological assembly with 28 protein chains.</p><p class="small">Built-in references request biological assembly 1 from the RCSB file service. PDB1 MODEL blocks are assembly copies, not trajectory frames; all are included. Water, ligands, ions, and hydrogen atoms are excluded. Highest-occupancy alternate locations are retained. Expected protein-chain counts are checked before ranking. Coordinates remain in memory in your browser. No upload to a server occurs. Internet access to RCSB is required unless you import a local file.</p></details>
+</div></section>
+<footer>Prototype v0.1 · 17 October 2026 · Shape comparison, not molecular dynamics, sequence identification, structural homology, or biological validation. No protein match has been precomputed or embedded.</footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), TAU=2*Math.PI;
+const refs=[{id:'1MBN',name:'Myoglobin',chains:1},{id:'1AON',name:'GroEL / GroES',chains:21},{id:'1FHA',name:'H ferritin',chains:24},{id:'1G0U',name:'Proteasome core',chains:28}];
+const targets=new Map(); let sourceRaw=null, source=null, selected='tube', scores=[], lastReport=null;
+let camera={yaw:.83,pitch:.23,zoom:1,principal:false,spin:false}, animationId=null;
+const config={rho:.49,twist:.05,density:1.2,seed:1729,time:0};
+function rngFactory(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
+function generateSource(params){
+ const count=Math.round(8400*params.density), out=new Float32Array(12*4*count*3);let offset=0;
+ const maps=Array.from({length:5},(_,i)=>{const phi=i*1.42+.11,r=1.32*Math.exp(-i*.24),a=.48+i*.32;return{tx:r*Math.cos(phi),ty:r*Math.sin(phi),c:Math.cos(a),s:Math.sin(a)};});
+ for(let index=0;index<12;index++){
+  const rand=rngFactory(params.seed+index*6337), layerRotation=index*20*params.twist;
+  const baseRadius=5.4+Math.sin(index*.78)*1.2+.016*index*20, factor=2.12+(index%3)*.13;
+  const rot=params.time*.009+.075*Math.sin(params.time*.22+index*.37),lc=Math.cos(rot),ls=Math.sin(rot);
+  for(let arm=0;arm<4;arm++){
+   const phase=arm*TAU/4+layerRotation,cx=baseRadius*Math.cos(phase),cy=baseRadius*Math.sin(phase),c=Math.cos(phase+.2),s=Math.sin(phase+.2);let wx=0,wy=0;
+   for(let t=0;t<count+32;t++){
+    const k=Math.floor(rand()*5),m=maps[k],nx=params.rho*(m.c*wx-m.s*wy)+m.tx,ny=params.rho*(m.s*wx+m.c*wy)+m.ty;wx=nx;wy=ny;if(t<32)continue;
+    const x=Math.fround(cx+factor*(c*wx-s*wy)),y=Math.fround(cy+factor*(s*wx+c*wy));
+    const z=Math.fround(-1.3+.68*Math.sin(.95*wx+1.4*wy+k*.8)-.45*(wx*wx+wy*wy)/9);
+    out[offset++]=lc*x-ls*y;out[offset++]=ls*x+lc*y;out[offset++]=z-10-index*20;
+    rand();if(rand()>=.017)rand();rand(); // Original color, point-size and pulse draws.
+   }
+  }
+ }
+ return{points:out,clusterCount:count,layerCount:count*4};
+}
+function eigenSymmetric(cov){
+ const a=cov.map(r=>r.slice()),v=[[1,0,0],[0,1,0],[0,0,1]];
+ for(let iter=0;iter<50;iter++){
+  let p=0,q=1;for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)if(Math.abs(a[i][j])>Math.abs(a[p][q])){p=i;q=j;}
+  if(Math.abs(a[p][q])<1e-14)break;
+  const phi=.5*Math.atan2(2*a[p][q],a[q][q]-a[p][p]),c=Math.cos(phi),s=Math.sin(phi),app=a[p][p],aqq=a[q][q],apq=a[p][q];
+  for(let k=0;k<3;k++)if(k!==p&&k!==q){const akp=a[k][p],akq=a[k][q];a[k][p]=a[p][k]=c*akp-s*akq;a[k][q]=a[q][k]=s*akp+c*akq;}
+  a[p][p]=c*c*app-2*s*c*apq+s*s*aqq;a[q][q]=s*s*app+2*s*c*apq+c*c*aqq;a[p][q]=a[q][p]=0;
+  for(let k=0;k<3;k++){const vp=v[k][p],vq=v[k][q];v[k][p]=c*vp-s*vq;v[k][q]=s*vp+c*vq;}
+ }
+ const ix=[0,1,2].sort((i,j)=>a[j][j]-a[i][i]),values=ix.map(i=>Math.max(0,a[i][i])),vectors=ix.map(i=>[v[0][i],v[1][i],v[2][i]]);
+ const dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+ if(dot(cross(vectors[0],vectors[1]),vectors[2])<0)vectors[2]=vectors[2].map(x=>-x);
+ return{values,vectors};
+}
+function quantiles(sorted){const out=[];for(let i=0;i<128;i++){const p=(i+.5)/128*(sorted.length-1),l=Math.floor(p),f=p-l;out.push(sorted[l]*(1-f)+sorted[Math.min(l+1,sorted.length-1)]*f);}return out;}
+function describe(points,meta){
+ const n=points.length/3;if(n<4||points.length%3)throw Error('At least four valid 3D points are required.');
+ const mean=[0,0,0];for(let i=0;i<points.length;i++)mean[i%3]+=points[i]/n;
+ const cov=[[0,0,0],[0,0,0],[0,0,0]];for(let i=0;i<points.length;i+=3){const d=[points[i]-mean[0],points[i+1]-mean[1],points[i+2]-mean[2]];for(let j=0;j<3;j++)for(let k=j;k<3;k++)cov[j][k]+=d[j]*d[k]/n;}
+ for(let j=0;j<3;j++)for(let k=0;k<j;k++)cov[j][k]=cov[k][j];
+ const rg=Math.sqrt(cov[0][0]+cov[1][1]+cov[2][2]);if(!Number.isFinite(rg)||rg<1e-9)throw Error('Point cloud has zero extent or invalid coordinates.');
+ const eig=eigenSymmetric(cov),axes=eig.values.map(x=>Math.sqrt(x)/rg),norm=new Float32Array(points.length);
+ for(let i=0;i<points.length;i++)norm[i]=(points[i]-mean[i%3])/rg;
+ const rand=rngFactory(20261017),rad=[],pair=[];
+ for(let k=0;k<8192;k++){const i=3*Math.floor(rand()*n);rad.push(Math.hypot(norm[i],norm[i+1],norm[i+2]));}
+ for(let k=0;k<32768;k++){const ia=Math.floor(rand()*n);let ib=Math.floor(rand()*(n-1));if(ib>=ia)ib++;const i=3*ia,j=3*ib;pair.push(Math.hypot(norm[i]-norm[j],norm[i+1]-norm[j+1],norm[i+2]-norm[j+2]));}
+ rad.sort((a,b)=>a-b);pair.sort((a,b)=>a-b);
+ const display=[],drawRand=rngFactory(87831),count=Math.min(n,8000);
+ // Uniform reservoir sampling avoids repeating selected atoms in the display.
+ const indices=Array.from({length:count},(_,i)=>i);for(let i=count;i<n;i++){const j=Math.floor(drawRand()*(i+1));if(j<count)indices[j]=i;}
+ for(const k of indices)display.push([norm[k*3],norm[k*3+1],norm[k*3+2]]);
+ return{...meta,n,mean,rg,axes,basis:eig.vectors,radial:quantiles(rad),pairwise:quantiles(pair),norm,display};
+}
+function distance(a,b){const mad=(x,y)=>x.reduce((s,v,i)=>s+Math.abs(v-y[i]),0)/x.length;const axes=mad(a.axes,b.axes),radial=mad(a.radial,b.radial),pairwise=mad(a.pairwise,b.pairwise);return{axes,radial,pairwise,total:(axes+radial+pairwise)/3};}
+function makeControls(){
+ const n=16000,rand=rngFactory(1141);const out={ball:[],shell:[],ring:[],tube:[]};
+ for(let i=0;i<n;i++){
+  const z=2*rand()-1,phi=TAU*rand(),r=Math.sqrt(1-z*z),dir=[r*Math.cos(phi),r*Math.sin(phi),z],scale=Math.cbrt(rand());
+  out.ball.push(...dir.map(x=>x*scale));out.shell.push(...dir);
+  const a=TAU*rand(),b=TAU*rand(),rr=.12*Math.sqrt(rand());out.ring.push((1+rr*Math.cos(b))*Math.cos(a),(1+rr*Math.cos(b))*Math.sin(a),rr*Math.sin(b));
+  const ang=TAU*rand(),radius=.9+.2*rand();out.tube.push(radius*Math.cos(ang),radius*Math.sin(ang),20*(rand()-.5));
+ }
+ const names={ball:'Solid ball',shell:'Spherical shell',ring:'Thin torus',tube:'Long hollow tube'};
+ for(const [key,pts] of Object.entries(out))targets.set(key,describe(new Float32Array(pts),{key,name:names[key],type:'control',provenance:'Synthetic geometric control; no biology.'}));
+}
+function selectSource(){
+ const scope=$('scope').value,raw=sourceRaw.points;
+ const pts=scope==='full'?raw:raw.subarray(0,3*(scope==='layer'?sourceRaw.layerCount:sourceRaw.clusterCount));
+ const name={full:'Full field · 12 depth layers',layer:'First layer · four IFS clusters',cluster:'First layer · first IFS cluster'}[scope];
+ source=describe(pts,{key:scope,name,type:'source'});refresh();
+}
+function rebuild(){
+ const rho=Number($('rho').value),twist=Number($('twist').value);
+ if(!Number.isFinite(rho)||rho<.28||rho>.62||!Number.isFinite(twist)||twist<.02||twist>.15){$('errors').textContent='Use ρ between 0.28 and 0.62, and twist between 0.02 and 0.15.';return;}
+ config.rho=rho;config.twist=twist;$('status').textContent='Building source geometry…';$('rebuild').disabled=true;
+ setTimeout(()=>{try{sourceRaw=generateSource(config);selectSource();$('status').textContent='Source ready. Protein references are not loaded until requested.';}catch(e){$('errors').textContent=e.message;}finally{$('rebuild').disabled=false;}},20);
+}
+function formatStats(s){return`${s.n.toLocaleString()} input points · ${s.display.length.toLocaleString()} displayed\nPrincipal RMS radii: ${s.axes.map(x=>(x/s.axes[0]).toFixed(3)).join(' : ')}${s.chains?' · '+s.chains+' chains':''}`;}
+function refresh(){
+ if(!source)return;
+ scores=Array.from(targets,([key,t])=>({key,name:t.name,type:t.type,...distance(source,t)})).sort((a,b)=>a.total-b.total);
+ const sel=$('target');sel.replaceChildren();for(const row of scores){const opt=document.createElement('option');opt.value=row.key;opt.textContent=row.name+(row.type==='control'?' · control':' · '+row.key);sel.append(opt);}
+ if(!targets.has(selected))selected=scores[0].key;sel.value=selected;
+ const body=$('ranking');body.replaceChildren();
+ for(const row of scores){const tr=document.createElement('tr');tr.dataset.key=row.key;if(row.key===selected)tr.className='selected';const title=document.createElement('td');title.textContent=row.name;const tag=document.createElement('span');tag.className='tag';tag.textContent=row.type==='control'?'CONTROL':row.key;title.append(tag);const score=document.createElement('td');score.className='num';score.textContent=row.total.toFixed(4);tr.append(title,score);tr.onclick=()=>{selected=row.key;refresh();};body.append(tr);}
+ for(const ref of refs)if(!targets.has(ref.id)){const tr=document.createElement('tr');tr.className='unloaded';const a=document.createElement('td');a.textContent=ref.name+' · '+ref.id;const b=document.createElement('td');b.className='num';b.textContent='not loaded';tr.append(a,b);body.append(tr);}
+ const t=targets.get(selected),d=distance(source,t);
+ $('sourceTitle').textContent=source.name;$('sourceStats').innerText=formatStats(source);
+ $('targetTitle').textContent=t.name;$('targetType').textContent=t.type==='control'?'NON-PROTEIN CONTROL':(t.key+' · PROTEIN COORDINATES');$('targetStats').innerText=formatStats(t);
+ $('scoreDetail').innerText=`Selected distance: ${d.total.toFixed(5)}\nAxes: ${d.axes.toFixed(5)} · radial: ${d.radial.toFixed(5)} · pairwise: ${d.pairwise.toFixed(5)}`;
+ render();
+}
+function parsePDB(text,{allModels=false,expectedChains=null}={}){
+ const atoms=new Map();let model='0',firstModel=null,seenModel=false;
+ for(const line of text.split(/\r?\n/)){
+  if(line.startsWith('MODEL ')){model=line.slice(10).trim()||'1';if(firstModel===null)firstModel=model;seenModel=true;continue;}
+  if(!line.startsWith('ATOM  '))continue;if(seenModel&&!allModels&&model!==firstModel)continue;
+  const atomName=line.slice(12,16).trim(),element=line.slice(76,78).trim()||atomName.replace(/^[0-9]+/,'')[0];if(element==='H'||element==='D')continue;
+  const x=Number.parseFloat(line.slice(30,38)),y=Number.parseFloat(line.slice(38,46)),z=Number.parseFloat(line.slice(46,54));if(![x,y,z].every(Number.isFinite))continue;
+  const parsedOcc=Number.parseFloat(line.slice(54,60)),occupancy=Number.isFinite(parsedOcc)?parsedOcc:1;if(occupancy<=0)continue;
+  const chain=model+':'+line.slice(21,22),key=chain+':'+line.slice(22,27)+':'+atomName,previous=atoms.get(key);
+  if(!previous||occupancy>previous.occupancy)atoms.set(key,{xyz:[x,y,z],occupancy,chain});
+ }
+ const pts=[],chains=new Set();for(const a of atoms.values()){pts.push(...a.xyz);chains.add(a.chain);}
+ if(pts.length<12)throw Error('No usable protein ATOM coordinates found. This importer accepts PDB format, not mmCIF.');
+ if(expectedChains!==null&&chains.size!==expectedChains)throw Error(`Assembly check failed: expected ${expectedChains} protein chains, found ${chains.size}. No score was added.`);
+ return{points:new Float32Array(pts),chains:chains.size};
+}
+async function decodeBytes(buffer){
+ const bytes=new Uint8Array(buffer);
+ if(bytes[0]===31&&bytes[1]===139){if(typeof DecompressionStream==='undefined')throw Error('This browser cannot decompress gzip. Import an uncompressed PDB1 file.');return await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();}
+ return new TextDecoder().decode(bytes);
+}
+async function getReference(ref){
+ let lastError=null;
+ for(const suffix of ['.pdb1','.pdb1.gz']){
+  const url=`https://files.rcsb.org/download/${ref.id}${suffix}`;
+  try{const response=await fetch(url,{signal:AbortSignal.timeout(25000)});if(!response.ok)throw Error(`HTTP ${response.status}`);const text=await decodeBytes(await response.arrayBuffer());const raw=parsePDB(text,{allModels:true,expectedChains:ref.chains});
+   return describe(raw.points,{key:ref.id,name:ref.name,type:'protein',chains:raw.chains,provenance:url,retrievedAt:new Date().toISOString(),modelMode:'biological assembly 1; all MODEL copies',excluded:'HETATM and hydrogen/deuterium; highest-occupancy alternate conformer'});
+  }catch(e){lastError=e;}
+ }
+ throw Error(`${ref.id}: ${lastError?.message||'download failed'}. RCSB access or browser CORS may be blocked. Import a biological-assembly PDB1 file instead.`);
+}
+async function loadReferences(){
+ $('load').disabled=true;$('errors').textContent='';let finished=0;
+ const pending=refs.filter(ref=>!targets.has(ref.id));if(!pending.length){$('status').textContent='All four protein references are already loaded.';$('load').disabled=false;return;}
+ $('status').textContent='Requesting biological assemblies from RCSB…';
+ await Promise.all(pending.map(async ref=>{try{const target=await getReference(ref);targets.set(ref.id,target);refresh();}catch(e){$('errors').textContent+=e.message+'\n';}finally{finished++;$('status').textContent=`Processed ${finished} / ${pending.length} requests. ${refs.filter(r=>targets.has(r.id)).length} / 4 protein references loaded.`;}}));
+ $('load').disabled=false;
+}
+function normalizedForView(points,basis){if(!camera.principal)return points;return points.map(p=>basis.map(v=>v[0]*p[0]+v[1]*p[1]+v[2]*p[2]));}
+function renderCloud(canvas,s){
+ const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.6),w=box.width,h=box.height;if(w<1||h<1)return;
+ if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+ const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);if(!s)return;
+ const cy=Math.cos(camera.yaw),sy=Math.sin(camera.yaw),cp=Math.cos(camera.pitch),sp=Math.sin(camera.pitch),scale=Math.min(w,h)/4.2*camera.zoom;
+ const input=normalizedForView(s.display,s.basis),projected=input.map(p=>{const x=cy*p[0]+sy*p[2],z=-sy*p[0]+cy*p[2];return[x,cp*p[1]-sp*z,sp*p[1]+cp*z];}).sort((a,b)=>a[2]-b[2]);
+ for(const p of projected){const x=w/2+p[0]*scale,y=h/2-p[1]*scale;if(x<0||x>w||y<0||y>h)continue;const alpha=Math.max(.22,Math.min(.82,.48+.12*p[2]));ctx.fillStyle=`rgba(220,230,242,${alpha.toFixed(2)})`;const r=s.n<2000?1.55:1.05;ctx.fillRect(x-r/2,y-r/2,r,r);}
+ ctx.fillStyle='#8292a8';ctx.font='11px system-ui';ctx.fillText(camera.principal?'PRINCIPAL AXES · SIGNS ARBITRARY':'ORIGINAL COORDINATE AXES',15,h-15);
+}
+function render(){renderCloud($('left'),source);renderCloud($('right'),targets.get(selected));}
+function animate(){if(!camera.spin){animationId=null;return;}camera.yaw+=.005;render();animationId=requestAnimationFrame(animate);}
+for(const id of ['left','right']){const canvas=$(id);let drag=null;
+ canvas.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});
+ canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;camera.yaw+=(e.clientX-drag.x)*.009;camera.pitch=Math.max(-1.5,Math.min(1.5,camera.pitch+(e.clientY-drag.y)*.009));drag.x=e.clientX;drag.y=e.clientY;render();});
+ for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>drag=null);
+ canvas.addEventListener('wheel',e=>{e.preventDefault();camera.zoom=Math.max(.25,Math.min(12,camera.zoom*Math.exp(-e.deltaY*.001)));render();},{passive:false});
+}
+$('front').onclick=()=>{camera.yaw=0;camera.pitch=0;render();};$('side').onclick=()=>{camera.yaw=Math.PI/2;camera.pitch=0;render();};$('oblique').onclick=()=>{camera.yaw=.83;camera.pitch=.23;render();};
+$('resetZoom').onclick=()=>{camera.zoom=1;render();};$('spin').onclick=()=>{camera.spin=!camera.spin;$('spin').textContent='Rotate: '+(camera.spin?'on':'off');if(camera.spin&&!animationId)animate();};
+$('axes').onclick=()=>{camera.principal=!camera.principal;$('axes').textContent='Axes: '+(camera.principal?'principal':'original');render();};
+$('scope').onchange=()=>{selectSource();};$('target').onchange=()=>{selected=$('target').value;refresh();};$('rebuild').onclick=rebuild;$('load').onclick=loadReferences;
+$('file').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const allModels=$('assemblyModels').checked,text=await decodeBytes(await file.arrayBuffer()),raw=parsePDB(text,{allModels});const key='LOCAL_'+file.name;targets.set(key,describe(raw.points,{key,name:file.name,type:'protein',chains:raw.chains,provenance:'Local file; assembly correctness not verified',modelMode:allModels?'all MODEL blocks':'first MODEL block'}));selected=key;refresh();$('status').textContent=`Imported ${file.name}. Check that the chosen model mode and assembly are appropriate.`;}catch(err){$('errors').textContent=err.message;}finally{e.target.value='';}};
+function download(name,text,mime='application/json'){const a=document.createElement('a'),url=URL.createObjectURL(new Blob([text],{type:mime}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+function report(){return{createdAt:new Date().toISOString(),experiment:'Banach/protein coarse shape pilot v0.1',source:{...config,scope:source.key,points:source.n,principalRMSRadii:source.axes,assumptions:'Seed 1729 and freeze time t=0; not exact video-frame recovery',excluded:'Decorative lines, guides, shells, cores, stars, glow'},metric:{name:'Unweighted mean of axis, radial-quantile and pair-distance-quantile mean absolute differences',center:true,uniformRMSRadiusNormalization:true,chemicalCorrespondence:false,coordinateWarping:false,radialSamples:8192,pairSamples:32768,quantileBins:128,monteCarloSeed:20261017,calibrated:false},ranking:scores.map(r=>({...r,provenance:targets.get(r.key).provenance,points:targets.get(r.key).n,chains:targets.get(r.key).chains||null,modelMode:targets.get(r.key).modelMode||null})),missingProteinReferences:refs.filter(r=>!targets.has(r.id)).map(r=>r.id),warning:'Limited reference set. Not protein identification, structural homology, or biological validation. Coarse descriptors are non-unique and ignore chirality and connectivity.'};}
+$('export').onclick=()=>download('banach_protein_shape_results.json',JSON.stringify(report(),null,2));
+$('exportSource').onclick=()=>{const pts=sourceRaw.points,end=$('scope').value==='full'?pts.length:3*($('scope').value==='layer'?sourceRaw.layerCount:sourceRaw.clusterCount),lines=['# Original unnormalized particle coordinates. '+JSON.stringify({...config,scope:$('scope').value})];for(let i=0;i<end;i+=3)lines.push(`${pts[i]} ${pts[i+1]} ${pts[i+2]}`);download('banach_'+$('scope').value+'.xyz',lines.join('\n'),'text/plain');};
+addEventListener('resize',render);
+// Exposed for reproducible local tests and inspection; no external dependencies.
+window.BanachProteinLab={rngFactory,generateSource,parsePDB,eigenSymmetric,describe,distance,report,get source(){return source;},get targets(){return targets;}};
+setTimeout(()=>{try{makeControls();sourceRaw=generateSource(config);selectSource();$('status').textContent='Source reconstructed. Only non-protein controls are loaded. Click “Load 4 PDB references” to test actual structures.';}catch(e){$('errors').textContent=e.stack||e.message;}},30);
+</script></body></html>
