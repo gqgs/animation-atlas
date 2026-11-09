@@ -21,9 +21,11 @@ jobs:
       - name: Install isolated browser-test dependency
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg glslang-tools
           npm install --prefix "$RUNNER_TEMP/chen-qa" --no-save playwright@1.62.1
           "$RUNNER_TEMP/chen-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Validate GLSL ES shader linking
+        run: node dist/experiments/chen-orbit/tests/link-shaders.mjs
       - name: Render early visual review
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
