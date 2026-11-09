@@ -21,11 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout PR
-        if: github.event.action != 'closed'
+      # Preview removal also initializes Git in the workspace. Keep checkout
+      # on closed events, even though those events do not build a preview.
+      - name: Checkout repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+
+      - name: Verify preview workflow lifecycle
+        run: |
+          git rev-parse --is-inside-work-tree
+          node --test .github/tests/preview-workflow.test.mjs
 
       - name: Verify static site
         if: github.event.action != 'closed'
