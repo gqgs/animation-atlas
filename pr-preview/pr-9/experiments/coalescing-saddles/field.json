@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "family": "elliptic umbilic",
+  "width": 231,
+  "height": 231,
+  "frames": 161,
+  "zMin": 0,
+  "zMax": 4,
+  "zStep": 0.025,
+  "xyMin": -15.053464798451094,
+  "xyMax": 15.053464798451094,
+  "xyStep": 0.1308996938995747,
+  "format": "little-endian float16, frame/y/x/(real,imag), y increases with row",
+  "normalization": "NIST DLMF 36.2.5; positive Fourier sign; no intensity renormalization per frame",
+  "fftSize": 4096,
+  "integrationHalfWidth": 24.0,
+  "apertureInner": 6,
+  "apertureOuter": 8,
+  "chunks": [
+    "field-000.bin",
+    "field-001.bin",
+    "field-002.bin",
+    "field-003.bin",
+    "field-004.bin",
+    "field-005.bin",
+    "field-006.bin",
+    "field-007.bin",
+    "field-008.bin"
+  ]
+}
