@@ -35,8 +35,9 @@ coverage, which deliberately excludes a fixed point or a short periodic cycle,
 not all possible quasiperiodic/one-dimensional invariant curves.
 
 Search is cancellable and time-sliced. For each discovery batch, it samples up
-to 1,200 random seeds, confirms up to 16 candidates with a longer trajectory,
-ranks the survivors and offers the eight highest-scoring seeds. The best
+to 1,200 random seeds, screens candidates over 9,000 steps, then verifies the
+survivors with the full 52,000-point orbit used for display. It ranks up to
+16 full-orbit survivors and offers the eight highest-scoring seeds. The best
 candidate is shown and saved locally; other finalists can be selected and saved.
 Scores are computed from *unaltered dynamical orbit points*, not the moving
 visual treatment. A seeded URL can reproduce any chosen shape.
