@@ -1,7 +1,7 @@
 // Chen–Čelikovský system, parameters from Paul Bourke's October 2010 reference.
 export const TAU = 2 * Math.PI;
 export const parameters = Object.freeze({a:36, b:3, c:20});
-export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons', cameraOffset:0, study:'trajectory', level:2, guides:false, stride:8, lines:false});
+export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons', cameraOffset:0, study:'trajectory', level:2, guides:false, stride:8, lines:false, opacity:'scaled'});
 export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-80,80], zoom:[.65,1.65], glow:[.4,1.8]};
 export const palettes = ['ember','glacier','pearl'];
 export const wrap = t => ((t % 1) + 1) % 1;
@@ -39,6 +39,7 @@ export function readSettings(search) {
   if(q.get('study')==='planes')p.study='planes';
   if(q.has('level')&&/^[0-4]$/.test(q.get('level')))p.level=Number(q.get('level'));
   if(q.has('stride')&&/^[1248]$/.test(q.get('stride')))p.stride=Number(q.get('stride'));
+  if(['scaled','fixed'].includes(q.get('opacity')))p.opacity=q.get('opacity');
   if(q.get('lines')==='true')p.lines=true;
   if(q.get('guides')==='true')p.guides=true;
   if(palettes.includes(q.get('palette')))p.palette=q.get('palette');
