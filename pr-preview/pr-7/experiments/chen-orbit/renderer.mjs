@@ -1,13 +1,13 @@
 import {buildAttractor,cameraAt,palettes,TAU,wrap} from './core.mjs';
 import {buildLightTrail} from './patterns.mjs';
 let cached;
-const vertex=`#version 300 es
+export const vertexShader=`#version 300 es
 precision highp float;
-in vec4 point;
-uniform vec2 resolution;
-uniform float azimuth,elevation,distance,phase,pointScale;
-uniform int layer;
-out float height,depth,flow,light;
+precision highp int;
+in highp vec4 point;
+uniform highp vec2 resolution;
+uniform highp float azimuth,elevation,distance,phase,pointScale;
+out highp float height,depth,flow,light;
 float packet(float age){return smoothstep(0.,.008,age)*exp(-pow(age/.065,2.));}
 void main(){
  float c=cos(azimuth),s=sin(azimuth),ce=cos(elevation),se=sin(elevation);
@@ -24,12 +24,13 @@ void main(){
  float u=point.w,t=phase/6.28318530718;
  light=(packet(fract(t-u))+ .65*packet(fract(t+.5-u)))*smoothstep(0.,.035,u)*(1.-smoothstep(.965,1.,u));
 }`;
-const fragment=`#version 300 es
+export const fragmentShader=`#version 300 es
 precision highp float;
-uniform int palette,pass,layer,pattern;
-uniform float glow;
-in float height,depth,flow,light;
-out vec4 color;
+precision highp int;
+uniform highp int palette,pass,layer,pattern;
+uniform highp float glow;
+in highp float height,depth,flow,light;
+out highp vec4 color;
 vec3 ink(float h){
  if(palette==1)return mix(vec3(.04,.26,.44),vec3(.64,1.,.84),h);
  if(palette==2)return mix(vec3(.24,.30,.51),vec3(1.,.91,.76),h);
@@ -56,7 +57,7 @@ export function createRenderer(canvas) {
  const gl=canvas.getContext('webgl2',{alpha:false,antialias:true,preserveDrawingBuffer:true});
  if(!gl)throw new Error('WebGL2 is unavailable. Try a browser with hardware acceleration.');
  function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
- const program=gl.createProgram(),vs=compile(gl.VERTEX_SHADER,vertex),fs=compile(gl.FRAGMENT_SHADER,fragment);
+ const program=gl.createProgram(),vs=compile(gl.VERTEX_SHADER,vertexShader),fs=compile(gl.FRAGMENT_SHADER,fragmentShader);
  gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);
  if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(program));
  const model=cached||(cached=buildAttractor()),trail=buildLightTrail(model),resources=[];
