@@ -514,13 +514,12 @@
     "category": "Dynamics",
     "date": "2026-11-09",
     "url": "experiments/chen-orbit/index.html",
-    "description": "A folded skin grown directly from the Chen–Čelikovský trajectory. Compare cyclic origin forcing, the earlier genus-2 sculpture and the original luminous trace.",
+    "description": "The original luminous Chen–Čelikovský attractor, animated by soft traveling light trains along its real trajectory. Hold the camera to watch the pattern cycle.",
     "tags": [
       "chaos",
       "attractor",
       "3d",
-      "density surface",
-      "cyclic forcing",
+      "light trails",
       "WebGL"
     ],
     "cover": "covers/chen-orbit.svg",
@@ -529,16 +528,12 @@
     "note": "Study 023 · closed genus-2 surface · two tunnels · original trace comparison",
     "variants": [
       {
-        "title": "Cyclic origin",
-        "url": "experiments/chen-orbit/index.html?form=flow&origin=cyclic"
+        "title": "Hold camera · traveling light",
+        "url": "experiments/chen-orbit/index.html?motion=still"
       },
       {
-        "title": "Earlier genus-2 sculpture",
-        "url": "experiments/chen-orbit/index.html?form=sculpture"
-      },
-      {
-        "title": "Original trajectory · comparison",
-        "url": "experiments/chen-orbit/index.html?form=trace&azimuth=0&elevation=12&phase=0"
+        "title": "Original glow · comparison",
+        "url": "experiments/chen-orbit/index.html?pattern=original"
       },
       {
         "title": "Paul Bourke · reference",

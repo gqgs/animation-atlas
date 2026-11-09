@@ -8,7 +8,7 @@ let renderer,exportController=null,last=performance.now(),dirty=true,previousKey
 function graphicsFailure(error){playing=false;$('status').textContent=error.message;$('error').hidden=false;$('error').textContent=error.message;$('meter').textContent='GRAPHICS UNAVAILABLE';for(const id of ['play','png','record'])$(id).disabled=true;}
 try {renderer=createRenderer(canvas);}catch(error){graphicsFailure(error);}
 const specs=[
- ['duration','Revolution · seconds',1,0,'primary'],['glow','Luminance',.01,2,'primary'],
+ ['duration','Loop · seconds',1,0,'primary'],['glow','Luminance',.01,2,'primary'],
  ['azimuth','Azimuth · degrees',1,0,'camera'],['elevation','Elevation · degrees',1,0,'camera'],['zoom','Closeness',.01,2,'camera'],
 ];
 for(const [key,title,step,,group] of specs){
@@ -20,10 +20,8 @@ for(const [key,title,step,,group] of specs){
 function markCustom(){dirty=true;}
 function sync(){
  for(const [key,,,digits] of specs){$(key).value=p[key];$(key+'Value').value=p[key].toFixed(digits);}
- for(const key of ['motion','palette','form','origin'])$(key).value=p[key];
- $('origin-control').hidden=p.form!=='flow';
- $('description').textContent=p.form==='flow'?'A folded skin grown directly from the trajectory’s three-dimensional density. Slow passages glow amber; faster flow shades into violet.':p.form==='sculpture'?'The earlier designed genus-2 sculpture, with thick tunnel walls and Chen grain on its skin.':'The original unforced Chen trajectory: luminous points and a continuous trace in its actual three-dimensional geometry.';
- $('play').textContent=playing?'Pause orbit':'Play orbit';
+ for(const key of ['motion','palette','pattern'])$(key).value=p[key];
+ $('play').textContent=playing?'Pause animation':'Play animation';
  $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';dirty=true;
 }
 sync();
@@ -35,7 +33,7 @@ function render(){
  if(!dirty&&key===previousKey)return;
  try{
   renderer.draw(p,phase,w,h);
-  $('meter').textContent=`${p.form==='flow'?`DENSITY SKIN / ${p.origin==='cyclic'?'CYCLIC ORIGIN':'FIXED ORIGIN'}`:p.form==='sculpture'?'CLOSED SURFACE / GENUS 2':'180,000 SAMPLES'} / ${Math.round(phase*360)}° ORBIT`;
+  $('meter').textContent=`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
   $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';previousKey=key;dirty=false;
  }catch(error){graphicsFailure(error);renderer=null;sync();}
 }
@@ -44,10 +42,9 @@ requestAnimationFrame(animate);
 function togglePlay(){if(exportController||!renderer)return;playing=!playing;sync();}
 $('play').onclick=togglePlay;
 $('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
-$('form').onchange=()=>{p.form=$('form').value;sync();};
-$('origin').onchange=()=>{p.origin=$('origin').value;sync();};
+$('pattern').onchange=()=>{p.pattern=$('pattern').value;sync();};
 $('palette').onchange=()=>{p.palette=$('palette').value;sync();};
-$('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;phase=0;sync();};
+$('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;if(p.motion==='orbit')phase=0;sync();};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;sync();};
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');dirty=true;}
 $('hide').onclick=hide;$('show').onclick=hide;
