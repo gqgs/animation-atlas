@@ -4,9 +4,9 @@ import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 
 const $=id=>document.getElementById(id);
 const canvas=$('scene');
-const settings={palette:'porcelain',strands:26,trail:370,drift:.45,width:.85,zoom:1,duration:26};
+const settings={palette:'porcelain',strands:22,trail:300,density:.55,drift:.8,width:.85,zoom:1,duration:26};
 const specs=[
-  ['strands',8,44,1],['trail',100,720,10],['drift',0,2,.05],
+  ['strands',8,44,1],['trail',100,720,10],['density',.05,1,.05],['drift',0,2,.05],
   ['width',.35,2.5,.05],['zoom',.7,1.4,.01],['duration',8,90,1],
 ];
 const params=new URLSearchParams(location.search);
@@ -18,6 +18,7 @@ if(['porcelain','nocturne','ember'].includes(params.get('palette')))settings.pal
 let phase=Math.max(0,Math.min(1,Number(params.get('phase'))||0));
 let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches&&!params.has('phase');
 let last=performance.now(),seed=references[0],orbit=null,paint=null,searchToken=0,attempts=0,exportController=null;
+let dirty=true,rebuildTimer=null;
 const seen=new Set(references);
 const storageKey='eigendynamics-polynomial-tides-saved-v1';
 let saved=[];
@@ -51,8 +52,12 @@ function sync(){
   $('play').textContent=playing?'Pause':'Play';
 }
 function resize(){
-  const ratio=Math.min(devicePixelRatio||1,1.5);
-  canvas.width=Math.round(innerWidth*ratio);canvas.height=Math.round(innerHeight*ratio);
+  // Keep the live preview lightweight on 4K displays. Exports still
+  // rasterize directly at the user's selected 720/1080/2160 resolution.
+  const ratio=Math.min(devicePixelRatio||1,1.5,2200/Math.max(1,innerWidth),1400/Math.max(1,innerHeight));
+  canvas.width=Math.max(1,Math.round(innerWidth*ratio));
+  canvas.height=Math.max(1,Math.round(innerHeight*ratio));
+  dirty=true;
 }
 addEventListener('resize',resize);resize();
 function load(code,{announce=true}={}){
@@ -61,7 +66,7 @@ function load(code,{announce=true}={}){
     decodeSeed(normalized);
     const next=buildOrbit(normalized);
     const inspection=inspectSeed(normalized,{steps:6500,burn:800});
-    orbit=next;seed=normalized;paint=makePainter(orbit,{...settings});
+    orbit=next;seed=normalized;resetPainter();
     $('seed').value=seed;$('code').textContent=seed;
     $('metric').textContent=inspection.accepted?'BOUNDED · STRETCHING':'BOUNDED · NOT CLASSIFIED';
     $('lambda').textContent=inspection.lambda===null?'—':inspection.lambda.toFixed(4);
@@ -74,7 +79,16 @@ function load(code,{announce=true}={}){
     return false;
   }
 }
-function resetPainter(){if(orbit)paint=makePainter(orbit,{...settings});}
+function resetPainter(){
+  clearTimeout(rebuildTimer);rebuildTimer=null;
+  if(orbit){paint=makePainter(orbit,{...settings});dirty=true;}
+}
+function schedulePainter(){
+  // A slider can emit dozens of input events in one drag. Rebuild the cached
+  // geometry after a short pause rather than on every pointer movement.
+  clearTimeout(rebuildTimer);
+  rebuildTimer=setTimeout(resetPainter,130);
+}
 sync();
 load(params.get('seed')||references[0]);
 if(!orbit)load(references[0]);
@@ -82,8 +96,11 @@ function draw(target,t=phase,renderer=paint){if(renderer)renderer(target,t);}
 function frame(now){
   const dt=Math.min(.10,Math.max(0,(now-last)/1000));last=now;
   if(playing&&!document.hidden&&!exportController)phase=(phase+dt/settings.duration)%1;
-  draw(canvas,phase);
-  $('phase').value=phase;$('phaseValue').textContent=(phase*100).toFixed(1)+'%';
+  if(playing&&!document.hidden&&!exportController)dirty=true;
+  if(dirty&&!document.hidden){
+    draw(canvas,phase);dirty=false;
+    $('phase').value=phase;$('phaseValue').textContent=(phase*100).toFixed(1)+'%';
+  }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -92,12 +109,15 @@ function pauseToggle(){
   playing=!playing;sync();
 }
 $('play').onclick=pauseToggle;canvas.onclick=pauseToggle;
-$('phase').oninput=()=>{phase=Number($('phase').value);playing=false;sync();};
-for(const [key] of specs)$(key).oninput=()=>{
-  if(exportController)return;
-  settings[key]=Number($(key).value);
-  sync();if(key!=='duration')resetPainter();
-};
+$('phase').oninput=()=>{phase=Number($('phase').value);playing=false;dirty=true;sync();};
+for(const [key] of specs){
+  $(key).oninput=()=>{
+    if(exportController)return;
+    settings[key]=Number($(key).value);
+    sync();if(key!=='duration')schedulePainter();
+  };
+  $(key).onchange=()=>{if(key!=='duration'&&!exportController)resetPainter();};
+}
 $('palette').onchange=()=>{if(!exportController){settings.palette=$('palette').value;resetPainter();}};
 $('apply').onclick=()=>{if(!exportController){searchToken++;$('discover').textContent='Discover new';load($('seed').value);}};
 $('seed').onkeydown=event=>{if(event.key==='Enter'){$('apply').click();}};
