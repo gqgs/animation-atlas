@@ -1,5 +1,5 @@
-import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs?v=planes-1';
-import {createRenderer} from './renderer.mjs?v=planes-1';
+import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs?v=density-1';
+import {createRenderer} from './renderer.mjs?v=density-1';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
 const restored=readSettings(location.search),p=restored.parameters;
@@ -20,8 +20,8 @@ for(const [key,title,step,,group] of specs){
 function markCustom(){dirty=true;}
 function sync(){
  for(const [key,,,digits] of specs){$(key).value=p[key];$(key+'Value').value=p[key].toFixed(digits);}
- for(const key of ['motion','palette','pattern','study','level'])$(key).value=p[key];
- $('projection-controls').hidden=p.study!=='planes';$('guides').checked=p.guides;
+ for(const key of ['motion','palette','pattern','study','level','stride'])$(key).value=p[key];
+ $('projection-controls').hidden=p.study!=='planes';$('guides').checked=p.guides;$('lines').checked=p.lines;
  $('intro').textContent=p.study==='planes'?'The same orbit, projected onto a growing fan of vertical planes. Each step bisects the angles between the previous planes.':'Two light trains follow the chaotic orbit, sweeping through its lobes and leaving soft trails. The original point cloud stays beneath them.';
  $('play').textContent=playing?'Pause animation':'Play animation';
  $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';dirty=true;
@@ -35,7 +35,7 @@ function render(){
  if(!dirty&&key===previousKey)return;
  try{
   renderer.draw(p,phase,w,h);
-  $('meter').textContent=p.study==='planes'?`${2**p.level} PLANES / ${180/2**p.level}° SPACING / SAME SAMPLES`:`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
+  $('meter').textContent=p.study==='planes'?`${2**p.level} PLANES / ${(180000/p.stride).toLocaleString('en-US')} SAMPLES / LINES ${p.lines?'ON':'OFF'}`:`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
   $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';previousKey=key;dirty=false;
  }catch(error){graphicsFailure(error);renderer=null;sync();}
 }
@@ -46,6 +46,8 @@ $('play').onclick=togglePlay;
 $('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
 $('study').onchange=()=>{p.study=$('study').value;sync();};
 $('level').onchange=()=>{p.level=Number($('level').value);sync();};
+$('stride').onchange=()=>{p.stride=Number($('stride').value);sync();};
+$('lines').onchange=()=>{p.lines=$('lines').checked;sync();};
 $('guides').onchange=()=>{p.guides=$('guides').checked;sync();};
 $('pattern').onchange=()=>{p.pattern=$('pattern').value;sync();};
 $('palette').onchange=()=>{p.palette=$('palette').value;sync();};

@@ -26,3 +26,17 @@ test('projection links round-trip and invalid controls retain safe defaults',()=
  for(const level of ['-1','5','1.5','Infinity','bad',''])assert.equal(readSettings('?study=planes&level='+level).parameters.level,2);
  assert.equal(readSettings('?study=bad&guides=no').parameters.study,'trajectory');assert.equal(readSettings('?study=bad&guides=no').parameters.guides,false);
 });
+test('all sample densities preserve exact source samples and nested order',()=>{
+ const model=buildAttractor({count:12000});
+ for(const stride of [8,4,2,1]){
+  const samples=projectionSamples(model,stride);assert.equal(samples.count,Math.ceil(model.count/stride));
+  for(let i=0;i<samples.count;i++)assert.deepEqual(samples.data.subarray(i*4,i*4+4),model.data.subarray(i*stride*4,i*stride*4+4));
+  if(stride===1)assert.equal(samples.data,model.data,'full density reuses the original data');
+ }
+ for(const stride of [0,3,16,-1,NaN])assert.throws(()=>projectionSamples(model,stride),RangeError);
+});
+test('density and connecting lines round-trip without changing default mode',()=>{
+ for(const stride of [8,4,2,1])for(const lines of [false,true]){const p={...defaults,study:'planes',stride,lines};assert.deepEqual(readSettings(settingsQuery(p,.25)).parameters,p);}
+ for(const stride of ['0','3','9','1.5','Infinity','bad',''])assert.equal(readSettings('?stride='+stride).parameters.stride,8);
+ assert.equal(defaults.stride,8);assert.equal(defaults.lines,false);assert.equal(readSettings('?lines=yes').parameters.lines,false);assert.equal(defaults.study,'trajectory');
+});
