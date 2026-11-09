@@ -1,5 +1,6 @@
 import {references,decodeSeed,inspectSeed,buildOrbit,randomSeed} from './core.mjs';
 import {makePainter} from './painter.mjs';
+import {shapeMetrics,scoreShape,rankCandidates,coefficientResidual} from './shape.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 
 const $=id=>document.getElementById(id);
@@ -10,6 +11,9 @@ const specs=[
   ['width',.35,2.5,.05],['zoom',.7,1.4,.01],['duration',8,90,1],
 ];
 const params=new URLSearchParams(location.search);
+let discoveryMode=['chaos','ring','symmetry','balanced'].includes(params.get('discovery'))
+  ?params.get('discovery'):'chaos';
+let rankedResults=[],currentMetrics=null;
 for(const [key,min,max,step] of specs)if(params.has(key)){
   const value=Number(params.get(key));
   if(Number.isFinite(value))settings[key]=Math.max(min,Math.min(max,step===1?Math.round(value):value));
@@ -20,6 +24,26 @@ let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches&&!params.has
 let last=performance.now(),seed=references[0],orbit=null,paint=null,searchToken=0,attempts=0,exportController=null;
 let dirty=true,rebuildTimer=null;
 const seen=new Set(references);
+function formatMetric(value){return Number.isFinite(value)?value.toFixed(3):'—';}
+function refreshRanked(){
+  const selector=$('ranked');
+  selector.replaceChildren(new Option('Choose a ranked candidate…',''));
+  const objective=discoveryMode==='chaos'?'ring':discoveryMode;
+  for(const {seed:code,metrics} of rankedResults){
+    const score=scoreShape(metrics,objective);
+    const order=metrics.order===null?'ring':metrics.order+'-fold';
+    selector.add(new Option(code+' · '+score.toFixed(3)+' · '+order,code));
+  }
+}
+function showMetrics(){
+  if(!orbit||!currentMetrics)return;
+  $('isotropy').textContent=formatMetric(currentMetrics.isotropy);
+  $('radial').textContent=formatMetric(currentMetrics.radial);
+  $('symmetry').textContent=formatMetric(currentMetrics.symmetry);
+  $('order').textContent=currentMetrics.order===null?'continuous / unclear':currentMetrics.order+'-fold';
+  $('rotationResidual').textContent=formatMetric(coefficientResidual(seed));
+}
+$('discoveryMode').value=discoveryMode;
 const storageKey='eigendynamics-polynomial-tides-saved-v1';
 let saved=[];
 try{
@@ -67,11 +91,14 @@ function load(code,{announce=true}={}){
     const next=buildOrbit(normalized);
     const inspection=inspectSeed(normalized,{steps:6500,burn:800});
     orbit=next;seed=normalized;resetPainter();
+    currentMetrics=shapeMetrics(next.points);
+    showMetrics();
     $('seed').value=seed;$('code').textContent=seed;
     $('metric').textContent=inspection.accepted?'BOUNDED · STRETCHING':'BOUNDED · NOT CLASSIFIED';
     $('lambda').textContent=inspection.lambda===null?'—':inspection.lambda.toFixed(4);
     $('occupancy').textContent=inspection.occupancy+' / 576';
     $('references').value=references.includes(seed)?seed:'';
+    $('ranked').value=rankedResults.some(x=>x.seed===seed)?seed:'';
     if(announce)status(seed+' · '+(inspection.accepted?'promising strange-attractor candidate':'bounded orbit; chaos not established')+'.');
     return true;
   }catch(error){
@@ -127,6 +154,7 @@ $('favorite').onclick=()=>{remember(seed);status('Saved '+seed+' in this browser
 function sceneURL(){
   const url=new URL(location.href);url.search='';
   url.searchParams.set('seed',seed);
+  url.searchParams.set('discovery',discoveryMode);
   for(const [key,value] of Object.entries(settings))url.searchParams.set(key,String(value));
   url.searchParams.set('phase',phase.toFixed(6));
   return url.href;
@@ -138,39 +166,101 @@ async function copy(text,success){
 }
 $('copySeed').onclick=()=>copy(seed,'Copied '+seed+'.');
 $('copyLink').onclick=()=>copy(sceneURL(),'Scene URL copied with the seed, settings and paused frame.');
+$('discoveryMode').onchange=()=>{
+  if(exportController)return;
+  searchToken++;$('discover').textContent='Discover new';
+  discoveryMode=$('discoveryMode').value;
+  rankedResults=rankCandidates(rankedResults,
+    discoveryMode==='chaos'?'ring':discoveryMode);
+  refreshRanked();showMetrics();
+};
+$('ranked').onchange=()=>{
+  if($('ranked').value&&!exportController){
+    searchToken++;$('discover').textContent='Discover new';
+    load($('ranked').value);
+  }
+};
 $('discover').onclick=async()=>{
   if(exportController)return;
   if($('discover').textContent==='Stop search'){
-    searchToken++;$('discover').textContent='Discover new';status('Discovery stopped after '+attempts+' candidates.');return;
+    searchToken++;$('discover').textContent='Discover new';
+    status('Discovery stopped after '+attempts+' candidates.');
+    return;
   }
-  const token=++searchToken;let tried=0,secondPass=0;
+  const token=++searchToken,mode=discoveryMode,geometry=mode!=='chaos';
+  const limit=geometry?1200:Infinity,goal=geometry?16:1;
+  let tried=0,secondPass=0;
+  const pool=[];
   $('discover').textContent='Stop search';
-  status('Searching the 25¹² coefficient space…');
-  // Time-slice the CPU work so controls, painting and cancellation stay usable.
+  status(geometry?'Searching for '+mode+' shapes…':'Searching for strange attractors…');
   try{
-    while(token===searchToken){
-      for(let j=0;j<60&&token===searchToken;j++){
+    while(token===searchToken&&tried<limit&&pool.length<goal){
+      // Bound CPU work on the main thread. A geometry search completes an
+      // objective-specific pool before choosing the strongest result, whereas
+      // the original chaos mode still returns the first confirmed seed.
+      for(let j=0;j<18&&token===searchToken&&tried<limit&&pool.length<goal;j++){
         const candidate=randomSeed();
         if(seen.has(candidate))continue;
         seen.add(candidate);attempts++;tried++;
-        const first=inspectSeed(candidate,{steps:2800,burn:450});
+        const first=inspectSeed(candidate,{
+          steps:2800,burn:450,filter:geometry?'geometry':'chaos'
+        });
         if(!first.accepted)continue;
         secondPass++;
-        const confirmed=inspectSeed(candidate,{steps:9000,burn:1000});
+        const confirmed=inspectSeed(candidate,{
+          steps:9000,burn:1000,filter:geometry?'geometry':'chaos',
+          withPoints:geometry
+        });
         if(!confirmed.accepted)continue;
-        if(load(candidate,{announce:false})){
-          remember(candidate);playing=true;phase=0;sync();
-          status('Discovered '+candidate+' after '+tried+' tries ('+secondPass+' second-pass candidates). Automatically saved locally. This heuristic does not establish historical novelty.');
-          $('attempts').textContent=String(attempts);
-          return;
+        if(!geometry){
+          if(load(candidate,{announce:false})){
+            remember(candidate);playing=true;phase=0;sync();
+            status('Discovered '+candidate+' after '+tried+' tries ('+
+              secondPass+' long-run candidates). Saved locally. Chaoticity and historical novelty are not proven.');
+            $('attempts').textContent=String(attempts);
+            return;
+          }
+          continue;
         }
+        const metrics=shapeMetrics(confirmed.points);
+        pool.push({seed:candidate,metrics,lambda:confirmed.lambda});
       }
       $('attempts').textContent=String(attempts);
-      status('Screening candidates… '+tried+' checked · '+secondPass+' long-run tests · click Stop search to cancel.');
+      if(geometry){
+        const best=pool.length?rankCandidates(pool,mode,1)[0]:null;
+        status('Evaluating '+mode+' geometry · '+tried+'/'+limit+' seeds · '+
+          pool.length+'/'+goal+' confirmed shapes'+
+          (best?' · best '+best.seed+' ('+scoreShape(best.metrics,mode).toFixed(3)+')':'')+
+          ' · Stop search to cancel.');
+      }else{
+        status('Screening chaotic candidates · '+tried+' tested · '+
+          secondPass+' long-run checks · Stop search to cancel.');
+      }
       await new Promise(resolve=>requestAnimationFrame(resolve));
     }
-  }catch(error){status('Discovery failed: '+error.message);}
-  finally{if(token===searchToken)$('discover').textContent='Discover new';}
+    if(token!==searchToken)return;
+    if(geometry){
+      if(pool.length){
+        rankedResults=rankCandidates(pool,mode,8);
+        refreshRanked();
+        const top=rankedResults[0];
+        if(load(top.seed,{announce:false})){
+          remember(top.seed);phase=0;playing=true;sync();
+          status('Ranked '+pool.length+' confirmed '+mode+' candidates from '+
+            tried+' random seeds. Best: '+top.seed+' · score '+
+            scoreShape(top.metrics,mode).toFixed(3)+
+            '. Select other finalists above. This ranking does not prove symmetry or novelty.');
+        }
+      }else{
+        status('No bounded, spatially distributed candidates after '+tried+
+          ' trials. Try again.');
+      }
+    }
+  }catch(error){
+    status('Discovery failed: '+error.message);
+  }finally{
+    if(token===searchToken)$('discover').textContent='Discover new';
+  }
 };
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');}
 $('hide').onclick=hide;$('show').onclick=hide;
