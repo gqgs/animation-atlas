@@ -27,22 +27,25 @@ export function buildSurface({nx=80,ny=64,nz=48,distance=surfaceDistance,bounds=
  function edge(a,b){if(a>b)[a,b]=[b,a];const key=a*total+b;if(edges.has(key))return edges.get(key);const pa=position(a),pb=position(b),t=values[a]/(values[a]-values[b]),p=pa.map((v,i)=>v+t*(pb[i]-v)),e=.001;
  const n=[distance(p[0]+e,p[1],p[2])-distance(p[0]-e,p[1],p[2]),distance(p[0],p[1]+e,p[2])-distance(p[0],p[1]-e,p[2]),distance(p[0],p[1],p[2]+e)-distance(p[0],p[1],p[2]-e)],length=Math.hypot(...n),index=vertices.length/3;
  vertices.push(...p);normals.push(...n.map(v=>v/length));edges.set(key,index);return index;}
- function triangle(a,b,c){const p=[a,b,c].map(i=>vertices.slice(i*3,i*3+3)),u=p[1].map((v,i)=>v-p[0][i]),v=p[2].map((v,i)=>v-p[0][i]),n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(n.reduce((sum,x,i)=>sum+x*normals[a*3+i],0)<0)[b,c]=[c,b];indices.push(a,b,c);}
+ function triangle(a,b,c,outward){const p=[a,b,c].map(i=>vertices.slice(i*3,i*3+3)),u=p[1].map((v,i)=>v-p[0][i]),v=p[2].map((v,i)=>v-p[0][i]),n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(n.reduce((sum,x,i)=>sum+x*outward[i],0)<0)[b,c]=[c,b];indices.push(a,b,c);}
  const tets=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
  for(let k=0;k<nz;k++)for(let j=0;j<ny;j++)for(let i=0;i<nx;i++){
   const a=i+j*strideY+k*strideZ,cube=[a,a+1,a+1+strideY,a+strideY,a+strideZ,a+1+strideZ,a+1+strideY+strideZ,a+strideY+strideZ];
   if(cube.every(id=>values[id]>=0)||cube.every(id=>values[id]<0))continue;
   for(const tet of tets){const inside=tet.map(t=>cube[t]).filter(id=>values[id]<0),outside=tet.map(t=>cube[t]).filter(id=>values[id]>=0);if(inside.length===0||inside.length===4)continue;
-   if(inside.length===1||inside.length===3){const single=inside.length===1?inside:outside,other=inside.length===1?outside:inside;triangle(...other.map(b=>edge(single[0],b)));}
-   else{const [a,b]=inside,[c,d]=outside,ac=edge(a,c),ad=edge(a,d),bc=edge(b,c),bd=edge(b,d);triangle(ac,ad,bc);triangle(ad,bd,bc);}
+   // Classify winding against this tetrahedron's own linear cut, not a
+   // smoothed shading normal which can disagree near a sharp density fold.
+   const pin=position(inside[0]),pout=position(outside[0]),outward=pout.map((v,i)=>v-pin[i]);
+   if(inside.length===1||inside.length===3){const single=inside.length===1?inside:outside,other=inside.length===1?outside:inside;triangle(...other.map(b=>edge(single[0],b)),outward);}
+   else{const [a,b]=inside,[c,d]=outside,ac=edge(a,c),ad=edge(a,d),bc=edge(b,c),bd=edge(b,d);triangle(ac,ad,bc,outward);triangle(ad,bd,bc,outward);}
   }
  }
  return {positions:new Float32Array(vertices),normals:new Float32Array(normals),indices:new Uint32Array(indices)};
 }
 export function topology(mesh){
- const vertices=mesh.positions.length/3,faces=mesh.indices.length/3,edgeCounts=new Map(),parent=Array.from({length:vertices},(_,i)=>i);
+ const vertices=mesh.positions.length/3,faces=mesh.indices.length/3,edgeCounts=new Map(),edgeDirections=new Map(),parent=Array.from({length:vertices},(_,i)=>i);
  const find=x=>{while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x];}return x;};
- for(let i=0;i<mesh.indices.length;i+=3){const t=mesh.indices.subarray(i,i+3);for(let j=0;j<3;j++){let a=t[j],b=t[(j+1)%3];parent[find(a)]=find(b);if(a>b)[a,b]=[b,a];const key=a*vertices+b;edgeCounts.set(key,(edgeCounts.get(key)||0)+1);}}
+ for(let i=0;i<mesh.indices.length;i+=3){const t=mesh.indices.subarray(i,i+3);for(let j=0;j<3;j++){let a=t[j],b=t[(j+1)%3];parent[find(a)]=find(b);const direction=a<b?1:-1;if(a>b)[a,b]=[b,a];const key=a*vertices+b;edgeDirections.set(key,(edgeDirections.get(key)||0)+direction);edgeCounts.set(key,(edgeCounts.get(key)||0)+1);}}
  const components=new Set(parent.map((_,i)=>find(i))).size,edges=edgeCounts.size,euler=vertices-edges+faces;
- return {vertices,edges,faces,components,boundaryEdges:[...edgeCounts.values()].filter(n=>n===1).length,nonmanifoldEdges:[...edgeCounts.values()].filter(n=>n!==2).length,euler,genus:(2-euler)/2};
+ return {vertices,edges,faces,components,inconsistentEdges:[...edgeDirections.values()].filter(n=>n!==0).length,boundaryEdges:[...edgeCounts.values()].filter(n=>n===1).length,nonmanifoldEdges:[...edgeCounts.values()].filter(n=>n!==2).length,euler,genus:(2-euler)/2};
 }
