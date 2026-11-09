@@ -11,7 +11,11 @@ permissions:
 jobs:
   browser:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        pass: [visual, export]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -27,26 +31,28 @@ jobs:
       - name: Validate GLSL ES shader linking
         run: node dist/experiments/chen-orbit/tests/link-shaders.mjs
       - name: Render early visual review
+        if: matrix.pass == 'visual'
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
           QA_OUTPUT: ${{ runner.temp }}/chen-visual-output
           QA_VISUAL_ONLY: '1'
         run: node dist/experiments/chen-orbit/tests/browser-test.cjs
       - name: Publish early visual evidence
-        if: always()
+        if: always() && matrix.pass == 'visual'
         uses: actions/upload-artifact@v4
         with:
           name: chen-orbit-visual
           path: ${{ runner.temp }}/chen-visual-output
           retention-days: 14
       - name: Test render, controls, PNG and actual MP4
+        if: matrix.pass == 'export'
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
           QA_OUTPUT: ${{ runner.temp }}/chen-qa-output
           QA_EXPORT_ONLY: '1'
         run: node dist/experiments/chen-orbit/tests/browser-test.cjs
       - name: Preserve visual evidence
-        if: always()
+        if: always() && matrix.pass == 'export'
         uses: actions/upload-artifact@v4
         with:
           name: chen-orbit-qa
