@@ -506,5 +506,35 @@
         "url": "downloads/spiral-julia-source.zip"
       }
     ]
+  },
+  {
+    "id": "polynomial-tides",
+    "title": "Polynomial Tides",
+    "index": 23,
+    "category": "Dynamics",
+    "date": "2026-11-09",
+    "url": "experiments/polynomial-tides/index.html",
+    "description": "Quadratic strange attractors bloom into moving iridescent filaments. Revisit Sprott's coded examples or discover, screen, save, and animate new 12-letter coefficient seeds.",
+    "tags": [
+      "Sprott",
+      "polynomial attractors",
+      "chaos",
+      "seed discovery",
+      "Paul Bourke",
+      "generative art"
+    ],
+    "cover": "covers/polynomial-tides.svg",
+    "color": "purple",
+    "note": "Study 023 · genuine 2D quadratic iterates · two-stage random-seed screening · PNG & fixed-frame MP4",
+    "variants": [
+      {
+        "title": "Paul Bourke · polynomial attractors",
+        "url": "https://paulbourke.net/fractals/sprott/"
+      },
+      {
+        "title": "Source and numerical checks",
+        "url": "experiments/polynomial-tides/README.md"
+      }
+    ]
   }
 ]
