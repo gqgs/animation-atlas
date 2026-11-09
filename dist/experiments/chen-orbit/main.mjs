@@ -1,6 +1,6 @@
-import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs?v=sweep-1';
-import {loadSweepDensity} from './sweep-renderer.mjs?v=sweep-1';
-import {createRenderer} from './renderer.mjs?v=sweep-1';
+import {defaults,limits,readSettings,settingsQuery,switchCameraMotion,wrapDegrees} from './core.mjs?v=camera-1';
+import {loadSweepDensity} from './sweep-renderer.mjs?v=camera-1';
+import {createRenderer} from './renderer.mjs?v=camera-1';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
 const restored=readSettings(location.search),p=restored.parameters,initialStudy=p.study;
@@ -13,7 +13,7 @@ try {renderer=createRenderer(canvas);}catch(error){graphicsFailure(error);}
 const specs=[
  ['duration','Loop · seconds',1,0,'primary'],['glow','Luminance',.01,2,'primary'],
  ['sweepGain','Density exposure',.01,2,'sweep'],['sweepCutoff','Low-density cutoff',.005,3,'sweep'],
- ['azimuth','Azimuth · degrees',1,0,'camera'],['elevation','Elevation · degrees',1,0,'camera'],['zoom','Closeness',.01,2,'camera'],
+ ['azimuth','Azimuth · degrees',1,0,'camera'],['elevation','Vertical angle · degrees',1,0,'camera'],['zoom','Closeness',.01,2,'camera'],
 ];
 for(const [key,title,step,,group] of specs){
  const label=document.createElement('label');label.textContent=title;
@@ -63,7 +63,7 @@ $('lines').onchange=()=>{p.lines=$('lines').checked;sync();};
 $('guides').onchange=()=>{p.guides=$('guides').checked;sync();};
 $('pattern').onchange=()=>{p.pattern=$('pattern').value;sync();};
 $('palette').onchange=()=>{p.palette=$('palette').value;sync();};
-$('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;p.cameraOffset=wrap(-phase);sync();};
+$('motion').onchange=()=>{Object.assign(p,switchCameraMotion(p,$('motion').value,phase));sync();};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;sync();};
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');dirty=true;}
 $('hide').onclick=hide;$('show').onclick=hide;
@@ -72,7 +72,7 @@ $('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exi
 // All gestures edit the camera only; the integrated orbit remains unchanged.
 let drag=null;
 canvas.onpointerdown=e=>{if(exportController)return;canvas.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,azimuth:p.azimuth,elevation:p.elevation};};
-canvas.onpointermove=e=>{if(!drag||drag.id!==e.pointerId||exportController)return;p.azimuth=((drag.azimuth+(e.clientX-drag.x)*.35+180)%360+360)%360-180;p.elevation=Math.max(-80,Math.min(80,drag.elevation+(e.clientY-drag.y)*.25));dirty=true;sync();};
+canvas.onpointermove=e=>{if(!drag||drag.id!==e.pointerId||exportController)return;p.azimuth=((drag.azimuth+(e.clientX-drag.x)*.35+180)%360+360)%360-180;p.elevation=wrapDegrees(drag.elevation+(e.clientY-drag.y)*.25);dirty=true;sync();};
 for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,e=>{if(drag?.id===e.pointerId)drag=null;});
 canvas.addEventListener('wheel',e=>{e.preventDefault();if(exportController)return;p.zoom=Math.max(.65,Math.min(1.65,p.zoom*Math.exp(-Math.max(-100,Math.min(100,e.deltaY))*.001)));sync();},{passive:false});
 function download(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}

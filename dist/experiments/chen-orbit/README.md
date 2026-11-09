@@ -29,6 +29,8 @@ Rebuild with `node dist/experiments/chen-orbit/tools/precompute-sweep.mjs`. `swe
 
 ## Capture and checks
 
+**Vertical orbit** makes a full 360° overhead-to-underside camera circuit in every study. Its continuous frame avoids sudden pole flips; the back half naturally rotates the view. Switching between horizontal, vertical and held camera preserves the current view and light phase. Scene links and deterministic exports retain the selected path.
+
 Drag/scroll to compose; Space pauses; H hides controls. Scene links preserve settings. Reduced motion starts paused. PNG and MP4 render to a dedicated output-size canvas, at 720/1080/2160 square and 30/60 fps, using `../../shared/frame-export.mjs`; MP4 lazily loads FrameWrap and supports cancellation.
 
 Run `node --test $(find dist -name '*.test.mjs' -print)`. Optional browser QA: `PLAYWRIGHT_MODULE=/path/to/playwright node dist/experiments/chen-orbit/tests/browser-test.cjs`. CI checks multiple phases with the camera held, loop seams, original comparison, PNG, actual H.264 capture and cancellation, mobile and Atlas lifecycle.
