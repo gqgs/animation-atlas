@@ -2,7 +2,7 @@
 export const TAU = 2 * Math.PI;
 export const parameters = Object.freeze({a:36, b:3, c:20});
 export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit'});
-export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-60,60], zoom:[.65,1.65], glow:[.4,1.8]};
+export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-80,80], zoom:[.65,1.65], glow:[.4,1.8]};
 export const palettes = ['ember','glacier','pearl'];
 export const wrap = t => ((t % 1) + 1) % 1;
 export function derivative([x,y,z], {a,b,c}=parameters) { return [a*(y-x), c*y-x*z, x*y-b*z]; }
@@ -28,7 +28,7 @@ export function buildAttractor({count=180000, burn=6000, dt=.002}={}) {
 }
 export function cameraAt(p, phase) {
   const t=TAU*wrap(phase),moving=p.motion==='orbit';
-  return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:p.elevation*Math.PI/180+(moving?.11*Math.sin(t):0),distance:4.4/p.zoom};
+  return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:Math.max(-80*Math.PI/180,Math.min(80*Math.PI/180,p.elevation*Math.PI/180+(moving?.11*Math.sin(t):0))),distance:4.4/p.zoom};
 }
 export function readSettings(search) {
   const q=new URLSearchParams(search),p={...defaults};

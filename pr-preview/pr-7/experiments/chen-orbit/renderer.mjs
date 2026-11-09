@@ -28,13 +28,13 @@ out vec4 color;
 vec3 ink(float h){
  if(palette==1)return mix(vec3(.04,.26,.44),vec3(.64,1.,.84),h);
  if(palette==2)return mix(vec3(.24,.30,.51),vec3(1.,.91,.76),h);
- vec3 violet=vec3(.34,.045,.8),coral=vec3(1.,.17,.17),gold=vec3(1.,.72,.26);
+ vec3 violet=vec3(.48,.07,.95),coral=vec3(1.,.17,.17),gold=vec3(1.,.72,.26);
  return h<.62?mix(violet,coral,smoothstep(0.,.62,h)):mix(coral,gold,smoothstep(.62,1.,h));
 }
 void main(){
  float alpha;
  if(pass==1){alpha=.026+.11*flow;}
- else {float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;alpha=exp(-r*r*4.5)*.15;}
+ else {float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;alpha=exp(-r*r*4.5)*(pass==2?.012:.15);}
  alpha*=glow*(.38+.62*depth);
  color=vec4(ink(1.-height)*(.85+.25*flow),alpha);
 }`;
@@ -57,6 +57,7 @@ export function createRenderer(canvas) {
    const camera=cameraAt(p,phase);gl.uniform2f(uniforms.resolution,width,height);
    for(const key of ['azimuth','elevation','distance'])gl.uniform1f(uniforms[key],camera[key]);
    gl.uniform1f(uniforms.phase,TAU*wrap(phase));gl.uniform1f(uniforms.glow,p.glow);gl.uniform1i(uniforms.palette,palettes.indexOf(p.palette));
+   gl.uniform1i(uniforms.pass,2);gl.uniform1f(uniforms.pointScale,8.);gl.drawArrays(gl.POINTS,0,model.count);
    gl.uniform1i(uniforms.pass,0);gl.uniform1f(uniforms.pointScale,2.2);gl.drawArrays(gl.POINTS,0,model.count);
    gl.uniform1i(uniforms.pass,1);gl.drawArrays(gl.LINE_STRIP,0,model.count);
    return camera;

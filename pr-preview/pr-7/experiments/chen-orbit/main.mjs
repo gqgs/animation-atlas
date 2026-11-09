@@ -1,11 +1,12 @@
-import {defaults,limits,readSettings,settingsQuery} from './core.mjs';
+import {defaults,limits,readSettings,settingsQuery,cameraAt} from './core.mjs';
 import {createRenderer} from './renderer.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
 const restored=readSettings(location.search),p=restored.parameters;
 let phase=restored.phase,playing=!restored.paused&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let renderer,exportController=null,last=performance.now(),dirty=true,previousKey='';
-try {renderer=createRenderer(canvas);}catch(error){$('status').textContent=error.message;$('play').disabled=true;$('png').disabled=true;$('record').disabled=true;}
+function graphicsFailure(error){playing=false;$('status').textContent=error.message;$('error').hidden=false;$('error').textContent=error.message;$('meter').textContent='GRAPHICS UNAVAILABLE';for(const id of ['play','png','record'])$(id).disabled=true;}
+try {renderer=createRenderer(canvas);}catch(error){graphicsFailure(error);}
 const specs=[
  ['duration','Revolution · seconds',1,0,'primary'],['glow','Luminance',.01,2,'primary'],
  ['azimuth','Azimuth · degrees',1,0,'camera'],['elevation','Elevation · degrees',1,0,'camera'],['zoom','Closeness',.01,2,'camera'],
@@ -31,18 +32,18 @@ function render(){
  const [w,h]=dimensions(),key=[...Object.values(p),phase,w,h].join(',');
  if(!dirty&&key===previousKey)return;
  try{
-  const state=renderer.draw(p,phase,w,h);
-  
+  renderer.draw(p,phase,w,h);
   $('meter').textContent=`180,000 SAMPLES / ${Math.round(phase*360)}° ORBIT`;
   $('phase').value=phase;$('phaseValue').value=(phase*100).toFixed(1)+'%';previousKey=key;dirty=false;
- }catch(error){playing=false;$('status').textContent=error.message;renderer=null;sync();}
+ }catch(error){graphicsFailure(error);renderer=null;sync();}
 }
 function animate(now){const dt=Math.min((now-last)/1000,.1);last=now;if(playing&&!document.hidden&&!exportController)phase=(phase+dt/p.duration)%1;if(!exportController)render();requestAnimationFrame(animate);}
 requestAnimationFrame(animate);
 function togglePlay(){if(exportController||!renderer)return;playing=!playing;sync();}
 $('play').onclick=togglePlay;
 $('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
-for(const key of ['motion','palette'])$(key).onchange=()=>{p[key]=$(key).value;markCustom();sync();};
+$('palette').onchange=()=>{p.palette=$('palette').value;sync();};
+$('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;phase=0;sync();};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;sync();};
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');dirty=true;}
 $('hide').onclick=hide;$('show').onclick=hide;
@@ -51,7 +52,7 @@ $('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exi
 // All gestures edit the camera only; the integrated orbit remains unchanged.
 let drag=null;
 canvas.onpointerdown=e=>{if(exportController)return;canvas.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY,azimuth:p.azimuth,elevation:p.elevation};};
-canvas.onpointermove=e=>{if(!drag||drag.id!==e.pointerId||exportController)return;p.azimuth=((drag.azimuth+(e.clientX-drag.x)*.35+180)%360+360)%360-180;p.elevation=Math.max(-60,Math.min(60,drag.elevation+(e.clientY-drag.y)*.25));dirty=true;sync();};
+canvas.onpointermove=e=>{if(!drag||drag.id!==e.pointerId||exportController)return;p.azimuth=((drag.azimuth+(e.clientX-drag.x)*.35+180)%360+360)%360-180;p.elevation=Math.max(-80,Math.min(80,drag.elevation+(e.clientY-drag.y)*.25));dirty=true;sync();};
 for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,e=>{if(drag?.id===e.pointerId)drag=null;});
 canvas.addEventListener('wheel',e=>{e.preventDefault();if(exportController)return;p.zoom=Math.max(.65,Math.min(1.65,p.zoom*Math.exp(-Math.max(-100,Math.min(100,e.deltaY))*.001)));sync();},{passive:false});
 function download(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
