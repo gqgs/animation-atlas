@@ -31,6 +31,7 @@ jobs:
           QA_VISUAL_ONLY: '1'
         run: node dist/experiments/chen-orbit/tests/browser-test.cjs
       - name: Publish early visual evidence
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: chen-orbit-visual

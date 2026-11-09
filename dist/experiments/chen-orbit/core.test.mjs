@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parameters,defaults,derivative,rk4,buildAttractor,cameraAt,readSettings,settingsQuery} from './core.mjs';
+import {parameters,defaults,derivative,rk4,buildAttractor,cameraAt,readSettings,settingsQuery,wrap} from './core.mjs';
 test('reference equations and coefficients are exact',()=>{assert.deepEqual(parameters,{a:36,b:3,c:20});assert.deepEqual(derivative([2,3,4]),[36,52,-6]);assert.deepEqual(derivative([0,0,0]),[0,0,0]);});
 test('RK4 agrees with two half steps on a short interval',()=>{const p=[3,4,20],a=rk4(p,.002),b=rk4(rk4(p,.001),.001);for(let i=0;i<3;i++)assert.ok(Math.abs(a[i]-b[i])<1e-7);});
 test('deterministic trajectory is finite, bounded, occupies both wings and has real depth',()=>{const a=buildAttractor({count:12000}),b=buildAttractor({count:12000});assert.deepEqual(a.data,b.data);assert.ok(a.data.every(Number.isFinite));assert.ok(a.bounds.min[0]<-1&&a.bounds.max[0]>1);assert.ok(a.bounds.max[2]-a.bounds.min[2]>.3);assert.ok(a.bounds.max.every(n=>Math.abs(n)<2));assert.ok(a.bounds.min.every(n=>Math.abs(n)<2));assert.equal(a.data[3],0);assert.equal(a.data.at(-1),1);});
@@ -9,3 +9,5 @@ test('scene links preserve all controls and sanitize untrusted numbers',()=>{con
 test('reject invalid integration sizes and steps',()=>{for(const opts of [{count:1},{count:NaN},{dt:0},{dt:1},{burn:-1}])assert.throws(()=>buildAttractor(opts),RangeError);});
 
 test('camera elevation remains smooth at both slider extremes',()=>{for(const elevation of [-80,-78,78,80]){const p={...defaults,elevation},e=1e-5,a=cameraAt(p,e),b=cameraAt(p,1-e),s=cameraAt(p,0);assert.ok(Math.abs((a.elevation-s.elevation)/e-(s.elevation-b.elevation)/e)<1e-7);for(let phase=0;phase<1;phase+=.01)assert.ok(Math.abs(cameraAt(p,phase).elevation)<=80*Math.PI/180+1e-12);}});
+
+test('resuming orbit can preserve both the camera pose and illumination phase',()=>{const phase=.37,p={...defaults,motion:'still',azimuth:31,elevation:23},before=cameraAt(p,phase),after=cameraAt({...p,motion:'orbit',cameraOffset:wrap(-phase)},phase);assert.deepEqual(after,before);});
