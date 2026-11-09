@@ -1,6 +1,7 @@
 import {buildAttractor,cameraAt,palettes,TAU,wrap} from './core.mjs';
 import {buildSurface,surfaceGLSL} from './surface.mjs';
 import {createRenderer as createTraceRenderer} from './trace-renderer.mjs';
+import {createFlowRenderer} from './flow-renderer.mjs';
 let meshCache,textureCache;
 function flowTexture(){
  if(textureCache)return textureCache;
@@ -64,15 +65,16 @@ export function createRenderer(canvas){
  for(const [name,data] of [['position',mesh.positions],['normal',mesh.normals]]){const b=gl.createBuffer();buffers.push(b);gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);const loc=gl.getAttribLocation(program,name);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,3,gl.FLOAT,false,0,0);}
  const index=gl.createBuffer();buffers.push(index);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,index);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);
  const texture=gl.createTexture(),flow=flowTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.R8,flow.size,flow.size,0,gl.RED,gl.UNSIGNED_BYTE,flow.bytes);for(const k of [gl.TEXTURE_MIN_FILTER,gl.TEXTURE_MAG_FILTER])gl.texParameteri(gl.TEXTURE_2D,k,gl.LINEAR);for(const k of [gl.TEXTURE_WRAP_S,gl.TEXTURE_WRAP_T])gl.texParameteri(gl.TEXTURE_2D,k,gl.CLAMP_TO_EDGE);
- const u=Object.fromEntries(['resolution','azimuth','elevation','distance','eye','glow','phase','palette','flow'].map(k=>[k,gl.getUniformLocation(program,k)]));let trace;
+ const u=Object.fromEntries(['resolution','azimuth','elevation','distance','eye','glow','phase','palette','flow'].map(k=>[k,gl.getUniformLocation(program,k)]));let trace,volume;
  return {
   draw(p,phase,width=canvas.width,height=canvas.height){
+   if(p.form==='flow'){volume||=createFlowRenderer(canvas);return volume.draw(p,phase,width,height);}
    if(p.form==='trace'){trace||=createTraceRenderer(canvas);return trace.draw(p,phase,width,height);}
    if(gl.isContextLost())throw new Error('Graphics context lost. Reload to restore the study.');
    if(canvas.width!==width)canvas.width=width;if(canvas.height!==height)canvas.height=height;
    gl.viewport(0,0,width,height);gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.enable(gl.CULL_FACE);gl.cullFace(gl.BACK);gl.clearColor(.012,.009,.021,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(program);gl.bindVertexArray(vao);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform1i(u.flow,0);
    const camera=cameraAt(p,phase);for(const k of ['azimuth','elevation','distance'])gl.uniform1f(u[k],camera[k]);gl.uniform2f(u.resolution,width,height);gl.uniform3f(u.eye,-Math.sin(camera.azimuth)*Math.cos(camera.elevation)*camera.distance,Math.sin(camera.elevation)*camera.distance,Math.cos(camera.azimuth)*Math.cos(camera.elevation)*camera.distance);gl.uniform1f(u.glow,p.glow);gl.uniform1f(u.phase,TAU*wrap(phase));gl.uniform1i(u.palette,palettes.indexOf(p.palette));gl.drawElements(gl.TRIANGLES,mesh.indices.length,gl.UNSIGNED_INT,0);return camera;
   },
-  dispose(){for(const b of buffers)gl.deleteBuffer(b);gl.deleteTexture(texture);gl.deleteVertexArray(vao);gl.deleteProgram(program);if(trace)trace.dispose();else gl.getExtension('WEBGL_lose_context')?.loseContext();},
+  dispose(){volume?.dispose();for(const b of buffers)gl.deleteBuffer(b);gl.deleteTexture(texture);gl.deleteVertexArray(vao);gl.deleteProgram(program);if(trace)trace.dispose();else gl.getExtension('WEBGL_lose_context')?.loseContext();},
  };
 }

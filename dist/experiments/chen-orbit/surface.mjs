@@ -20,12 +20,12 @@ float surfaceDistance(vec3 p){
  float h=clamp(.5+.5*(d2-d1)/.22,0.,1.);
  return (mix(d2,d1,h)-.22*h*(1.-h))*.85;
 }`;
-export function buildSurface({nx=80,ny=64,nz=48}={}){
+export function buildSurface({nx=80,ny=64,nz=48,distance=surfaceDistance,bounds=[[-1.8,1.8],[-1.3,1.3],[-.95,.95]]}={}){
  const total=(nx+1)*(ny+1)*(nz+1),values=new Float32Array(total),vertices=[],normals=[],indices=[],edges=new Map();
- const strideY=nx+1,strideZ=(nx+1)*(ny+1),position=id=>{const k=Math.floor(id/strideZ),j=Math.floor((id-k*strideZ)/strideY),i=id-k*strideZ-j*strideY;return [-1.8+3.6*i/nx,-1.3+2.6*j/ny,-.95+1.9*k/nz];};
- for(let id=0;id<total;id++)values[id]=surfaceDistance(...position(id));
+ const strideY=nx+1,strideZ=(nx+1)*(ny+1),position=id=>{const k=Math.floor(id/strideZ),j=Math.floor((id-k*strideZ)/strideY),i=id-k*strideZ-j*strideY;return [bounds[0][0]+(bounds[0][1]-bounds[0][0])*i/nx,bounds[1][0]+(bounds[1][1]-bounds[1][0])*j/ny,bounds[2][0]+(bounds[2][1]-bounds[2][0])*k/nz];};
+ for(let id=0;id<total;id++)values[id]=distance(...position(id));
  function edge(a,b){if(a>b)[a,b]=[b,a];const key=a*total+b;if(edges.has(key))return edges.get(key);const pa=position(a),pb=position(b),t=values[a]/(values[a]-values[b]),p=pa.map((v,i)=>v+t*(pb[i]-v)),e=.001;
- const n=[surfaceDistance(p[0]+e,p[1],p[2])-surfaceDistance(p[0]-e,p[1],p[2]),surfaceDistance(p[0],p[1]+e,p[2])-surfaceDistance(p[0],p[1]-e,p[2]),surfaceDistance(p[0],p[1],p[2]+e)-surfaceDistance(p[0],p[1],p[2]-e)],length=Math.hypot(...n),index=vertices.length/3;
+ const n=[distance(p[0]+e,p[1],p[2])-distance(p[0]-e,p[1],p[2]),distance(p[0],p[1]+e,p[2])-distance(p[0],p[1]-e,p[2]),distance(p[0],p[1],p[2]+e)-distance(p[0],p[1],p[2]-e)],length=Math.hypot(...n),index=vertices.length/3;
  vertices.push(...p);normals.push(...n.map(v=>v/length));edges.set(key,index);return index;}
  function triangle(a,b,c){const p=[a,b,c].map(i=>vertices.slice(i*3,i*3+3)),u=p[1].map((v,i)=>v-p[0][i]),v=p[2].map((v,i)=>v-p[0][i]),n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(n.reduce((sum,x,i)=>sum+x*normals[a*3+i],0)<0)[b,c]=[c,b];indices.push(a,b,c);}
  const tets=[[0,5,1,6],[0,1,2,6],[0,2,3,6],[0,3,7,6],[0,7,4,6],[0,4,5,6]];
