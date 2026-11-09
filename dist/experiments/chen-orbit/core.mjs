@@ -1,7 +1,7 @@
 // Chen–Čelikovský system, parameters from Paul Bourke's October 2010 reference.
 export const TAU = 2 * Math.PI;
 export const parameters = Object.freeze({a:36, b:3, c:20});
-export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons', cameraOffset:0});
+export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons', cameraOffset:0, study:'trajectory', level:2, guides:false});
 export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-80,80], zoom:[.65,1.65], glow:[.4,1.8]};
 export const palettes = ['ember','glacier','pearl'];
 export const wrap = t => ((t % 1) + 1) % 1;
@@ -36,6 +36,9 @@ export function readSettings(search) {
   for(const [key,[lo,hi]] of Object.entries(limits))if(q.has(key)&&q.get(key).trim()&&Number.isFinite(Number(q.get(key))))p[key]=Math.max(lo,Math.min(hi,Number(q.get(key))));
   if(q.has('cameraOffset')&&Number.isFinite(Number(q.get('cameraOffset'))))p.cameraOffset=wrap(Number(q.get('cameraOffset')));
   if(['ribbons','original'].includes(q.get('pattern')))p.pattern=q.get('pattern');
+  if(q.get('study')==='planes')p.study='planes';
+  if(q.has('level')&&/^[0-4]$/.test(q.get('level')))p.level=Number(q.get('level'));
+  if(q.get('guides')==='true')p.guides=true;
   if(palettes.includes(q.get('palette')))p.palette=q.get('palette');
   if(['orbit','still'].includes(q.get('motion')))p.motion=q.get('motion');
   const v=Number(q.get('phase'));return {parameters:p,phase:Number.isFinite(v)?wrap(v):0,paused:q.has('phase')};

@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {vertexShader,fragmentShader} from './renderer.mjs';
+import {vertexShader as originalVertex,fragmentShader as originalFragment} from './renderer.mjs';
+
+import {vertexShader as projectionVertex,fragmentShader as projectionFragment} from './projection-renderer.mjs';
 
 // GLSL ES defaults differ by stage: int is highp in vertex, mediump in fragment.
 // Catch interface mismatches even when a permissive driver drops an unused uniform.
@@ -19,7 +21,7 @@ function uniformMismatches(vertex,fragment){
  const a=declarations(vertex,'uniform','vertex'),b=declarations(fragment,'uniform','fragment');
  return [...a].filter(([name,value])=>b.has(name)&&(value.type!==b.get(name).type||value.precision!==b.get(name).precision)).map(([name])=>name);
 }
-test('all linked shader interfaces specify matching precision explicitly',()=>{
+for(const [name,vertexShader,fragmentShader] of [['trajectory',originalVertex,originalFragment],['projections',projectionVertex,projectionFragment]])test(`${name}: all linked shader interfaces specify matching precision explicitly`,()=>{
  for(const [stage,source] of [['vertex',vertexShader],['fragment',fragmentShader]]){
   assert.match(source,/precision highp float;/);assert.match(source,/precision highp int;/);
   for(const storage of ['uniform','in','out'])for(const [name,value] of declarations(source,storage,stage))assert.ok(value.explicit,`${stage} ${storage} ${name} needs explicit precision`);
@@ -30,7 +32,7 @@ test('all linked shader interfaces specify matching precision explicitly',()=>{
  assert.ok(!declarations(vertexShader,'uniform','vertex').has('layer'),'unused fragment-only layer must not be redeclared in vertex');
 });
 test('regression detects the reported default integer-precision mismatch',()=>{
- const vertex=vertexShader.replace('precision highp int;','')+'\nuniform int layer;';
- const fragment=fragmentShader.replace('precision highp int;','').replace('uniform highp int palette,pass,layer,pattern;','uniform int palette,pass,layer,pattern;');
+ const vertex=originalVertex.replace('precision highp int;','')+'\nuniform int layer;';
+ const fragment=originalFragment.replace('precision highp int;','').replace('uniform highp int palette,pass,layer,pattern;','uniform int palette,pass,layer,pattern;');
  assert.deepEqual(uniformMismatches(vertex,fragment),['layer']);
 });
