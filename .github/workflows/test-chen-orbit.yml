@@ -1,0 +1,73 @@
+name: Test Chen Orbit
+on:
+  pull_request:
+    paths:
+      - 'dist/experiments/chen-orbit/**'
+      - 'dist/shared/frame-export*.mjs'
+      - '.github/workflows/test-chen-orbit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        pass: [visual, export, sweep]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Test dynamics and fixed-frame exporter
+        run: node --test $(find dist -name '*.test.mjs' -print)
+      - name: Install isolated browser-test dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg glslang-tools
+          npm install --prefix "$RUNNER_TEMP/chen-qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/chen-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Validate GLSL ES shader linking
+        run: node dist/experiments/chen-orbit/tests/link-shaders.mjs
+      - name: Render early visual review
+        if: matrix.pass == 'visual'
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/chen-visual-output
+          QA_VISUAL_ONLY: '1'
+        run: node dist/experiments/chen-orbit/tests/browser-test.cjs
+      - name: Publish early visual evidence
+        if: always() && matrix.pass == 'visual'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chen-orbit-visual
+          path: ${{ runner.temp }}/chen-visual-output
+          retention-days: 14
+      - name: Test render, controls, PNG and actual MP4
+        if: matrix.pass == 'export'
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/chen-qa-output
+          QA_EXPORT_ONLY: '1'
+        run: node dist/experiments/chen-orbit/tests/browser-test.cjs
+      - name: Preserve visual evidence
+        if: always() && matrix.pass == 'export'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chen-orbit-qa
+          path: ${{ runner.temp }}/chen-qa-output
+          retention-days: 14
+      - name: Test continuous density rendering and exports
+        if: matrix.pass == 'sweep'
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/chen-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/chen-sweep-output
+        run: node dist/experiments/chen-orbit/tests/sweep-browser-test.cjs
+      - name: Preserve continuous density evidence
+        if: always() && matrix.pass == 'sweep'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chen-orbit-sweep
+          path: ${{ runner.temp }}/chen-sweep-output
+          retention-days: 14

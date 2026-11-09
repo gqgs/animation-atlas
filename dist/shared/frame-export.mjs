@@ -42,7 +42,7 @@ export async function exportFrames({
   const ctx=canvas.getContext('2d',{alpha:false});
   if (!ctx) throw new Error('Could not create export canvas');
   const recorder=createRecorder({format,codec:format==='mp4'?'avc':'vp9',
-    framerate:fps,bitrate,quality:95});
+    framerate:fps,bitrate,quality:95,maxQueueSize:2});
   let started=false,stopped=false,failure=null;
   const pending=new Set();
   let rejectFailure;
@@ -78,6 +78,10 @@ export async function exportFrames({
       await step(()=>draw({canvas,ctx,frame,time:frame/fps,phase:frame/plan.frames,
         frames:plan.frames,fps}));
       await step(()=>recorder.capture(canvas));
+      // FrameWrap exposes this hook but does not call it in capture(). Bound
+      // native GPU/codec work so cancellation cannot inherit a whole clip queue.
+      if (typeof recorder.encoder?.backpressure==='function')
+        await step(()=>recorder.encoder.backpressure());
       onProgress(frame+1,plan.frames);
       // Yield to the UI, not to the animation clock; abort also interrupts this wait.
       if (yieldEvery>0&&(frame+1)%yieldEvery===0)

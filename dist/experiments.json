@@ -537,5 +537,47 @@
       }
     ],
     "source": "downloads/polynomial-tides-source.zip"
+  },
+  {
+    "id": "chen-orbit",
+    "title": "Chen Orbit",
+    "index": 24,
+    "category": "Dynamics",
+    "date": "2026-11-09",
+    "url": "experiments/chen-orbit/index.html",
+    "description": "The original luminous Chen–Čelikovský attractor, animated by soft traveling light trains along its real trajectory. Hold the camera to watch the pattern cycle.",
+    "tags": [
+      "chaos",
+      "attractor",
+      "3d",
+      "light trails",
+      "WebGL"
+    ],
+    "cover": "covers/chen-orbit.svg",
+    "source": "downloads/chen-orbit-source.zip",
+    "source_library_id": "libfile_3301184d2b9081919bb4d426d99b8f7e",
+    "note": "Study 024 · traveling light · original Chen trajectory",
+    "variants": [
+      {
+        "title": "Projection planes · angular bisection",
+        "url": "experiments/chen-orbit/index.html?study=planes&level=2&elevation=24&azimuth=12&motion=still"
+      },
+      {
+        "title": "Hold camera · traveling light",
+        "url": "experiments/chen-orbit/index.html?motion=still"
+      },
+      {
+        "title": "Original glow · comparison",
+        "url": "experiments/chen-orbit/index.html?pattern=original"
+      },
+      {
+        "title": "Paul Bourke · reference",
+        "url": "https://paulbourke.net/fractals/chen_celi/"
+      },
+      {
+        "title": "Source & math notes",
+        "url": "downloads/chen-orbit-source.zip"
+      }
+    ]
   }
 ]
