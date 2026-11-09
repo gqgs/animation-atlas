@@ -514,20 +514,28 @@
     "category": "Dynamics",
     "date": "2026-11-09",
     "url": "experiments/chen-orbit/index.html",
-    "description": "A closed genus-2 sculpture with two real tunnels, asymmetrical lobes, illuminated rims and Chen-attractor grain. Circle the solid or compare it with the original chaotic trajectory.",
+    "description": "A folded skin grown directly from the Chen–Čelikovský trajectory. Compare cyclic origin forcing, the earlier genus-2 sculpture and the original luminous trace.",
     "tags": [
-      "genus 2",
-      "surface",
-      "3D",
+      "chaos",
       "attractor",
-      "Chen–Čelikovský",
-      "WebGL2"
+      "3d",
+      "density surface",
+      "cyclic forcing",
+      "WebGL"
     ],
     "cover": "covers/chen-orbit.svg",
     "source": "downloads/chen-orbit-source.zip",
     "source_library_id": "libfile_3301184d2b9081919bb4d426d99b8f7e",
     "note": "Study 023 · closed genus-2 surface · two tunnels · original trace comparison",
     "variants": [
+      {
+        "title": "Cyclic origin",
+        "url": "experiments/chen-orbit/index.html?form=flow&origin=cyclic"
+      },
+      {
+        "title": "Earlier genus-2 sculpture",
+        "url": "experiments/chen-orbit/index.html?form=sculpture"
+      },
       {
         "title": "Original trajectory · comparison",
         "url": "experiments/chen-orbit/index.html?form=trace&azimuth=0&elevation=12&phase=0"

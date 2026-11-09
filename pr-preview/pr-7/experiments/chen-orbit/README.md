@@ -1,16 +1,26 @@
 # Chen Orbit
 
-Study 023. A closed, asymmetrical genus-2 sculpture with two genuine through-tunnels, thick rims, self-shadowing and a slow 48-second camera orbit. The original trajectory remains available under **Form → Original trajectory**. Inspired by the equations and violet/coral/amber image in [Paul Bourke's October 2010 reference](https://paulbourke.net/fractals/chen_celi/).
+Study 023. A folded, illuminated density skin generated directly from the Chen–Čelikovský trajectory, with a slow 48-second camera orbit. Compare the original equations with cyclic x-origin forcing. The earlier designed genus-2 sculpture and original trace both remain available under **Form**. Inspired by the equations and violet/coral/amber image in [Paul Bourke's October 2010 reference](https://paulbourke.net/fractals/chen_celi/).
 
 ## Run
 
 From the repository root: `python3 -m http.server 8080 --directory dist`, then open `/experiments/chen-orbit/`. No build or runtime dependencies. WebGL2 is required; only the optional MP4 encoder requests a CDN resource.
 
-## Surface and topology
+## Attractor-grown skin (default)
 
-The sculpture is a designed manifold inspired by the attractor, not the exact chaotic invariant set. Two unequal, thick elliptical toroidal lobes are smoothly joined and twisted through depth. A deterministic marching-tetrahedra extraction creates 37,528 vertices and 75,060 triangles. The production mesh has one connected component, no boundary or non-manifold edges, and Euler characteristic −2: a closed genus-2 surface. A coarser mesh independently retains that topology.
+The integrated samples are trilinearly splatted into a 113 × 81 × 49 grid, then smoothed with an isotropic Gaussian of world-space standard deviation 0.025. Marching tetrahedra extracts density level 1.5. These choices give a thin finite neighbourhood to the chaotic folds: no template torus or hand-authored holes. Actual trajectory speed, averaged locally with the same kernel, controls the violet-to-amber palette. Normals, real depth occlusion, density-based self-shadowing and rim light reveal the crossover and rolled edges.
 
-Normals, key/rim lighting, ambient occlusion and implicit-surface self-shadowing reveal the solid and its tunnel walls. A smoothed density texture made from the actual integrated Chen trajectories supplies the luminous grain on the skin. The two handles are deliberately preserved; simply thickening a chaotic path would not guarantee this topology.
+The fixed-origin mesh has 29,456 vertices and 58,916 triangles, one component, no boundary or non-manifold edges, and Euler characteristic −2. This is the topology of this particular sampled, smoothed level set, **not** proof that the attractor is a smooth invariant genus-2 surface. Resolution, density threshold and forcing can change topology. The cyclic variant is also one closed component, but has Euler characteristic −4; its geometry is not forced to match the baseline.
+
+### Cyclic origin experiment
+
+The control selects `X′ = F(X − s(t)e_x)`, `s(t) = 3 sin(0.5t)`, with RK4 forcing evaluated at each substep. There is **no** added `s′(t)` in the lab-frame equation. In moving-origin coordinates, `U′ = F(U) − s′(t)e_x`, so this changes the dynamics rather than rigidly translating a fixed attractor. The same 360 integration-time-unit sample interval accumulates about 29 forcing cycles into a static density skin. The camera/illumination loop, not the chaotic state.
+
+A bounded nine-case check of A={1,3,5}, ω={0.5,1.5,3} retained finite trajectories and both lobes over that interval. A=3, ω=0.5 adds a visible but restrained sweep. Much of its added world-space volume comes from spatial sweeping rather than intrinsically thickened folds. A separate 27-case coefficient sweep did not offer a clear visual advantage, so a=36, b=3, c=20 remain unchanged.
+
+## Earlier comparison forms
+
+**Genus-2 sculpture** is the previous designed manifold: two unequal thick elliptical toroidal lobes joined and twisted through depth, with Chen density etched into the skin. Its 37,528 vertices / 75,060 triangles form a closed connected genus-2 mesh. It is attractor-inspired, not attractor-derived geometry. **Original trajectory** retains the unforced 180,000-point trace. Origin forcing applies only to the new density form, so these remain honest baselines.
 
 ## Attractor math and original trace
 
