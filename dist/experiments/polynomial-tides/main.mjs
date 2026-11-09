@@ -13,7 +13,7 @@ const specs=[
 const params=new URLSearchParams(location.search);
 let discoveryMode=['chaos','ring','symmetry','balanced'].includes(params.get('discovery'))
   ?params.get('discovery'):'chaos';
-let rankedResults=[],currentMetrics=null;
+let rankedResults=[],currentMetrics=null,stopDiscovery=false;
 for(const [key,min,max,step] of specs)if(params.has(key)){
   const value=Number(params.get(key));
   if(Number.isFinite(value))settings[key]=Math.max(min,Math.min(max,step===1?Math.round(value):value));
@@ -183,10 +183,13 @@ $('ranked').onchange=()=>{
 $('discover').onclick=async()=>{
   if(exportController)return;
   if($('discover').textContent==='Stop search'){
-    searchToken++;$('discover').textContent='Discover new';
-    status('Discovery stopped after '+attempts+' candidates.');
+    // Retain and rank any already confirmed candidates rather than discarding
+    // the entire pool when the user ends an exploration early.
+    stopDiscovery=true;
+    status('Ending discovery with the confirmed candidates found so far…');
     return;
   }
+  stopDiscovery=false;
   const token=++searchToken,mode=discoveryMode,geometry=mode!=='chaos';
   const limit=geometry?1200:Infinity,goal=geometry?16:1;
   let tried=0,secondPass=0;
@@ -194,11 +197,11 @@ $('discover').onclick=async()=>{
   $('discover').textContent='Stop search';
   status(geometry?'Searching for '+mode+' shapes…':'Searching for strange attractors…');
   try{
-    while(token===searchToken&&tried<limit&&pool.length<goal){
+    while(token===searchToken&&!stopDiscovery&&tried<limit&&pool.length<goal){
       // Bound CPU work on the main thread. A geometry search completes an
       // objective-specific pool before choosing the strongest result, whereas
       // the original chaos mode still returns the first confirmed seed.
-      for(let j=0;j<18&&token===searchToken&&tried<limit&&pool.length<goal;j++){
+      for(let j=0;j<18&&token===searchToken&&!stopDiscovery&&tried<limit&&pool.length<goal;j++){
         const candidate=randomSeed();
         if(seen.has(candidate))continue;
         seen.add(candidate);attempts++;tried++;
