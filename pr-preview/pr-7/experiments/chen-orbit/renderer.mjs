@@ -42,10 +42,10 @@ void main(){
  else {float r=length(gl_PointCoord-.5)*2.;if(r>1.)discard;alpha=exp(-r*r*4.5)*(pass==2?.012:.15);}
  vec3 rgb=ink(1.-height)*(.85+.25*flow);
  if(pattern==1){
-  if(layer==0){alpha*=.22;rgb=ink(1.-height);}
+  if(layer==0){alpha*=.60;rgb=ink(1.-height);}
   else {
    float r=pass==1?0.:length(gl_PointCoord-.5)*2.;
-   alpha=(pass==1?.48:exp(-r*r*4.5)*(pass==2?.065:.75))*light;
+   alpha=(pass==1?.80:exp(-r*r*4.5)*(pass==2?.09:1.0))*light;
    rgb=mix(ink(1.-height),vec3(1.,.85,.65),.45*light);
   }
  }

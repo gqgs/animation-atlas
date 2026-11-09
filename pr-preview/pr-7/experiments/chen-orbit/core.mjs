@@ -1,7 +1,7 @@
 // Chen–Čelikovský system, parameters from Paul Bourke's October 2010 reference.
 export const TAU = 2 * Math.PI;
 export const parameters = Object.freeze({a:36, b:3, c:20});
-export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons'});
+export const defaults = Object.freeze({duration:48, azimuth:0, elevation:12, zoom:1, glow:1, palette:'ember', motion:'orbit', pattern:'ribbons', cameraOffset:0});
 export const limits = {duration:[8,120], azimuth:[-180,180], elevation:[-80,80], zoom:[.65,1.65], glow:[.4,1.8]};
 export const palettes = ['ember','glacier','pearl'];
 export const wrap = t => ((t % 1) + 1) % 1;
@@ -27,13 +27,14 @@ export function buildAttractor({count=180000, burn=6000, dt=.002}={}) {
   return {data,count,bounds,dt,burn};
 }
 export function cameraAt(p, phase) {
-  const t=TAU*wrap(phase),moving=p.motion==='orbit';
+  const t=TAU*wrap(phase+(p.cameraOffset||0)),moving=p.motion==='orbit';
   const pitch=p.elevation*Math.PI/180,amplitude=Math.min(.11,Math.max(0,(80-Math.abs(p.elevation))*Math.PI/180));
   return {azimuth:p.azimuth*Math.PI/180+(moving?t:0),elevation:pitch+(moving?amplitude*Math.sin(t):0),distance:4.4/p.zoom};
 }
 export function readSettings(search) {
   const q=new URLSearchParams(search),p={...defaults};
   for(const [key,[lo,hi]] of Object.entries(limits))if(q.has(key)&&q.get(key).trim()&&Number.isFinite(Number(q.get(key))))p[key]=Math.max(lo,Math.min(hi,Number(q.get(key))));
+  if(q.has('cameraOffset')&&Number.isFinite(Number(q.get('cameraOffset'))))p.cameraOffset=wrap(Number(q.get('cameraOffset')));
   if(['ribbons','original'].includes(q.get('pattern')))p.pattern=q.get('pattern');
   if(palettes.includes(q.get('palette')))p.palette=q.get('palette');
   if(['orbit','still'].includes(q.get('motion')))p.motion=q.get('motion');

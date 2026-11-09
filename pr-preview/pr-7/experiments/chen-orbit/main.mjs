@@ -1,4 +1,4 @@
-import {defaults,limits,readSettings,settingsQuery,cameraAt} from './core.mjs';
+import {defaults,limits,readSettings,settingsQuery,cameraAt,wrap} from './core.mjs';
 import {createRenderer} from './renderer.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),stage=$('stage');
@@ -44,7 +44,7 @@ $('play').onclick=togglePlay;
 $('reset').onclick=()=>{Object.assign(p,defaults);phase=0;sync();};
 $('pattern').onchange=()=>{p.pattern=$('pattern').value;sync();};
 $('palette').onchange=()=>{p.palette=$('palette').value;sync();};
-$('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;if(p.motion==='orbit')phase=0;sync();};
+$('motion').onchange=()=>{const camera=cameraAt(p,phase);p.azimuth=((camera.azimuth*180/Math.PI+180)%360+360)%360-180;p.elevation=camera.elevation*180/Math.PI;p.motion=$('motion').value;p.cameraOffset=wrap(-phase);sync();};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;sync();};
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');dirty=true;}
 $('hide').onclick=hide;$('show').onclick=hide;
