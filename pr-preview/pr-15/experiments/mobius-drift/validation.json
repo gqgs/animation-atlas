@@ -1,5 +1,0 @@
-{
-  "mathematics": "2700 comparisons of simplified map against two-step composition; closed and bounded trajectories; parameter validation and round-trip passed",
-  "shader": "EGL/OpenGL ES compilation, linking and nonblank rendering passed for all three pattern families; concentric and radial images visually inspected",
-  "browser": "Preview loads, but cloud browser reports WebGL2 unavailable. Live browser playback and media export remain unverified."
-}
