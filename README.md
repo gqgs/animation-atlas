@@ -45,6 +45,10 @@ If the secret is not yet configured, the preview workflow on this migration PR c
 
 Push or merge into `main` to update production. Production deployments preserve `pr-preview/`, and each preview deployment preserves production and the other previews. Both publishing actions use non-force pushes to reduce concurrent update conflicts.
 
+Preview success means both the downstream **pages build and deployment** run and the live preview have been verified. A generated `preview-build.json` identifies the PR head served at the public URL. Verification also runs when copying files makes no changes, and success comments are posted only afterward. Cleanup verifies that the removed preview returns 404. The verification window allows for CDN propagation; it does not extend GitHub Pages' own deployment timeout.
+
+If Pages publishing fails, follow the downstream run link in the verification error and use **Re-run failed jobs** there. Rerunning only **Preview GitHub Pages** may have nothing new to push and cannot restart a failed Pages build. An unchanged-copy rerun will now correctly fail until Pages and the live URL are healthy. If Pages repeatedly stalls at `syncing_files`, inspect GitHub Status or contact GitHub Support rather than disabling verification. Never publish an old `gh-pages` snapshot over newer production or preview changes.
+
 ## Publish the repository
 
 Commit the repository's source and the entire maintained `dist/` tree, then push to `main`. The publishing workflow copies the site into `gh-pages`; the `gh-pages` branch is a deployment output and should not be edited manually.
