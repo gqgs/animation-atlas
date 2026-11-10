@@ -7,6 +7,7 @@ on:
 # Only same-repository PRs are supported by the preview action.
 # Never use pull_request_target to execute or publish untrusted fork changes.
 permissions:
+  actions: read
   contents: write
   pull-requests: write
   issues: write
@@ -19,7 +20,7 @@ jobs:
   preview:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       # Preview removal also initializes Git in the workspace. Keep checkout
       # on closed events, even though those events do not build a preview.
@@ -31,13 +32,21 @@ jobs:
       - name: Verify preview workflow lifecycle
         run: |
           git rev-parse --is-inside-work-tree
-          node --test .github/tests/preview-workflow.test.mjs
+          node --test .github/tests/*.test.mjs
 
       - name: Verify static site
         if: github.event.action != 'closed'
         run: |
           test -f dist/index.html
           python3 -m json.tool dist/experiments.json > /dev/null
+
+      - name: Identify preview contents
+        if: github.event.action != 'closed'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node --input-type=module -e "import { writeFileSync } from 'node:fs'; writeFileSync('dist/preview-build.json', JSON.stringify({ repository: process.env.GITHUB_REPOSITORY, pullRequest: Number(process.env.PR_NUMBER), headSha: process.env.PR_HEAD_SHA, sourceSha: process.env.GITHUB_SHA }) + '\\n');"
 
       - name: Require Pages publishing token
         env:
@@ -49,11 +58,52 @@ jobs:
           fi
 
       - name: Publish or remove PR preview
+        id: preview
         uses: rossjrw/pr-preview-action@ffa7509e91a3ec8dfc2e5536c4d5c1acdf7a6de9 # v1.8.1
         with:
           source-dir: dist
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-          wait-for-pages-deployment: 'true'
+          # The action skips its wait on no-change reruns, even after a failed
+          # Pages deployment. Always verify separately before reporting success.
+          wait-for-pages-deployment: 'false'
+          comment: 'false'
           qr-code: 'false'
+
+      - name: Verify published preview
+        id: verify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PREVIEW_URL: ${{ steps.preview.outputs.preview-url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_ACTION: ${{ github.event.action }}
+        run: node .github/scripts/verify-preview.mjs
+
+      - name: Report verified preview
+        if: github.event.action != 'closed'
+        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+        with:
+          header: pr-preview
+          message: |
+            Preview published and verified for commit ${{ github.event.pull_request.head.sha }}.
+
+            [Open preview](${{ steps.preview.outputs.preview-url }}) · [Verified Pages deployment](${{ steps.verify.outputs.pages_run_url }})
+
+      - name: Report verified removal
+        if: github.event.action == 'closed'
+        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+        with:
+          header: pr-preview
+          message: Preview removal has been verified on GitHub Pages.
+
+      - name: Report preview failure
+        if: failure()
+        uses: marocchino/sticky-pull-request-comment@67d0dec7b07ed060a405f9b2a64b8ab319fdd7db # v2.9.2
+        with:
+          header: pr-preview
+          message: |
+            Preview publishing or removal was not verified. The preview may be unavailable or stale.
+
+            [Inspect the verification error and downstream Pages run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
