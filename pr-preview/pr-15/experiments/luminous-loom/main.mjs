@@ -16,7 +16,8 @@ function sync(){
  $('knot').textContent=`T(${p.p},${p.q})`;const c=counts(p);$('workload').textContent=`${c.fibers} FIBERS / ${(c.segments/1000).toFixed(1)}k SEGMENTS × ${c.passes}`;
  $('modeNote').textContent=p.renderer==='merged'?'Approximation: merging same-color paths changes overlap brightness. Fewer strokes do not guarantee a faster frame.':p.renderer==='path2d'?'Same ordered paths and styles. Paths are rebuilt every frame; preparation cost is included.':'Reference: submit each closed fiber directly to Canvas, preserving every overlap.';
 }
-function rebuild(){p=normalize(p);workspace=createGeometry(p);dirty=true;sync();}
+function invalidateReport(){report=null;window.loomBenchmarkResult=null;$('report').hidden=true;$('benchSummary').textContent='Settings changed. Compare matched frames to measure this configuration.';}
+function rebuild(){invalidateReport();p=normalize(p);workspace=createGeometry(p);dirty=true;sync();}
 function resize(){const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);const w=Math.max(1,Math.round(box.width*dpr)),h=Math.max(1,Math.round(box.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;dirty=true;renderAt(canvas,phase,p,workspace);}}
 new ResizeObserver(resize).observe(canvas);resize();sync();if(query.size)$('preset').value='custom';
 function renderAt(target,position,scene,space){const data=geometryAt(space,position);const paths=preparePaths(data,scene);paint(target,data,scene,paths);}
@@ -33,8 +34,8 @@ requestAnimationFrame(frame);
 $('play').onclick=()=>{if(!busy){playing=!playing;sync();}};
 $('reset').onclick=()=>{phase=0;playing=false;dirty=true;sync();};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;dirty=true;sync();};
-for(const key of ['palette','renderer'])$(key).onchange=()=>{p[key]=$(key).value;$('preset').value='custom';dirty=true;sync();};
-$('glow').onchange=()=>{p.glow=Number($('glow').checked);$('preset').value='custom';dirty=true;sync();};
+for(const key of ['palette','renderer'])$(key).onchange=()=>{p[key]=$(key).value;$('preset').value='custom';invalidateReport();dirty=true;sync();};
+$('glow').onchange=()=>{p.glow=Number($('glow').checked);$('preset').value='custom';invalidateReport();dirty=true;sync();};
 const presets={ribbon:{...defaults},cinquefoil:{...defaults,p:2,q:5,spread:.45,palette:'ember',fibers:112},orbital:{...defaults,p:3,q:4,spread:.95,palette:'glacier',fibers:144,width:.75},stress:{...defaults,fibers:384,samples:1536,width:.55,opacity:.38}};
 $('preset').onchange=()=>{p={...presets[$('preset').value]};phase=0;rebuild();};
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');}
