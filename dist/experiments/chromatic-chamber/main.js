@@ -1,5 +1,6 @@
-import {defaults,TAU,makeChamber,polygonAt,clipWedge,colorFor} from './core.mjs';
-const $=id=>document.getElementById(id),canvas=$('scene'),ctx=canvas.getContext('2d',{alpha:false}),p={...defaults};
+import {paintChamber} from './painter.mjs';
+import {defaults,makeChamber,polygonAt,clipWedge,colorFor} from './core.mjs';
+const $=id=>document.getElementById(id),canvas=$('scene'),p={...defaults};
 const specs=[['symmetry','Rotational symmetry',3,32,1],['sides','Polygon sides',3,8,1],['density','Glass density',.3,2.5,.05],['size','Shard radius',.035,.14,.005],['drift','Drift amplitude',0,.24,.005],['duration','Loop duration · seconds',8,120,1],['zoom','Magnification',.65,2,.01]];
 let phase=0,playing=!matchMedia('(prefers-reduced-motion: reduce)').matches,chamber=[],last=performance.now(),recording=null,recordStart=0,recordDuration=0,frames=0,fpsStart=last;
 const share=new URLSearchParams(location.search);
@@ -15,18 +16,9 @@ function sync(){for(const [key,,,,step] of specs){$(key).value=p[key];$(key+'Val
 function resize(){const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(innerWidth*dpr);canvas.height=Math.round(innerHeight*dpr);}
 addEventListener('resize',resize);resize();rebuild();sync();
 function render(){
- const w=canvas.width,h=canvas.height,scale=Math.min(w,h)*.46*p.zoom, angle=TAU*phase*p.rotation;
- ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#030508';ctx.fillRect(0,0,w,h);
  const polygons=chamber.map(g=>({points:clipWedge(polygonAt(g,p,phase),p.symmetry),color:colorFor(g,p)})).filter(g=>g.points.length>2);
- for(let sector=0;sector<2*p.symmetry;sector++){
-   const a=angle+TAU*Math.floor(sector/2)/p.symmetry,c=Math.cos(a),s=Math.sin(a),flip=sector%2?-1:1;
-   ctx.setTransform(scale*c,scale*s,-scale*s*flip,scale*c*flip,w/2,h/2);
-   // A subpixel stroke in the fill color closes raster cracks between mirror copies.
-   ctx.lineWidth=.55/scale;ctx.lineJoin='round';
-   for(const g of polygons){ctx.beginPath();ctx.moveTo(...g.points[0]);for(let i=1;i<g.points.length;i++)ctx.lineTo(...g.points[i]);ctx.closePath();ctx.fillStyle=ctx.strokeStyle=g.color;ctx.fill();ctx.stroke();}
- }
- if(p.mirrors){ctx.setTransform(1,0,0,1,0,0);ctx.strokeStyle='#ffffff50';ctx.lineWidth=1;ctx.setLineDash([5,8]);for(let i=0;i<2*p.symmetry;i++){const a=angle+i*Math.PI/p.symmetry;ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(w/2+Math.cos(a)*Math.hypot(w,h),h/2+Math.sin(a)*Math.hypot(w,h));ctx.stroke();}ctx.setLineDash([]);}
- ctx.setTransform(1,0,0,1,0,0);$('phase').value=phase;$('phaseValue').value=`${(phase*100).toFixed(1)}%`;
+ paintChamber(canvas,polygons,p,phase);
+ $('phase').value=phase;$('phaseValue').value=`${(phase*100).toFixed(1)}%`;
 }
 function animate(now){const dt=Math.min((now-last)/1000,.1);last=now;if(recording)phase=Math.min(1,(now-recordStart)/recordDuration);else if(playing&&!document.hidden)phase=(phase+dt/p.duration)%1;render();if(recording&&phase>=1)recording.stop();frames++;if(now-fpsStart>1000){$('meter').textContent=`${p.symmetry} FOLD · ${Math.round(frames*1000/(now-fpsStart))} FPS`;frames=0;fpsStart=now;}requestAnimationFrame(animate);}
 requestAnimationFrame(animate);

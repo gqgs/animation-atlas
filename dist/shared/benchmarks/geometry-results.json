@@ -1,0 +1,193 @@
+{
+  "baselineCommit": "dffcf34ef2c5b4e4995fb6358521f1db6990f5c0",
+  "environment": {
+    "node": "v24.22.1",
+    "v8": "13.6.233.17-node.58",
+    "platform": "linux",
+    "arch": "x64",
+    "os": "6.18.57",
+    "cpu": "AMD EPYC 9V74 80-Core Processor"
+  },
+  "method": {
+    "samples": 31,
+    "warmup": 8,
+    "batch": 3,
+    "seed": 20903,
+    "phases": [
+      0,
+      0.03125,
+      0.173,
+      0.25,
+      0.499999,
+      0.5,
+      0.731,
+      1
+    ],
+    "units": "milliseconds per geometry construction; not FPS",
+    "order": "seeded randomized paired interleaving; same phase and batch for both variants",
+    "scope": "Unwinding makeField; Chamber polygonAt + wedge clip + color/filter, with prebuilt identical shards; excludes paint and chamber generation",
+    "speedIsNonGating": true
+  },
+  "accuracy": {
+    "comparisons": 3214,
+    "scalars": 2002615,
+    "maxAbsoluteError": 5.8260063440229715e-12,
+    "tolerance": 1e-9,
+    "pass": true
+  },
+  "results": [
+    {
+      "case": "unwinding/default",
+      "settings": {
+        "steps": 360,
+        "filaments": 48,
+        "spread": 1.2,
+        "width": 2.4,
+        "duration": 48,
+        "zoom": 1,
+        "palette": "iridescent",
+        "mode": "silk"
+      },
+      "reference": {
+        "samples": 31,
+        "medianMs": 0.5761726666666694,
+        "p95Ms": 1.8492299999999962,
+        "minMs": 0.27934166666666727,
+        "maxMs": 2.474773666666669
+      },
+      "optimized": {
+        "samples": 31,
+        "medianMs": 0.3611180000000047,
+        "p95Ms": 0.8980683333333369,
+        "minMs": 0.27870699999999715,
+        "maxMs": 0.942538666666664
+      },
+      "medianRatio": 1.595524639222254
+    },
+    {
+      "case": "unwinding/max-ui",
+      "settings": {
+        "steps": 800,
+        "filaments": 64,
+        "spread": 2,
+        "width": 4,
+        "duration": 120,
+        "zoom": 2,
+        "palette": "iridescent",
+        "mode": "silk"
+      },
+      "reference": {
+        "samples": 31,
+        "medianMs": 1.6009920000000004,
+        "p95Ms": 3.6059536666666645,
+        "minMs": 0.7742313333333565,
+        "maxMs": 4.387553000000007
+      },
+      "optimized": {
+        "samples": 31,
+        "medianMs": 1.0764239999999934,
+        "p95Ms": 1.962934999999997,
+        "minMs": 0.8341083333333282,
+        "maxMs": 2.195816333333331
+      },
+      "medianRatio": 1.4873246973311727
+    },
+    {
+      "case": "chamber/default",
+      "settings": {
+        "seed": 13013,
+        "symmetry": 12,
+        "sides": 4,
+        "density": 1.1,
+        "size": 0.075,
+        "drift": 0.09,
+        "duration": 48,
+        "zoom": 1,
+        "rotation": 0,
+        "palette": "jewel",
+        "mirrors": false
+      },
+      "shardCount": 94,
+      "reference": {
+        "samples": 31,
+        "medianMs": 0.07611500000003464,
+        "p95Ms": 0.09053299999997459,
+        "minMs": 0.07352766666667776,
+        "maxMs": 0.10136633333331702
+      },
+      "optimized": {
+        "samples": 31,
+        "medianMs": 0.07173833333335249,
+        "p95Ms": 0.08487466666667842,
+        "minMs": 0.06768533333331561,
+        "maxMs": 0.12602366666665907
+      },
+      "medianRatio": 1.061008758683377
+    },
+    {
+      "case": "chamber/max-ui",
+      "settings": {
+        "seed": 13013,
+        "symmetry": 32,
+        "sides": 8,
+        "density": 2.5,
+        "size": 0.14,
+        "drift": 0.24,
+        "duration": 120,
+        "zoom": 2,
+        "rotation": 1,
+        "palette": "jewel",
+        "mirrors": true
+      },
+      "shardCount": 23,
+      "reference": {
+        "samples": 31,
+        "medianMs": 0.026202666666677032,
+        "p95Ms": 0.046573333333337054,
+        "minMs": 0.024893999999979616,
+        "maxMs": 0.0650949999999663
+      },
+      "optimized": {
+        "samples": 31,
+        "medianMs": 0.021095333333353967,
+        "p95Ms": 0.02876333333332089,
+        "minMs": 0.020461000000030555,
+        "maxMs": 0.1279063333333473
+      },
+      "medianRatio": 1.242107259108716
+    },
+    {
+      "case": "chamber/max-workload",
+      "settings": {
+        "seed": 13013,
+        "symmetry": 3,
+        "sides": 8,
+        "density": 2.5,
+        "size": 0.035,
+        "drift": 0.24,
+        "duration": 120,
+        "zoom": 2,
+        "rotation": 1,
+        "palette": "jewel",
+        "mirrors": true
+      },
+      "shardCount": 3909,
+      "reference": {
+        "samples": 31,
+        "medianMs": 6.230142999999998,
+        "p95Ms": 7.19728566666663,
+        "minMs": 5.754251666666657,
+        "maxMs": 7.360992666666713
+      },
+      "optimized": {
+        "samples": 31,
+        "medianMs": 5.258870999999999,
+        "p95Ms": 5.7185180000000555,
+        "minMs": 4.91839733333336,
+        "maxMs": 5.726740333333358
+      },
+      "medianRatio": 1.1846921135734265
+    }
+  ],
+  "checksum": 775272
+}

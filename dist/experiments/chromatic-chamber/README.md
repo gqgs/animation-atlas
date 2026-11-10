@@ -10,7 +10,7 @@ The fundamental wedge has angle π/n. Each regular polygon is clipped against y 
 
 Polygon centers follow seed-selected elliptical paths. Polygon rotation advances by 2π/m per loop, where m is the number of sides. Endpoint vertices are cyclically permuted, producing exactly the same shape. Optional whole-chamber rotation adds one full turn per loop. Colors and painter order stay constant, avoiding temporal discontinuities.
 
-`core.mjs` exposes the geometry, seeded generator and palettes. `main.js` handles rendering, timeline, scene URLs and export. The finite polygon field is generated to radius 2.6 in chamber coordinates; very wide views or low magnification may expose its outer edge. Subpixel fill-colored strokes close antialias cracks along mirrors. CPU Canvas performance depends on density, polygon size and resolution; device pixel ratio is capped at 2.
+`core.mjs` exposes the geometry, seeded generator and palettes. `painter.mjs` draws supplied polygons at an explicit phase; `main.js` handles timeline, scene URLs and export. Regular polygon bases reuse `../../shared/rotation-sequence.mjs`; the source bundle includes this dependency. See `../../shared/benchmarks/README.md` for original-versus-optimized comparisons. The finite polygon field is generated to radius 2.6 in chamber coordinates; very wide views or low magnification may expose its outer edge. Subpixel fill-colored strokes close antialias cracks along mirrors. CPU Canvas performance depends on density, polygon size and resolution; device pixel ratio is capped at 2.
 
 ## Controls and captures
 

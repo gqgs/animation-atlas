@@ -1,0 +1,52 @@
+name: Test shared rotation sequences
+
+on:
+  pull_request:
+    paths:
+      - 'dist/experiments/chromatic-unwinding/**'
+      - 'dist/experiments/chromatic-chamber/**'
+      - 'dist/shared/**'
+      - 'dist/downloads/chromatic-*-source.zip'
+      - '.github/scripts/package-chromatic-sources.py'
+      - '.github/workflows/test-shared-rotations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Test math, export and portable source bundles
+        run: |
+          node --test $(find dist -name '*.test.mjs' -print) .github/tests/*.test.mjs
+          python3 .github/scripts/package-chromatic-sources.py --check
+          node dist/shared/benchmarks/geometry.mjs
+      - name: Install isolated browser-test dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          npm install --prefix "$RUNNER_TEMP/rotation-qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/rotation-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Compare original and optimized Canvas frames
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/rotation-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/rotation-qa-output
+        run: node dist/shared/benchmarks/tests/browser-test.cjs
+      - name: Test controls, PNG and video exports
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/rotation-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/rotation-qa-output
+        run: node dist/shared/tests/chromatic-browser-test.cjs
+      - name: Preserve benchmark results and visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-rotation-validation
+          path: ${{ runner.temp }}/rotation-qa-output
+          if-no-files-found: ignore
