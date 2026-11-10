@@ -44,4 +44,6 @@ The exporter is deterministic in **frame sampling and geometry**, not bit-for-bi
 
 For portable use without a build step, CCapture is fetched lazily from `ccapture.js@2.0.0`. If this prototype graduates to a standalone module/package, prefer an explicit npm dependency, pinned version, browser compatibility tests and multiple renderer examples.
 
-The existing downloadable source ZIP is an earlier experiment snapshot; to include the new shared exporter in that ZIP it must be regenerated separately.
+The downloadable source bundle includes the shared exporter and rotation kernel, preserving their relative imports. Serve its root folder and open `index.html`.
+
+Angular samples use `../../shared/rotation-sequence.mjs`, with the original formulas retained in the shared benchmark controls. `painter.mjs` draws supplied paths independently of playback. Reproduce the geometry and browser comparisons with `../../shared/benchmarks/README.md`.
