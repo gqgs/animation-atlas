@@ -579,5 +579,30 @@
         "url": "downloads/chen-orbit-source.zip"
       }
     ]
+  },
+  {
+    "id": "julia-drift",
+    "title": "Julia Drift",
+    "index": 25,
+    "category": "Dynamics",
+    "date": "2026-11-10",
+    "url": "experiments/julia-drift/index.html",
+    "description": "Nested violet spirals flow through a closed Möbius tide. Explore seeded reverse Julia iteration, branch probabilities, and fine fractal gardens.",
+    "tags": [
+      "Julia set",
+      "inverse iteration",
+      "Möbius",
+      "Paul Bourke",
+      "generative art",
+      "WebGL2"
+    ],
+    "cover": "covers/julia-drift.svg",
+    "source": "downloads/julia-drift-source.zip",
+    "variants": [
+      {
+        "title": "Paul Bourke · reverse Julia",
+        "url": "https://paulbourke.net/fractals/reversejulia/"
+      }
+    ]
   }
 ]
