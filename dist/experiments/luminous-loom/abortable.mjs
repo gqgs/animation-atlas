@@ -3,8 +3,8 @@
 export function abortable(promise,signal) {
  return new Promise((resolve,reject)=>{
   const cancel=()=>reject(new DOMException('Canceled','AbortError'));
-  if(signal.aborted){cancel();return;}
-  signal.addEventListener('abort',cancel,{once:true});
+  if(signal.aborted)cancel();
+  else signal.addEventListener('abort',cancel,{once:true});
   Promise.resolve(promise).then(resolve,reject).finally(()=>signal.removeEventListener('abort',cancel));
  });
 }

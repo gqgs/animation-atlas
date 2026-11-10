@@ -17,7 +17,7 @@ function sync(){
  $('modeNote').textContent=p.renderer==='merged'?'Approximation: merging same-color paths changes overlap brightness. Fewer strokes do not guarantee a faster frame.':p.renderer==='path2d'?'Same ordered paths and styles. Paths are rebuilt every frame; preparation cost is included.':'Reference: submit each closed fiber directly to Canvas, preserving every overlap.';
 }
 function rebuild(){p=normalize(p);workspace=createGeometry(p);dirty=true;sync();}
-function resize(){const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);const w=Math.max(1,Math.round(box.width*dpr)),h=Math.max(1,Math.round(box.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;dirty=true;}}
+function resize(){const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);const w=Math.max(1,Math.round(box.width*dpr)),h=Math.max(1,Math.round(box.height*dpr));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;dirty=true;renderAt(canvas,phase,p,workspace);}}
 new ResizeObserver(resize).observe(canvas);resize();sync();if(query.size)$('preset').value='custom';
 function renderAt(target,position,scene,space){const data=geometryAt(space,position);const paths=preparePaths(data,scene);paint(target,data,scene,paths);}
 function frame(now){
