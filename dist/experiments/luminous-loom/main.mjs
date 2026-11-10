@@ -52,7 +52,7 @@ $('benchmark').onclick=async()=>{
  if(busy)return;
  const controller=new AbortController();busy={kind:'benchmark',controller};playing=false;sync();lock('benchmark');$('benchmark').textContent='Cancel comparison';$('report').hidden=true;
  try{
-  report=await runBenchmark({...p},{signal:controller.signal,onProgress:message=>{$('benchSummary').textContent=message;}});
+  report=await runBenchmark({...p},{samples:p.fibers*p.samples>200000?3:9,warmup:p.fibers*p.samples>200000?1:2,signal:controller.signal,onProgress:message=>{$('benchSummary').textContent=message;}});
   window.loomBenchmarkResult=report;
   const t=report.timings,delta=Math.max(...report.pixels.filter(x=>x.mode==='merged').map(x=>x.meanAbsoluteRGBDelta));
   $('benchSummary').textContent=`1080² median total: Direct ${t.direct.total.median.toFixed(1)} ms · Path2D ${t.path2d.total.median.toFixed(1)} ms · Merged ${t.merged.total.median.toFixed(1)} ms. Same-path pixel check ${report.pass?'passed':'FAILED'}. Merged mean RGB error up to ${delta.toFixed(2)}/255. Exploratory, not FPS.`;

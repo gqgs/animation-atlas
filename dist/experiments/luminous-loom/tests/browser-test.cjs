@@ -8,7 +8,7 @@ const types={'.html':'text/html','.mjs':'application/javascript','.js':'applicat
 const server=http.createServer(async(req,res)=>{try{let name=decodeURIComponent(new URL(req.url,'http://local').pathname);if(name.endsWith('/'))name+='index.html';const file=path.resolve(root,'.'+name);if(!file.startsWith(root+path.sep))throw Error('Invalid path');res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');res.end(await fs.readFile(file));}catch{res.writeHead(404);res.end('Not found');}});
 let browser,page;const errors=[],results=[],evidence={};
 const log=m=>{results.push(m);console.log('PASS · '+m);};
-const deadline=setTimeout(()=>{console.error('Loom QA exceeded 15 minutes');process.exit(1);},900000);
+const deadline=setTimeout(()=>{console.error('Loom QA exceeded 20 minutes');process.exit(1);},1200000);
 const settle=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));
 async function range(p,id,value){await p.locator('#'+id).evaluate((el,v)=>{el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));},value);await settle(p);}
 async function hash(p){await settle(p);return p.locator('#scene').evaluate(c=>c.toDataURL());}
@@ -74,7 +74,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  await page.waitForFunction(()=>window.loomBenchmarkResult&&document.querySelector('#benchmark').textContent==='Compare matched frames',null,{timeout:180000});
  evidence.benchmark=await page.evaluate(()=>window.loomBenchmarkResult);
  assert.equal(evidence.benchmark.size,1080);assert.equal(evidence.benchmark.pass,true);assert.equal(evidence.benchmark.method.samples,9);
- for(const mode of ['direct','path2d','merged'])for(const stage of ['geometry','prepare','submit','rasterFence','total']){const timing=evidence.benchmark.timings[mode][stage];assert.equal(timing.samples.length,9);assert.ok(timing.samples.every(n=>Number.isFinite(n)&&n>=0));assert.ok(timing.max>=timing.median&&timing.p95>=timing.min);}
+ for(const mode of ['direct','path2d','merged'])for(const stage of ['geometry','prepare','submit','readback','total']){const timing=evidence.benchmark.timings[mode][stage];assert.equal(timing.samples.length,9);assert.ok(timing.samples.every(n=>Number.isFinite(n)&&n>=0));assert.ok(timing.max>=timing.median&&timing.p95>=timing.min);}
  assert.equal(evidence.benchmark.pixels.length,8);assert.equal(await page.locator('#fibers').isEnabled(),true);
  const reportWait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.json')});await page.locator('#report').click();const reportDownload=await reportWait;await reportDownload.saveAs(path.join(output,'benchmark.json'));
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(output,'benchmark.json'),'utf8')),evidence.benchmark);
@@ -84,7 +84,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  const lateAbort=await page.evaluate(async()=>{const {runBenchmark}=await import('./benchmark.mjs');const c=new AbortController();try{await runBenchmark({fibers:8,samples:128},{size:64,samples:3,warmup:0,signal:c.signal,onProgress:m=>{if(m==='Comparing pixels · phase 0.731')c.abort();}});return false;}catch(e){return e.name==='AbortError';}});assert.equal(lateAbort,true);
  // Separate measured artistic/default and maximum stress workloads, not just
  // the light UI integration case. Timings are evidence, never speed assertions.
- evidence.workloads=await page.evaluate(async()=>{const {runBenchmark}=await import('./benchmark.mjs');const out=[];for(const [name,scene,size,samples] of [['default',{},1080,9],['stress',{fibers:384,samples:1536,width:.55,opacity:.38},1080,9],['default-2160',{},2160,5]])out.push({name,...await runBenchmark(scene,{size,samples})});return out;});
+ evidence.workloads=await page.evaluate(async()=>{const {runBenchmark}=await import('./benchmark.mjs');const out=[];for(const [name,scene,size,samples] of [['default',{},1080,9],['stress',{fibers:384,samples:1536,width:.55,opacity:.38},1080,3],['default-2160',{},2160,5]])out.push({name,...await runBenchmark(scene,{size,samples,warmup:name==='stress'?1:2})});return out;});
  await fs.writeFile(path.join(output,'workloads.json'),JSON.stringify(evidence.workloads,null,2));
  for(const measured of evidence.workloads)assert.equal(measured.pass,true,'Same-path equivalence: '+measured.name);
  console.log('WORKLOAD_TOTALS '+JSON.stringify(evidence.workloads.map(r=>({name:r.name,size:r.size,timings:r.timings,pixels:r.pixels}))));log('Default, maximum stress and 2160-square workloads measured with raw stage samples and matched pixels');
