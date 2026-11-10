@@ -48,6 +48,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  for(const [id,value] of [['fibers',24],['samples',192],['spread',.8],['width',1.5],['opacity',.8],['zoom',.9],['duration',4]]){await range(page,id,value);assert.equal(Number(await page.locator('#'+id).inputValue()),value);assert.equal(Number(await page.locator('#'+id+'Value').evaluate(el=>el.value)),value);}
  for(const palette of ['ember','glacier','aurora']){const before=await hash(page);await page.locator('#palette').selectOption(palette);assert.notEqual(await hash(page),before);}
  const glow=await hash(page);await page.locator('#glow').uncheck();assert.notEqual(await hash(page),glow);await page.locator('#glow').check();
+ await page.locator('details').filter({has:page.locator('#renderer')}).evaluate(el=>el.open=true);
  for(const renderer of ['path2d','merged','direct']){await page.locator('#renderer').selectOption(renderer);await settle(page);assert.equal(await page.locator('#renderer').inputValue(),renderer);}
  await snapshot(page,'desktop');log('Every preset, slider, palette, glow toggle and renderer control');
  // Real Canvas pixels from the same shared geometry/painter, independently of UI.
