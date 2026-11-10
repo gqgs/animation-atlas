@@ -13,6 +13,21 @@ const settle=p=>p.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestA
 async function range(p,id,value){await p.locator('#'+id).evaluate((el,v)=>{el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));},value);await settle(p);}
 async function hash(p){await settle(p);return p.locator('#scene').evaluate(c=>c.toDataURL());}
 const snapshot=(p,name)=>p.screenshot({path:path.join(output,name+'.png')});
+async function assertScene(p,label,clean=false){
+ await settle(p);
+ const info=await p.locator('#scene').evaluate(c=>{
+  const r=c.getBoundingClientRect(),data=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let colored=0;
+  for(let i=0;i<data.length;i+=4){const hi=Math.max(data[i],data[i+1],data[i+2]),lo=Math.min(data[i],data[i+1],data[i+2]);if(hi>50&&hi-lo>25)colored++;}
+  return {width:c.width,height:c.height,cssWidth:r.width,cssHeight:r.height,x:r.x,y:r.y,right:r.right,bottom:r.bottom,viewport:[innerWidth,innerHeight],dpr:Math.min(devicePixelRatio||1,2),colored};
+ });
+ assert.ok(info.colored>20,label+': missing colored drawing '+JSON.stringify(info));
+ assert.equal(info.width,Math.round(info.cssWidth*info.dpr),label+': canvas width not resized');
+ assert.equal(info.height,Math.round(info.cssHeight*info.dpr),label+': canvas height not resized');
+ assert.ok(info.cssWidth>0&&info.cssHeight>0&&info.x>=-1&&info.right<=info.viewport[0]+1,label+': canvas exceeds width');
+ if(clean){assert.ok(Math.abs(info.cssWidth-info.viewport[0])<=1&&Math.abs(info.cssHeight-info.viewport[1])<=1,label+': clean canvas does not fill viewport');assert.ok(info.y>=-1&&info.bottom<=info.viewport[1]+1,label+': clean canvas outside viewport');}
+ evidence[label]=info;
+}
+
 function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-select_streams','v:0','-count_frames','-show_entries','stream=codec_name,width,height,r_frame_rate,nb_read_frames,duration','-of','json',file],{encoding:'utf8',timeout:60000})).streams[0];}
 (async()=>{
  await fs.mkdir(output,{recursive:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
@@ -27,7 +42,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  await range(page,'phase',.173);const replay=await hash(page);await range(page,'phase',.429);assert.notEqual(await hash(page),replay);await range(page,'phase',.173);assert.equal(await hash(page),replay);
  await page.locator('#play').click();await page.waitForFunction(()=>Number(document.querySelector('#phase').value)>.174);await page.locator('#play').click();const paused=await hash(page);await page.waitForTimeout(150);assert.equal(await hash(page),paused);
  await page.locator('#reset').click();await settle(page);assert.equal(Number(await page.locator('#phase').inputValue()),0);
- await page.locator('#hide').click();assert.equal(await page.locator('aside').isVisible(),false);await page.locator('#show').click();assert.equal(await page.locator('aside').isVisible(),true);
+ await page.locator('#hide').click();assert.equal(await page.locator('aside').isVisible(),false);await assertScene(page,'desktop-clean',true);await snapshot(page,'desktop-hidden');await page.locator('#show').click();assert.equal(await page.locator('aside').isVisible(),true);await assertScene(page,'desktop-restored');
  log('Paused URL, exact phase replay, play/pause, reset and desktop hide/show');
  for(const [preset,knot,fibers,samples] of [['cinquefoil','T(2,5)',112,640],['orbital','T(3,4)',144,640],['stress','T(2,3)',384,1536],['ribbon','T(2,3)',96,640]]){await page.locator('#preset').selectOption(preset);await settle(page);assert.equal(await page.locator('#knot').textContent(),knot);assert.equal(Number(await page.locator('#fibers').inputValue()),fibers);assert.equal(Number(await page.locator('#samples').inputValue()),samples);await snapshot(page,'preset-'+preset);}
  for(const [id,value] of [['fibers',24],['samples',192],['spread',.8],['width',1.5],['opacity',.8],['zoom',.9],['duration',4]]){await range(page,id,value);assert.equal(Number(await page.locator('#'+id).inputValue()),value);assert.equal(Number(await page.locator('#'+id+'Value').evaluate(el=>el.value)),value);}
@@ -65,6 +80,14 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(output,'benchmark.json'),'utf8')),evidence.benchmark);
  log('Real 1080-square benchmark measures all stages and three modes, checks pixels, and downloads matching report');
  const aborted=await page.evaluate(async()=>{const {runBenchmark}=await import('./benchmark.mjs');const c=new AbortController();c.abort();try{await runBenchmark({fibers:8,samples:128},{size:64,samples:3,warmup:0,signal:c.signal});return false;}catch(e){return e.name==='AbortError';}});assert.equal(aborted,true);
+ // Cancel at the last pixel-phase yield, the prior race's boundary.
+ const lateAbort=await page.evaluate(async()=>{const {runBenchmark}=await import('./benchmark.mjs');const c=new AbortController();try{await runBenchmark({fibers:8,samples:128},{size:64,samples:3,warmup:0,signal:c.signal,onProgress:m=>{if(m==='Comparing pixels · phase 0.731')c.abort();}});return false;}catch(e){return e.name==='AbortError';}});assert.equal(lateAbort,true);
+ // Separate measured artistic/default and maximum stress workloads, not just
+ // the light UI integration case. Timings are evidence, never speed assertions.
+ evidence.workloads=await page.evaluate(async()=>{const {runBenchmark}=await import('./benchmark.mjs');const out=[];for(const [name,scene,size,samples] of [['default',{},1080,9],['stress',{fibers:384,samples:1536,width:.55,opacity:.38},1080,9],['default-2160',{},2160,5]])out.push({name,...await runBenchmark(scene,{size,samples})});return out;});
+ await fs.writeFile(path.join(output,'workloads.json'),JSON.stringify(evidence.workloads,null,2));
+ for(const measured of evidence.workloads)assert.equal(measured.pass,true,'Same-path equivalence: '+measured.name);
+ console.log('WORKLOAD_TOTALS '+JSON.stringify(evidence.workloads.map(r=>({name:r.name,size:r.size,timings:r.timings,pixels:r.pixels}))));log('Default, maximum stress and 2160-square workloads measured with raw stage samples and matched pixels');
  const pngWait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.png')});await page.locator('#png').click();const png=await pngWait,pngPath=path.join(output,'own-size.png');await png.saveAs(pngPath);const bytes=await fs.readFile(pngPath);assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.deepEqual([bytes.readUInt32BE(16),bytes.readUInt32BE(20)],[720,720]);log('PNG renders at selected 720 square output independent of preview');
  const mp4Wait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.mp4'),timeout:480000});await page.locator('#record').click();assert.equal(await page.locator('#fibers').isEnabled(),false);const mp4=await mp4Wait,mp4Path=path.join(output,'loom-720-30.mp4');await mp4.saveAs(mp4Path);await page.waitForFunction(()=>document.querySelector('#record').textContent==='Export MP4');assert.equal(await page.locator('#fibers').isEnabled(),true);assert.equal(await page.locator('#play').textContent(),'Play');
  evidence.mp4=probe(mp4Path);assert.equal(evidence.mp4.codec_name,'h264');assert.equal(evidence.mp4.width,720);assert.equal(evidence.mp4.height,720);assert.equal(evidence.mp4.r_frame_rate,'30/1');assert.equal(Number(evidence.mp4.nb_read_frames),120);assert.ok(Math.abs(Number(evidence.mp4.duration)-4)<.05);
@@ -72,7 +95,26 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  let canceledDownload=false;const onDownload=d=>{if(d.suggestedFilename().endsWith('.mp4'))canceledDownload=true;};page.on('download',onDownload);
  for(let attempt=0;attempt<2;attempt++){await page.locator('#record').click();await page.waitForFunction(()=>/Encoding/i.test(document.querySelector('#status').textContent),null,{timeout:60000});await page.locator('#record').click();await page.waitForFunction(()=>/cancel/i.test(document.querySelector('#status').textContent)&&document.querySelector('#record').textContent==='Export MP4');assert.equal(await page.locator('#fibers').isEnabled(),true);assert.equal(await page.locator('#play').textContent(),'Play');}
  await page.waitForTimeout(300);assert.equal(canceledDownload,false);page.off('download',onDownload);log('Repeated real-encoder cancellation restores controls without partial downloads');
+ // A fresh page has no cached FrameWrap promise. Hold the initial CDN request
+ // until after cancellation is confirmed, so encoder speed cannot mask the bug.
+ const loadingPage=await context.newPage();let delayedRoute,releaseRoute;
+ const routeSeen=new Promise(r=>{delayedRoute=r;}),routeRelease=new Promise(r=>{releaseRoute=r;});
+ let lateDownloads=0;loadingPage.on('download',()=>lateDownloads++);
+ await loadingPage.route('https://cdn.jsdelivr.net/npm/ccapture.js@2.0.0/build/ccapture.umd.min.js',async route=>{delayedRoute();await routeRelease;await route.fulfill({contentType:'application/javascript',body:'globalThis.CCapture={FrameWrap:class {constructor(){throw new Error("Canceled encoder must not start");}}};'});});
+ try{
+  await loadingPage.goto(url+'?phase=0&fibers=8&samples=128&duration=4');await loadingPage.locator('#fibers').waitFor();
+  await loadingPage.locator('details').filter({has:loadingPage.locator('#exportSize')}).evaluate(el=>el.open=true);
+  await loadingPage.locator('#record').click();
+  await Promise.race([routeSeen,new Promise((_,reject)=>setTimeout(()=>reject(Error('Encoder CDN request was not intercepted')),10000))]);
+  assert.equal(await loadingPage.locator('#fibers').isEnabled(),false);assert.match(await loadingPage.locator('#status').textContent(),/Loading/);
+  await loadingPage.locator('#record').click();
+  await loadingPage.waitForFunction(()=>document.querySelector('#record').textContent==='Export MP4'&&document.querySelector('#status').textContent==='Export canceled',null,{timeout:2000});
+  assert.equal(await loadingPage.locator('#fibers').isEnabled(),true);assert.equal(await loadingPage.locator('#play').textContent(),'Play');assert.equal(lateDownloads,0);
+  releaseRoute();await loadingPage.waitForFunction(()=>!!globalThis.CCapture);await settle(loadingPage);await loadingPage.waitForTimeout(100);
+  assert.equal(await loadingPage.locator('#status').textContent(),'Export canceled');assert.equal(await loadingPage.locator('#record').textContent(),'Export MP4');assert.equal(lateDownloads,0);
+  log('Cancel during delayed initial CDN load immediately unlocks controls and never starts encoder or downloads');
+ }finally{releaseRoute();await loadingPage.close();}
  await page.goto(base+'/#scene=luminous-loom');await page.locator('#frame-host iframe').waitFor();assert.equal(await page.locator('iframe').count(),1);await page.locator('#back').click();assert.equal(await page.locator('iframe').count(),0);await page.locator('a.cover[href="#scene=luminous-loom"]').click();await page.locator('#frame-host iframe').waitFor();assert.equal(await page.locator('iframe').count(),1);await page.locator('#back').click();assert.equal(await page.locator('iframe').count(),0);log('Gallery destroys and reopens study with no hidden running iframe');
- const mobile=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true,reducedMotion:'reduce'}),phone=await mobile.newPage();phone.on('pageerror',e=>errors.push(e.message));await phone.goto(url+'?phase=0&fibers=16&samples=128');await phone.locator('#fibers').waitFor();await settle(phone);assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const box=await phone.locator('aside').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=390);assert.ok(box.height>0);await phone.locator('#hide').scrollIntoViewIfNeeded();await snapshot(phone,'mobile');await phone.locator('#hide').tap();assert.equal(await phone.locator('aside').isVisible(),false);assert.equal(await phone.locator('#show').isVisible(),true);assert.ok(Number(await phone.locator('#show').evaluate(el=>getComputedStyle(el).opacity))>0);await snapshot(phone,'mobile-hidden');await phone.locator('#show').tap();assert.equal(await phone.locator('aside').isVisible(),true);await mobile.close();log('Mobile panel fits width, scrolls normally and visible hide/show works with touch');
+ const mobile=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true,reducedMotion:'reduce'}),phone=await mobile.newPage();phone.on('pageerror',e=>errors.push(e.message));await phone.goto(url+'?phase=0&fibers=16&samples=128');await phone.locator('#fibers').waitFor();await settle(phone);assert.ok(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const box=await phone.locator('aside').boundingBox();assert.ok(box.x>=0&&box.x+box.width<=390);assert.ok(box.height>0);await phone.locator('#hide').scrollIntoViewIfNeeded();await snapshot(phone,'mobile');await phone.locator('#hide').tap();assert.equal(await phone.locator('aside').isVisible(),false);assert.equal(await phone.locator('#show').isVisible(),true);assert.ok(Number(await phone.locator('#show').evaluate(el=>getComputedStyle(el).opacity))>0);await assertScene(phone,'mobile-clean',true);await snapshot(phone,'mobile-hidden');await phone.locator('#show').tap();assert.equal(await phone.locator('aside').isVisible(),true);await assertScene(phone,'mobile-restored');await snapshot(phone,'mobile-restored');await mobile.close();log('Mobile panel fits width, scrolls normally and visible hide/show works with touch');
  assert.deepEqual(errors,[]);console.log('LUMINOUS_LOOM_QA_SUCCESS');
 })().catch(async error=>{console.error(error);if(page){await snapshot(page,'failure').catch(()=>{});console.error('STATUS '+await page.locator('#status').textContent({timeout:1000}).catch(()=>'(absent)'));}process.exitCode=1;}).finally(async()=>{await fs.mkdir(output,{recursive:true});await fs.writeFile(path.join(output,'summary.json'),JSON.stringify({results,errors,...evidence},null,2));await browser?.close();await new Promise(r=>server.close(r));clearTimeout(deadline);});
