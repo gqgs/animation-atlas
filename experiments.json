@@ -604,5 +604,23 @@
         "url": "https://paulbourke.net/fractals/reversejulia/"
       }
     ]
+  },
+  {
+    "id": "luminous-loom",
+    "title": "Luminous Loom",
+    "index": 26,
+    "category": "Geometry",
+    "date": "2026-11-10",
+    "url": "experiments/luminous-loom/index.html",
+    "description": "Luminous torus-knot ribbons become a drawing laboratory: compare direct Canvas, fresh Path2D and approximate color merging at matched geometry and resolution.",
+    "tags": [
+      "torus knots",
+      "generative art",
+      "Canvas 2D",
+      "drawing benchmark",
+      "rotation sequences"
+    ],
+    "cover": "covers/luminous-loom.svg",
+    "source": "downloads/luminous-loom-source.zip"
   }
 ]
