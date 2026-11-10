@@ -53,9 +53,6 @@ async function sharedControls(p,id){
  for(const [id,value] of [['symmetry',7],['sides',5],['density',.7],['size',.08],['drift',.05],['duration',8],['zoom',.9]]){await range(page,id,value);assert.equal(Number(await page.locator('#'+id+'Value').evaluate(el=>el.value)),value);}
  await page.locator('#seed').fill('42');await page.locator('#seed').press('Tab');await settle(page);const seeded=await hash(page);await page.locator('#seed').fill('314159');await page.locator('#seed').press('Tab');assert.notEqual(await hash(page),seeded);await page.locator('#seed').fill('42');await page.locator('#seed').press('Tab');assert.equal(await hash(page),seeded);
  await page.locator('#palette').selectOption('ember');assert.notEqual(await hash(page),seeded);log('Chamber presets, settings, seed replay, palette, rotation and mirror toggles');
- // Existing real-time WebM behavior intentionally remains unchanged.
- const webmWait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.webm'),timeout:60000});
- await page.locator('#record').click();assert.equal(await page.locator('#record').textContent(),'Stop recording');assert.equal(await page.locator('#symmetry').isEnabled(),false);await page.waitForTimeout(1600);await page.locator('#record').click();const webm=await webmWait,webmPath=path.join(output,'chamber-short.webm');await webm.saveAs(webmPath);await page.waitForFunction(()=>document.querySelector('#record').textContent==='Record loop');assert.equal(await page.locator('#symmetry').isEnabled(),true);assert.equal(await page.locator('#play').textContent(),'Play');const ws=probe(webmPath);assert.ok(['vp8','vp9'].includes(ws.codec_name));assert.equal(ws.width,1280);assert.equal(ws.height,900);assert.ok(Number(ws.nb_read_frames)>1);console.log('WEBM_PROBE '+JSON.stringify(ws));log('Chamber actual short record/stop creates decodable WebM and restores controls');
  // Isolate the exact sampling contract with the real extracted painter. The
  // separate full UI export below verifies the actual encoder and downloaded file.
  await page.goto(unwinding+'?phase=0&steps=101&filaments=4');
@@ -101,5 +98,29 @@ async function sharedControls(p,id){
   await snapshot(phone,id+'-mobile-hidden');await phone.locator('#show').tap();assert.equal(await phone.locator('aside').isVisible(),true);
  }
  await mobile.close();log('Both mobile panels fit the viewport; hide/show hit targets work via touch (see visibility warnings)');
+ // Run the real-time recording last so a codec failure cannot mask the
+ // independent interaction, MP4, gallery or mobile results above. Use an
+ // explicitly light scene: slow software rendering must not consume the whole
+ // recording interval before the browser has presented multiple frames.
+ await page.setViewportSize({width:640,height:640});
+ try {
+  await page.goto(chamber+'?phase=0&seed=42&symmetry=3&sides=3&density=0.3&size=0.14&drift=0.12&duration=120&zoom=0.9');
+  await page.locator('#symmetry').waitFor();await settle(page);
+  const webmWait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.webm'),timeout:90000});
+  await page.locator('#record').click();assert.equal(await page.locator('#record').textContent(),'Stop recording');assert.equal(await page.locator('#symmetry').isEnabled(),false);
+  await page.evaluate(()=>{window.__chamberRecordingQA={last:null,changes:0,start:performance.now()};});
+  await page.waitForFunction(()=>{
+   const q=window.__chamberRecordingQA,value=Number(document.querySelector('#phase').value);
+   if(q.last!==null&&value>q.last)q.changes++;
+   q.last=value;
+   return q.changes>=8&&performance.now()-q.start>=2500;
+  },null,{polling:'raf',timeout:60000});
+  console.log('WEBM_CAPTURE '+JSON.stringify(await page.evaluate(()=>({phase:document.querySelector('#phase').value,transitions:window.__chamberRecordingQA.changes,elapsedMs:Math.round(performance.now()-window.__chamberRecordingQA.start)}))));
+  await page.locator('#record').click();const webm=await webmWait,webmPath=path.join(output,'chamber-short.webm');await webm.saveAs(webmPath);
+  await page.waitForFunction(()=>document.querySelector('#record').textContent==='Record loop');assert.equal(await page.locator('#symmetry').isEnabled(),true);assert.equal(await page.locator('#play').textContent(),'Play');
+  const ws=probe(webmPath);console.log('WEBM_PROBE '+JSON.stringify(ws));
+  assert.ok(['vp8','vp9'].includes(ws.codec_name));assert.equal(ws.width,640);assert.equal(ws.height,640);assert.ok(Number(ws.nb_read_frames)>1,'Short WebM must contain at least two decoded frames');
+  log('Chamber actual short record/stop creates multi-frame decodable WebM and restores controls');
+ } finally {await page.setViewportSize({width:1280,height:900});}
  assert.deepEqual(errors,[]);await fs.writeFile(path.join(output,'summary.json'),JSON.stringify({results,errors,warnings},null,2));console.log('CHROMATIC_BROWSER_QA_SUCCESS');
 })().catch(async error=>{console.error(error);console.error('PAGE_ERRORS '+JSON.stringify(errors));if(page){console.error('PAGE '+page.url());await snapshot(page,'failure').catch(()=>{});console.error('STATUS '+await page.locator('#status').textContent({timeout:1000}).catch(()=>'(not present)'));}process.exitCode=1;}).finally(async()=>{await browser?.close();await new Promise(resolve=>server.close(resolve));clearTimeout(deadline);});

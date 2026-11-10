@@ -34,3 +34,19 @@ Pixel comparisons use independently frozen original painters against production 
 Accepted: a shared unit-direction rotation sequence for the fixed-angle turtle steps and regular-polygon vertices. These consumers repeatedly evaluate evenly spaced angles, so recurrence with periodic trigonometric rebasing can remove repeated trigonometry while preserving their public geometry shapes. This benchmark validates those two integrations only.
 
 Deferred: RK4 integrators, Julia view-coordinate transforms, and contour extraction. They are separate candidate reuse areas, not consumers of the fixed-angle rotation sequence. Their equations, coordinate conventions and topology requirements need independent contracts and equivalence tests before extraction. No benchmark result here establishes their performance or correctness, and this change does not broadly consolidate those algorithms.
+
+## Observed browser results (2026-11-10)
+
+Both runs below passed all 25 image comparisons with **zero changed pixels**, including default and extreme geometry settings at 1080²/2160². They compare source commit `dffcf34` with candidate `ad3608c`. Raw reports retain environment, methods, median/p95 and per-frame image results: [headless CI](browser-results-ci.json), [foreground Chrome](browser-results-foreground.json).
+
+Full-frame medians in milliseconds, original → optimized (includes raster/readback, not FPS):
+
+| Workload | Headless CI | Foreground Chrome |
+| --- | ---: | ---: |
+| Unwinding default | 81.9 → 80.2 | 87.3 → 92.8 |
+| Unwinding maximum | 207.1 → 221.0 | 211.7 → 206.1 |
+| Chamber default | 5.8 → 5.9 | 8.0 → 6.9 |
+| Chamber maximum sliders | 2.6 → 2.6 | 2.9 → 2.8 |
+| Chamber maximum geometry | 39.1 → 38.0 | 42.0 → 41.1 |
+
+The geometry kernel is cheaper, but whole-frame results are mixed. In particular, one run improves each Unwinding case while the other regresses it. Nine timed pairs are exploratory and do not establish a general rendering speedup or slowdown. Canvas strokes/rasterization dominate Unwinding; geometry-only speedups should not be translated into FPS claims. The useful result here is a small reusable, tested geometry contract with equal images, plus a harness that exposes the actual next bottleneck.
