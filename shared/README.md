@@ -32,3 +32,17 @@ For future reuse, keep render callbacks pure in `(time, phase)`; derive determin
 Test: `node --test dist/shared/frame-export.test.mjs`
 
 If another project uses this helper, consider extracting it to a separate package with explicit dependencies and integration tests rather than creating a new video codec implementation.
+
+## Shared angular geometry
+
+`rotation-sequence.mjs` writes equally spaced unit directions into a Float64Array:
+
+```js
+import {rotationSequence} from './rotation-sequence.mjs';
+const xy = new Float64Array(800 * 2);
+rotationSequence(800, startAngle, angleStep, xy); // angles in radians
+```
+
+Sample i approximates `(cos(startAngle + i*angleStep), sin(...))`. A complex rotation recurrence rebases every 64 samples to limit accumulated roundoff. Output is caller-owned, may be reused, and must have room for 2 × count numbers. Returned fresh arrays are independent. This is floating-point geometry, not bit-identical transcendental output; accuracy is tested over the scenes' supported angles/counts, not arbitrarily huge angles. Every call depends only on its inputs, so seeking or deterministic export needs no playback history.
+
+Chromatic Unwinding reuses one direction buffer across its filaments. Chromatic Chamber caches fixed polygon bases and rotates them by each shard's explicit phase. Rendering, sample density and export timing are unchanged. [Audit, equivalence checks and benchmarks](benchmarks/README.md) retain the original formulas and measure geometry separately from whole Canvas frames.

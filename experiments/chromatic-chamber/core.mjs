@@ -1,3 +1,4 @@
+import {rotationSequence} from '../../shared/rotation-sequence.mjs';
 // Independent implementation of a dihedral mirror chamber. No Egan source is copied.
 export const TAU = 2 * Math.PI;
 export const defaults = Object.freeze({seed:13013, symmetry:12, sides:4, density:1.1, size:.075, drift:.09, duration:48, zoom:1, rotation:0, palette:'jewel', mirrors:false});
@@ -15,13 +16,18 @@ export function makeChamber(p) {
       phase:rand()*TAU, orientation:rand()*TAU, radius:p.size*(.6+.65*rand()), color:rand(), saturation:.55+.4*rand()};
   });
 }
+// Cache only immutable local geometry. Motion always comes from the supplied phase.
+const polygonBases = new Map();
 export function polygonAt(g,p,phase) {
+  let basis=polygonBases.get(p.sides);
+  if(!basis){basis=rotationSequence(p.sides,0,TAU/p.sides);polygonBases.set(p.sides,basis);}
   const t=TAU*phase, x=g.x+g.dx*Math.cos(t+g.phase), y=g.y+g.dy*Math.sin(t+g.phase);
-  return Array.from({length:p.sides},(_,i)=>{
-    // 2π/sides returns the same unlabelled regular polygon after one loop.
-    const a=g.orientation+(TAU*i+t)/p.sides;
-    return [x+g.radius*Math.cos(a),y+g.radius*Math.sin(a)];
-  });
+  // 2π/sides returns the same unlabelled regular polygon after one loop.
+  const angle=g.orientation+t/p.sides,c=Math.cos(angle),s=Math.sin(angle);
+  return Array.from({length:p.sides},(_,i)=>[
+    x+g.radius*(c*basis[2*i]-s*basis[2*i+1]),
+    y+g.radius*(s*basis[2*i]+c*basis[2*i+1]),
+  ]);
 }
 export function clipHalfPlane(poly,nx,ny) {
   const out=[];
