@@ -26,9 +26,13 @@ export function createGeometry(scene) {
  const major=rotationSequence(n,0,TAU*p.p/n),minor=rotationSequence(n,0,TAU*p.q/n);
  const around=rotationSequence(p.fibers,-p.spread/2,p.spread/(p.fibers-1));
  const coordinates=new Float64Array(p.fibers*n*2);
- return {settings:p,major,minor,around,coordinates};
+ return {settings:p,major,minor,around,coordinates,spread:p.spread};
 }
-export function geometryAt(workspace,phase) {
+export function geometryAt(workspace,phase,scene=workspace.settings) {
+ // Only spread varies continuously. Topology/density stay workspace-owned;
+ // reuse the small fiber-angle buffer instead of reallocating all coordinates.
+ const spread=Number.isFinite(scene.spread)?Math.max(limits.spread[0],Math.min(limits.spread[1],scene.spread)):workspace.settings.spread;
+ if(spread!==workspace.spread){rotationSequence(workspace.settings.fibers,-spread/2,spread/(workspace.settings.fibers-1),workspace.around);workspace.spread=spread;}
  const p=workspace.settings,t=wrapPhase(phase)*TAU;
  const {major,minor,around,coordinates}=workspace,n=p.samples;
  const yaw=t+.32, pitch=.67+.22*Math.sin(t),roll=.12*Math.sin(t);

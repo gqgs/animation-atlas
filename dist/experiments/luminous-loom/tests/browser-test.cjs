@@ -32,7 +32,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
 (async()=>{
  await fs.mkdir(output,{recursive:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const base=`http://127.0.0.1:${server.address().port}`,url=base+'/experiments/luminous-loom/';
- browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const context=await browser.newContext({viewport:{width:1280,height:900},deviceScaleFactor:1,reducedMotion:'reduce',acceptDownloads:true});
  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
  page=await context.newPage();page.setDefaultTimeout(30000);
@@ -48,6 +48,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  for(const [id,value] of [['fibers',24],['samples',192],['spread',.8],['width',1.5],['opacity',.8],['zoom',.9],['duration',4]]){await range(page,id,value);assert.equal(Number(await page.locator('#'+id).inputValue()),value);assert.equal(Number(await page.locator('#'+id+'Value').evaluate(el=>el.value)),value);}
  for(const palette of ['ember','glacier','aurora']){const before=await hash(page);await page.locator('#palette').selectOption(palette);assert.notEqual(await hash(page),before);}
  const glow=await hash(page);await page.locator('#glow').uncheck();assert.notEqual(await hash(page),glow);await page.locator('#glow').check();
+ await page.locator('details').filter({has:page.locator('#renderer')}).evaluate(el=>el.open=true);
  for(const renderer of ['path2d','merged','direct']){await page.locator('#renderer').selectOption(renderer);await settle(page);assert.equal(await page.locator('#renderer').inputValue(),renderer);}
  await snapshot(page,'desktop');log('Every preset, slider, palette, glow toggle and renderer control');
  // Real Canvas pixels from the same shared geometry/painter, independently of UI.
@@ -69,6 +70,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  await page.goto(url+'?phase=0&fibers=8&samples=128&duration=4');await page.locator('#fibers').waitFor();
  await page.locator('details').filter({has:page.locator('#exportSize')}).evaluate(el=>el.open=true);
  await page.locator('#exportSize').selectOption('720');await page.locator('#exportFps').selectOption('30');
+ await page.locator('details').filter({has:page.locator('#benchmark')}).evaluate(el=>el.open=true);
  // Exercise the real UI benchmark and downloaded report, not synthetic timers.
  await page.locator('#benchmark').click();assert.equal(await page.locator('#fibers').isEnabled(),false);
  await page.waitForFunction(()=>window.loomBenchmarkResult&&document.querySelector('#benchmark').textContent==='Compare matched frames',null,{timeout:180000});

@@ -12,7 +12,9 @@ def bundle():
     files = {p.relative_to(DIST).as_posix(): p.read_bytes()
              for p in (DIST / 'experiments' / SCENE).rglob('*') if p.is_file()}
     for name in ['rotation-sequence.mjs', 'rotation-sequence.test.mjs',
-                 'frame-export.mjs', 'frame-export.test.mjs', 'README.md']:
+                 'frame-export.mjs', 'frame-export.test.mjs', 'README.md',
+                 'parameter-tracks.mjs', 'parameter-tracks.test.mjs',
+                 'parameter-controls.mjs', 'parameter-tracks.md']:
         files['shared/' + name] = (DIST / 'shared' / name).read_bytes()
     files['index.html'] = (f'<!doctype html><meta charset="utf-8">'
                           f'<meta http-equiv="refresh" content="0;url=experiments/{SCENE}/">'
