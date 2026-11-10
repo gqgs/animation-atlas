@@ -33,10 +33,14 @@ export function createParameterControl({parent,key,label,definition,value,track,
  }else if(definition.note){const note=document.createElement('p');note.className='note parameter-note';note.textContent=definition.note;root.append(note);}
  slider.oninput=()=>onValue(Number(slider.value));parent.append(root);
  const decimals=definition.step===1?0:Math.max(2,String(definition.step).split('.')[1]?.length||0);
+ // Imported bounds are continuous, so do not let native step sanitization
+ // silently move a saved handle. Aligned values keep the usual keyboard step.
+ const setBound=(input,value)=>{const steps=(value-definition.min)/definition.step;input.step=Math.abs(steps-Math.round(steps))<1e-8?definition.step:'any';input.value=value;};
+ const formatBound=value=>value===Number(value.toFixed(decimals))?value.toFixed(decimals):String(Number(value.toPrecision(12)));
  function sync({value,track,resolved=value,disabled=false}){
   const active=!!track?.enabled;slider.value=value;slider.disabled=disabled||active;output.value=Number(resolved).toFixed(decimals);root.classList.toggle('is-cyclic',active);
   slider.title=active?`Static value ${value} is retained. Turn off Cyclic to edit.`:'';
-  if(toggle){if(active)draft={...track};toggle.checked=active;toggle.disabled=disabled;fields.hidden=!active;const token=JSON.stringify(draft);if(token!==lastDraft){lower.value=draft.min;upper.value=draft.max;easing.value=draft.easing;lowerOutput.value=draft.min.toFixed(decimals);upperOutput.value=draft.max.toFixed(decimals);lower.setAttribute('aria-valuemax',draft.max);upper.setAttribute('aria-valuemin',draft.min);const span=definition.max-definition.min;fields.style.setProperty('--range-low',`${span?(draft.min-definition.min)/span*100:0}%`);fields.style.setProperty('--range-high',`${span?(draft.max-definition.min)/span*100:0}%`);lastDraft=token;}for(const field of [lower,upper,easing])field.disabled=disabled;output.setAttribute('aria-label',`${label} ${active?'current':'static'} value`);}
+  if(toggle){if(active)draft={...track};toggle.checked=active;toggle.disabled=disabled;fields.hidden=!active;const token=JSON.stringify(draft);if(token!==lastDraft){setBound(lower,draft.min);setBound(upper,draft.max);easing.value=draft.easing;lowerOutput.value=formatBound(draft.min);upperOutput.value=formatBound(draft.max);lower.setAttribute('aria-valuemax',draft.max);upper.setAttribute('aria-valuemin',draft.min);const span=definition.max-definition.min;fields.style.setProperty('--range-low',`${span?(draft.min-definition.min)/span*100:0}%`);fields.style.setProperty('--range-high',`${span?(draft.max-definition.min)/span*100:0}%`);lastDraft=token;}for(const field of [lower,upper,easing])field.disabled=disabled;output.setAttribute('aria-label',`${label} ${active?'current':'static'} value`);}
  }
  sync({value,track});
  return {sync,reset(){draft={enabled:true,min:definition.min,max:definition.max,easing:'sine'};},element:root};
