@@ -1,5 +1,6 @@
 import {defaults,limits,normalize,createGeometry,geometryAt,counts} from './core.mjs';
 import {preparePaths,paint} from './renderer.mjs';
+import {abortable} from './abortable.mjs';
 import {runBenchmark} from './benchmark.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene');
@@ -65,7 +66,7 @@ $('record').onclick=async()=>{
  const controller=new AbortController();busy={kind:'export',controller};const scene={...p},space=createGeometry(scene),wasPlaying=playing,size=Number($('exportSize').value),fps=Number($('exportFps').value),link=sceneURL(0);
  playing=false;sync();lock('record');$('record').textContent='Cancel export';$('status').textContent='Loading deterministic MP4 encoder…';
  try{
-  const FrameWrap=await loadFrameWrap();if(controller.signal.aborted)throw new DOMException('Canceled','AbortError');
+  const FrameWrap=await abortable(loadFrameWrap(),controller.signal);if(controller.signal.aborted)throw new DOMException('Canceled','AbortError');
   const blob=await exportFrames({width:size,height:size,fps,duration:scene.duration,format:'mp4',bitrate:Math.round(24000000*(size/1080)**2*(fps/30)),createRecorder:options=>new FrameWrap(options),signal:controller.signal,draw:({canvas:output,phase:position})=>renderAt(output,position,scene,space),onProgress:(done,total)=>{if(done===1||done%10===0||done===total)$('status').textContent=`Encoding ${done}/${total} frames · ${size}² · ${fps} fps`;}});
   if(controller.signal.aborted)throw new DOMException('Canceled','AbortError');
   download(blob,`luminous-loom-${size}p-${fps}fps.mp4`);download(new Blob([link+'\n'],{type:'text/plain'}),'luminous-loom-scene-url.txt');$('status').textContent=`MP4 exported · ${size} × ${size} · ${fps} fps · exact frame steps`;

@@ -13,7 +13,7 @@ test('normalization validates bounds, defaults and enum choices',()=>{
  }
  assert.equal(normalize({fibers:9.7}).fibers,10);
  assert.equal(normalize({renderer:'invalid'}).renderer,'direct');
- assert.equal(normalize({palette:'invalid'}).palette,'aurora');
+ for(const palette of ['invalid','constructor','toString','__proto__'])assert.equal(normalize({palette}).palette,'aurora');
  assert.equal(normalize({glow:0}).glow,0);
  assert.equal(normalize({glow:1}).glow,1);
  assert.throws(()=>wrapPhase(NaN),RangeError);
@@ -96,4 +96,12 @@ test('benchmark statistics and RGB difference metrics are independently checkabl
 });
 test('benchmark rejects invalid workload options before browser access',async()=>{
  for(const options of [{size:0},{size:2161},{samples:2},{samples:101},{warmup:-1},{warmup:21}])await assert.rejects(runBenchmark({},options),RangeError);
+});
+
+import {abortable} from './abortable.mjs';
+test('encoder loading can be canceled without waiting for a stalled CDN',async()=>{
+ const controller=new AbortController(),pending=abortable(new Promise(()=>{}),controller.signal);
+ controller.abort();await assert.rejects(pending,{name:'AbortError'});
+ assert.equal(await abortable(Promise.resolve('ready'),new AbortController().signal),'ready');
+ await assert.rejects(abortable(Promise.reject(new Error('load failed')),new AbortController().signal),/load failed/);
 });

@@ -44,13 +44,13 @@ export async function runBenchmark(input,{size=1080,samples=9,warmup=2,onProgres
  }
  const pixels=[];
  for(const phase of phases) {
-  check(signal);onProgress(`Comparing pixels · phase ${phase}`);await yieldTask();
+  check(signal);onProgress(`Comparing pixels · phase ${phase}`);await yieldTask();check(signal);
   const images={};
-  for(const mode of modes){const data=geometryAt(workspaces[mode],phase);paint(canvases[mode],data,scene,preparePaths(data,scene,mode),mode);images[mode]=canvases[mode].getContext('2d').getImageData(0,0,size,size).data;}
+  for(const mode of modes){check(signal);const data=geometryAt(workspaces[mode],phase);paint(canvases[mode],data,scene,preparePaths(data,scene,mode),mode);images[mode]=canvases[mode].getContext('2d').getImageData(0,0,size,size).data;}
   for(const mode of ['path2d','merged'])pixels.push({mode,phase,...pixelDifference(images.direct,images[mode])});
  }
  const tolerance={maxChannelDelta:32,meanAbsoluteRGBDelta:.05,fractionOver2:.001};
  const report={scene,workload:counts(scene),size,environment:{userAgent:navigator.userAgent,devicePixelRatio,hardwareConcurrency:navigator.hardwareConcurrency,visibility:document.visibilityState,date:new Date().toISOString(),context:canvases.direct.getContext('2d').getContextAttributes?.()},method:{samples,warmup,phases,seed:13013,orders,setupMs,setup:'Three reusable angular tables and coordinate buffers, excluded from repeated-frame timing.',geometry:'Explicit-phase projection into reused Float64 storage; same work in all modes.',prepare:'Fresh Path2D construction every animated frame, included in total; never cached across phases.',submit:'Canvas commands, style setup, background and both stroke passes.',rasterFence:'Synchronous 1px readback after submission; includes pending drawing and readback overhead. May change browser backend heuristics.',total:'Geometry + path preparation + drawing submission + readback; not compositor presentation, encoder time, or FPS.',merged:'Approximate: same-color paths are stroked as a union, changing overlap opacity. Not an equivalent optimization.',tolerance,speedIsNonGating:true},timings:Object.fromEntries(modes.map(mode=>[mode,Object.fromEntries(Object.entries(times[mode]).map(([k,v])=>[k,summary(v)]))])),pixels};
  report.pass=pixels.filter(p=>p.mode==='path2d').every(p=>p.maxChannelDelta<=tolerance.maxChannelDelta&&p.meanAbsoluteRGBDelta<=tolerance.meanAbsoluteRGBDelta&&p.fractionOver2<=tolerance.fractionOver2);
- return report;
+ check(signal);return report;
 }
