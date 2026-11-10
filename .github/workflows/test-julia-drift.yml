@@ -1,0 +1,34 @@
+name: Test Julia Drift
+
+on:
+  pull_request:
+    paths:
+      - 'dist/experiments/julia-drift/**'
+      - 'dist/shared/frame-export*.mjs'
+      - '.github/workflows/test-julia-drift.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Test math and frame export
+        run: node --test $(find dist -name '*.test.mjs' -print)
+      - name: Install isolated browser-test dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          npm install --prefix "$RUNNER_TEMP/julia-drift-qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/julia-drift-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Test rendering, interactions, PNG and actual MP4
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/julia-drift-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/julia-drift-qa-output
+        run: node dist/experiments/julia-drift/tests/browser-test.cjs
