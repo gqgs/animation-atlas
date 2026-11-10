@@ -35,6 +35,11 @@ jobs:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/loom-qa/node_modules/playwright
           QA_OUTPUT: ${{ runner.temp }}/loom-qa-output
         run: node dist/experiments/luminous-loom/tests/browser-test.cjs
+      - name: Verify cyclic controls and real tracked video export
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/loom-qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/loom-qa-output/parameter-tracks
+        run: node dist/experiments/luminous-loom/tests/parameter-tracks-browser.cjs
       - name: Preserve measurements and visual evidence
         if: always()
         uses: actions/upload-artifact@v4

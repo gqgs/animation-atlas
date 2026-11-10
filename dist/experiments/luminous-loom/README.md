@@ -4,6 +4,18 @@ A slowly turning ribbon of neighboring (p,q) torus knots. Serve the atlas `dist/
 
 The centerline is `(x,y,z) = ((1+r cos(qt+v)) cos(pt), (1+r cos(qt+v)) sin(pt), r sin(qt+v))`; neighboring fibers vary `r` and `v`. Periodic rigid rotations and a small breathing radius make a closed loop. The shared `rotation-sequence.mjs` supplies reusable major, minor and fiber angle tables; only projection runs per frame. Defaults form a (2,3) trefoil ribbon. This is translucent wire art, without hidden-surface removal or simulated light transport.
 
+## Cyclic parameter controls
+
+Ribbon spread, stroke width, opacity and magnification each have a **Cyclic** toggle, lower/upper bounds and a choice of Linear, Sine, Smoothstep or Smootherstep easing. The displayed value is the current sample. A complete **Loop · seconds** goes lower → upper → lower, reaching the upper bound at 50%. All tracks share that phase. Sine is the UI default; linear has intentional sharp turnarounds. Equal bounds are constant. Reversed bounds are sorted and values are clamped to the control's legal range. Empty numeric edits revert when committed.
+
+Turning Cyclic off restores the stored static slider value, rather than capturing the current animation value. Bounds/easing survive off/on during the session; links preserve active tracks plus static values, not inactive drafts. Selecting a composition clears tracks. Editing bounds while playing is supported; press Tab or leave the number field to commit. Numeric output is rounded for display, but the sampled value is continuous.
+
+Only these four continuous controls are migrated in this first scene. **Fibers and samples stay static** because they change discrete geometry and allocation size; **duration stays static** because it defines the clock itself. Palette, renderer and glow are discrete choices. Other Atlas studies have not been migrated. The [shared track API and migration audit](../../shared/parameter-tracks.md) explain how to opt in more scene properties safely.
+
+Pause holds both the scene and tracks; scrub/reset directly evaluate the selected phase, without replaying prior frames. Visible playback advances by elapsed time (slow frames can be skipped), and hidden tabs pause. PNG evaluates the selected phase; MP4 snapshots settings/tracks and evaluates every exact exported phase with no dropped frames or duplicate endpoint. Export does not edit the stored static values or leave controls incorrectly unlocked. Scene links and exported URL sidecars include tracks and start paused.
+
+The benchmark freezes resolved parameter values at the selected phase for all comparison frames. Its report records the static settings, tracks and selected phase separately from the frozen measured scene. It measures renderer cost, not the cost of animating tracks.
+
 ## Drawing study
 
 - **Direct:** one closed Canvas path per fiber, drawn once per stroke pass.
@@ -21,5 +33,9 @@ Scene URLs retain settings and paused phase. Reduced motion starts paused. PNG a
 `node --test $(find dist -name '*.test.mjs' -print) .github/tests/*.test.mjs`
 
 `PLAYWRIGHT_MODULE=/path/to/playwright node dist/experiments/luminous-loom/tests/browser-test.cjs`
+
+`PLAYWRIGHT_MODULE=/path/to/playwright node dist/experiments/luminous-loom/tests/parameter-tracks-browser.cjs`
+
+Set `CHROMIUM_PATH` if using a separately installed Chromium. The cyclic suite checks bounds, every easing, editing during playback, toggle/static retention, seek/seam/URL replay, benchmark freezing, presets, mobile layout, repeated cancellation and an actual 720²/30 FPS/4-second H.264 export with decoded frames compared to reference PNGs.
 
 Browser QA covers same-path pixel comparisons, geometry replay/closure, controls, gallery lifecycle, mobile controls, actual PNG/MP4, decoded frames and repeated cancellation. Raw benchmark measurements are stored with CI artifacts; browser/device results are not universal speed claims.

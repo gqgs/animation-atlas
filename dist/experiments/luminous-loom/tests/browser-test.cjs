@@ -32,7 +32,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
 (async()=>{
  await fs.mkdir(output,{recursive:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const base=`http://127.0.0.1:${server.address().port}`,url=base+'/experiments/luminous-loom/';
- browser=await chromium.launch({headless:true,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined,args:['--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const context=await browser.newContext({viewport:{width:1280,height:900},deviceScaleFactor:1,reducedMotion:'reduce',acceptDownloads:true});
  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
  page=await context.newPage();page.setDefaultTimeout(30000);
@@ -69,6 +69,7 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  await page.goto(url+'?phase=0&fibers=8&samples=128&duration=4');await page.locator('#fibers').waitFor();
  await page.locator('details').filter({has:page.locator('#exportSize')}).evaluate(el=>el.open=true);
  await page.locator('#exportSize').selectOption('720');await page.locator('#exportFps').selectOption('30');
+ await page.locator('details').filter({has:page.locator('#benchmark')}).evaluate(el=>el.open=true);
  // Exercise the real UI benchmark and downloaded report, not synthetic timers.
  await page.locator('#benchmark').click();assert.equal(await page.locator('#fibers').isEnabled(),false);
  await page.waitForFunction(()=>window.loomBenchmarkResult&&document.querySelector('#benchmark').textContent==='Compare matched frames',null,{timeout:180000});
