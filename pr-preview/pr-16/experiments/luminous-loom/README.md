@@ -36,6 +36,6 @@ Scene URLs retain settings and paused phase. Reduced motion starts paused. PNG a
 
 `PLAYWRIGHT_MODULE=/path/to/playwright node dist/experiments/luminous-loom/tests/parameter-tracks-browser.cjs`
 
-Set `CHROMIUM_PATH` if using a separately installed Chromium. The cyclic suite checks bounds, every easing, editing during playback, toggle/static retention, seek/seam/URL replay, benchmark freezing, presets, mobile layout, repeated cancellation and an actual 720²/30 FPS/4-second H.264 export with decoded frames compared to reference PNGs.
+Set `CHROMIUM_PATH` if using a separately installed Chromium. The cyclic suite checks bounds, every easing, editing during playback, toggle/static retention, seek/seam/URL replay, benchmark freezing, presets, mobile layout, repeated cancellation and an actual 720²/30 FPS/4-second H.264 export with decoded frames compared to reference PNGs. Video comparison allows mean RGB error below 5/255 for lossy H.264 color conversion/chroma subsampling and requires each frame to match its own reference phase more closely than every other sampled phase.
 
 Browser QA covers same-path pixel comparisons, geometry replay/closure, controls, gallery lifecycle, mobile controls, actual PNG/MP4, decoded frames and repeated cancellation. Raw benchmark measurements are stored with CI artifacts; browser/device results are not universal speed claims.
