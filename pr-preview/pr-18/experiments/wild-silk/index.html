@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wild Silk · EigenDynamics</title><link rel="stylesheet" href="./style.css?v=3"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wild Silk · EigenDynamics</title><link rel="stylesheet" href="./style.css?v=4"></head><body>
 <main><div class="caption"><span>EIGENDYNAMICS / 027</span><h1>Wild Silk</h1><p>Order, caught in a tangle.</p></div><canvas id="scene" aria-label="Absolute-power attractor illuminated by a slow light cycle. Click to pause."></canvas></main>
 <aside><a class="eyebrow" href="../../">← ANIMATION ATLAS</a><div class="actions"><button id="play">Pause</button><button id="hide">Hide UI · H</button></div>
 <label>Starting form<select id="presets"><option value="">Discovered seed</option></select></label>
@@ -12,6 +12,7 @@
 <label>Palette<select id="palette"><option value="pearl">Pearl / oxidized silver</option><option value="copper">Copper / dried rose</option><option value="iris">Iris / dusk</option></select></label>
 <label>Exposure <output id="exposureValue"></output><input id="exposure" type="range" min=".2" max="4" step=".1"></label>
 <div id="cameraControls"></div>
+<label>Wave strength <output id="waveValue"></output><input id="wave" type="range" min="0" max="1" step=".01"></label>
 <label>Light motion <output id="motionValue"></output><input id="motion" type="range" min="0" max="1" step=".01"></label>
 <label>Loop seconds <output id="durationValue"></output><input id="duration" type="range" min="8" max="90" step="1"></label>
 <label>Loop position<input id="phase" type="range" min="0" max="1" step=".0001"></label>
@@ -19,8 +20,8 @@
 <div class="actions"><label>Export size<select id="exportSize"><option value="720">720²</option><option value="1080" selected>1080²</option><option value="2160">2160²</option></select></label><label>Frame rate<select id="exportFps"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select></label></div>
 <div class="actions"><button id="png">Save PNG</button><button id="record">Export MP4</button></div>
 <p id="status" role="status"></p>
-<details><summary>The map</summary><p>Fourteen coefficients fold the plane through absolute-value powers. Each mark is an actual iterate; nothing connects successive points. The camera zooms and turns in a closed cycle while illumination travels across the form. Disable Cyclic to hold either camera control still. Dense-core framing uses the 1st–99th coordinate percentiles to keep rare excursions from shrinking the form; switch to full extent to see their scale.</p><pre>x′ = a₀ + a₁x + a₂y
+<details><summary>The map</summary><p>Fourteen coefficients fold the plane through absolute-value powers. Each mark is an actual iterate; nothing connects successive points. Traveling waves gently bend the form as the camera zooms and turns. Wave strength controls this display-only deformation; zero restores the unwarped portrait. All motion shares one seamless loop. Disable Cyclic to hold either camera control still. Dense-core framing uses the 1st–99th coordinate percentiles to keep rare excursions from shrinking the form; switch to full extent to see their scale.</p><pre>x′ = a₀ + a₁x + a₂y
    + a₃|x|^a₄ + a₅|y|^a₆
 y′ = b₀ + b₁x + b₂y
    + b₃|x|^b₄ + b₅|y|^b₆</pre><pre id="coefficients"></pre><p>Discovery screens finite bounded orbits for positive finite-time stretching and coverage. Roundness measures covariance isotropy; balance compares density with its half-turn. These rank candidates, without adding symmetry or proving chaos. Nearby search mixes local mutations with occasional broad changes.</p><p>General 2D map by Antonio Sánchez, via <a href="https://paulbourke.net/fractals/2dmap/" target="_blank" rel="noreferrer">Paul Bourke</a>. Presets were discovered for this study, starting near his second example.</p><a href="./README.md">Math, search & export notes</a></details>
-</aside><button id="show" hidden>Show controls · H</button><script type="module" src="./main.mjs?v=3"></script></body></html>
+</aside><button id="show" hidden>Show controls · H</button><script type="module" src="./main.mjs?v=4"></script></body></html>
