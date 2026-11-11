@@ -7,7 +7,7 @@ x' = a0 + a1*x + a2*y + a3*abs(x)^a4 + a5*abs(y)^a6
 y' = b0 + b1*x + b2*y + b3*abs(x)^b4 + b5*abs(y)^b6
 ```
 
-The initial point is (0.05, 0.05). Each portrait samples 1,200,000 iterates after 1,800 transient steps. Negative exponents are evaluated literally: singular/nonfinite values and coordinates outside ±1000 reject the orbit. No clamping changes the map. Long bounded samples are not proofs of permanent boundedness.
+The initial point is (0.05, 0.05). Each portrait samples 1,200,000 iterates after 1,800 transient steps. Negative exponents are evaluated literally: singular/nonfinite values and coordinates outside ±1000 reject the orbit. No clamping changes the map. Long bounded samples are not proofs of permanent boundedness. Floating-point power implementations differ between engines: chaotic sample sequences and finite-time screening scores can differ across platforms, even with identical coefficients. Seeds reproduce coefficients, not bit-identical cross-platform trajectories.
 
 ## Rendering
 
@@ -21,7 +21,7 @@ WS1 codes encode all fourteen coefficients on a 0.001 grid in [-2,2], using four
 
 A module worker explores either broad uniform [-1.5,1.5] coefficients or a neighborhood of the current seed. Neighborhood sampling uses triangular perturbations up to ±0.16 for each coefficient, with 7% broad replacements per coefficient. Both modes quantize to the seed grid. The search collects up to eight distinct candidates or tests 25,000 proposals, and can be stopped immediately by terminating its worker. Selecting a thumbnail loads and saves it; candidates never silently replace the current portrait.
 
-Screening requires finite trajectories, positive largest finite-time Lyapunov estimate from an analytic Jacobian, nontrivial extent and at least 70 occupied cells of a 32² square histogram. Candidates get 2,400-step and 16,000-step inspections (plus transient), then a 100,000-point check. Loading performs the longer full portrait run and can still reject a candidate.
+Screening requires finite trajectories, positive largest finite-time Lyapunov estimate from an analytic Jacobian, nontrivial extent and at least 70 occupied cells of a 32² square histogram. Candidates get 2,400-step and 16,000-step inspections (plus transient), then the full 1,200,000-point portrait check before displaying a decimated thumbnail. Loading repeats that same horizon.
 
 Ranking is among the accepted batch, not an optimizer or hard guarantee. Roundness is the covariance eigenvalue ratio; balance compares square-root density with its 180° rotation about the bounding-box center. Neither enforces symmetry. Sprawling favors anisotropy and coverage; spatial variety favors coverage and stretching. Metrics use full bounds, not the cropped display. These heuristics do not prove chaos, artistic value or historical novelty.
 

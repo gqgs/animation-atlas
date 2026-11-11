@@ -11,7 +11,10 @@ self.onmessage=({data})=>{
         const metrics=inspect(a,16000);
         if(metrics.accepted){
           try{
-            const orbit=sample(a,100000);
+            const full=sample(a,1200000);
+            const points=new Float64Array(200000);
+            for(let i=0;i<100000;i++){const j=i*12;points[2*i]=full.points[2*j];points[2*i+1]=full.points[2*j+1];}
+            const orbit={...full,count:100000,points};
             self.postMessage({type:'candidate',seed,metrics,score:score(metrics,data.target),orbit,attempts},[orbit.points.buffer]);
             if(++found>=8){self.postMessage({type:'done',attempts,found});return;}
           }catch{/* Reject late escape; do not regularize the recurrence. */}
