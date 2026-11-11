@@ -1,4 +1,4 @@
-import {decode,encode,rng,candidate,inspect,sample,score} from './core.mjs?v=2';
+import {decode,encode,rng,candidate,inspect,sample,score} from './core.mjs?v=3';
 self.onmessage=({data})=>{
   try{
     const random=rng(data.randomSeed),base=decode(data.seed),seen=new Set([data.seed]);

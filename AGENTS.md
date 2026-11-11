@@ -22,3 +22,12 @@ For new Canvas 2D experiments, **reuse the deterministic frame exporter** in `di
 6. **Preserve existing behavior and document exports.** Interactive controls and the on-screen preview must keep working. When introducing an exporter, include a brief description in the experiment README, reusable code references, any needed updates to source ZIPs, and basic tests for frame timing, output dimensions, encoder lifecycle and cancellation.
 
 Do not create another recording library merely to integrate a new study. Reuse `dist/shared/frame-export.mjs`. If another repository needs the same functionality, consider promoting the small adapter into a separately versioned package after validating its API in at least two projects; keep encoding/muxing delegated to existing libraries rather than building a new codec.
+
+## Cyclic parameter controls for future experiments
+
+Include opt-in cyclic animation for suitable continuous controls in new experiments, following the shared implementation used by Luminous Loom and Wild Silk. In particular, expose zoom and orientation cycles when the scene supports them. Reuse `dist/shared/parameter-tracks.mjs` and `dist/shared/parameter-controls.mjs`; do not create a separate easing or cycling system.
+
+- Provide Cyclic toggles, lower/upper bounds and the shared easing choices. Use a smooth closed loop (lower → upper → lower), with sensible default motion where it improves the experiment.
+- Keep static settings and tracks separate. Resolve values from the explicit normalized scene phase, so playback, arbitrary seeking, PNG and deterministic video export agree. Preserve tracks in scene URLs and snapshot them during export.
+- Do not animate seeds, sample counts, discrete topology or the loop duration without a deliberate scene-specific strategy. Do not dispatch slider input events or rebuild simulations every frame. Reuse cached geometry or layers for interactive playback; if native-resolution export needs additional work, keep it deterministic and cancellable and document the cost.
+- Verify static fallback, endpoint/seam continuity, URL round trips, busy-state controls and at least one exported cycle. Update source archives with the shared modules required by standalone experiments.
