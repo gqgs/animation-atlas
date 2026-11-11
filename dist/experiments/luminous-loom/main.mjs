@@ -125,12 +125,12 @@ $('frames').onclick=async()=>{
    onProgress:(done,total)=>{completed=done;if(done===1||done%10===0||done===total)$('status').textContent='Saving lossless PNG '+done+'/'+total+' · '+size+'² · '+fps+' fps';},
   });
   if(controller.signal.aborted)throw new DOMException('Canceled','AbortError');
-  await writeExportText(directory,'scene-url.txt',link+'\\n');
+  await writeExportText(directory,'scene-url.txt',link+'\n');
   await writeExportText(directory,'encode.sh',[
    '#!/bin/sh','set -eu','cd "$(dirname "$0")"',
    'ffmpeg -framerate '+fps+" -i 'frame-%06d.png' -c:v libx264 -preset slow -crf 14 -pix_fmt yuv420p luminous-loom.mp4",
    '',
-  ].join('\\n'));
+  ].join('\n'));
   $('status').textContent='Saved '+result.frames+' lossless PNG frames to '+folderName+'/ · run sh encode.sh there for a high-quality MP4.';
  }catch(error){
   $('status').textContent=(error.name==='AbortError'?'PNG export canceled':'PNG export failed: '+error.message)+
