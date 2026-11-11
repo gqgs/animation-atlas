@@ -1,6 +1,6 @@
 # Wild Silk · Study 027
 
-Absolute-power attractors from Antonio Sánchez's General 2D Map, via [Paul Bourke's “Having a bad hair day”](https://paulbourke.net/fractals/2dmap/). Filigree, Veil and Thorn are Atlas search results, initially exploring neighborhoods of Bourke's second parameter set. Descriptive names were assigned here. The original example and another early candidate were omitted after perturbed-start checks revealed late escapes.
+Absolute-power attractors from Antonio Sánchez's General 2D Map, via [Paul Bourke's “Having a bad hair day”](https://paulbourke.net/fractals/2dmap/). Filigree and Veil are Atlas search results, initially exploring neighborhoods of Bourke's second parameter set. Descriptive names were assigned here. Fragile early candidates were omitted after cross-platform and perturbed-start checks revealed late escapes or collapse.
 
 ```
 x' = a0 + a1*x + a2*y + a3*abs(x)^a4 + a5*abs(y)^a6

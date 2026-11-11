@@ -2,7 +2,6 @@
 export const presets = [
   ['Filigree · Atlas',[-.811,.425,-1.136,.505,-.531,-.021,-.585,.736,.964,-.233,-.673,-.392,-1.204,-.435]],
   ['Veil · Atlas',[-.771,.342,-1.145,.479,-.533,-.052,-.575,.848,.912,-.286,-.712,-.266,-1.236,-.277]],
-  ['Thorn · Atlas',[-.824,1.057,-1.109,.618,-.571,-.06,-.547,.741,.998,-.292,-.577,-.383,-1.062,-.218]],
 ];
 export function encode(a){
   if(a.length!==14||a.some(v=>!Number.isFinite(v)||Math.abs(v)>2))throw Error('Expected 14 coefficients between −2 and 2');
