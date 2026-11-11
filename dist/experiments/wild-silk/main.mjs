@@ -1,12 +1,12 @@
 import {createParameterControl} from '../../shared/parameter-controls.mjs';
 import {normalizeTracks,serializeTracks} from '../../shared/parameter-tracks.mjs';
-import {trackDefinitions,readTracks,cameraAt} from './parameters.mjs?v=3';
-import {presets,encode,decode,inspect,sample} from './core.mjs?v=3';
-import {makePainter} from './painter.mjs?v=3';
+import {trackDefinitions,readTracks,cameraAt} from './parameters.mjs?v=4';
+import {presets,encode,decode,inspect,sample} from './core.mjs?v=4';
+import {makePainter} from './painter.mjs?v=4';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene');
-const settings={palette:'pearl',framing:'core',exposure:1.6,zoom:.8,rotation:0,motion:.6,duration:24};
-const specs=[['exposure',.2,4,.1],['zoom',.5,2,.01],['rotation',-180,180,1],['motion',0,1,.01],['duration',8,90,1]];
+const settings={palette:'pearl',framing:'core',exposure:1.6,zoom:.8,rotation:0,motion:.6,wave:.65,duration:24};
+const specs=[['exposure',.2,4,.1],['zoom',.5,2,.01],['rotation',-180,180,1],['motion',0,1,.01],['wave',0,1,.01],['duration',8,90,1]];
 const params=new URLSearchParams(location.search);
 let tracks=readTracks(params);const cameraControls=new Map();
 for(const [k,min,max] of specs){const v=Number(params.get(k));if(params.has(k)&&Number.isFinite(v))settings[k]=Math.max(min,Math.min(max,v));}
@@ -88,7 +88,7 @@ function showResults(){
 $('discover').onclick=()=>{
   if(worker){stopSearch();status('Search stopped. Candidates remain available.');return;}
   results=[];showResults();
-  try{worker=new Worker(new URL('./search-worker.mjs?v=3',import.meta.url),{type:'module'});}catch(e){status('Search unavailable: '+e.message);return;}
+  try{worker=new Worker(new URL('./search-worker.mjs?v=4',import.meta.url),{type:'module'});}catch(e){status('Search unavailable: '+e.message);return;}
   $('discover').textContent='Stop search';status('Searching…');
   worker.onmessage=({data:d})=>{
     if(d.type==='candidate'){results.push(d);results.sort((a,b)=>b.score-a.score);showResults();}

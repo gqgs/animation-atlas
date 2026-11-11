@@ -32,8 +32,11 @@ const assert=require('node:assert/strict');
     const settings={palette:'pearl',framing:'core',exposure:1.6,zoom:.8,rotation:0,motion:0};
     const draw=makePainter(orbit,settings,defaultTracks,{exact:true}),c=document.createElement('canvas');c.width=c.height=720;
     draw(c,0);const a=c.toDataURL();draw(c,1);const b=c.toDataURL();draw(c,.5);const d=c.toDataURL();draw(c,0);
-    return {seam:a===b,animated:a!==d,repeat:a===c.toDataURL()};
-  });assert.deepEqual(render,{seam:true,animated:true,repeat:true});
+    const repeat=a===c.toDataURL();
+    const waveDraw=makePainter(orbit,{...settings,wave:.65},{},{exact:true});
+    waveDraw(c,0);const waveStart=c.toDataURL();waveDraw(c,.5);const waveMid=c.toDataURL();waveDraw(c,1);
+    return {seam:a===b,animated:a!==d,repeat,waveAnimated:waveStart!==waveMid,waveSeam:waveStart===c.toDataURL()};
+  });assert.deepEqual(render,{seam:true,animated:true,repeat:true,waveAnimated:true,waveSeam:true});
   // UI integration with the real shared exporter and a deterministic recorder double.
   await page.evaluate(()=>{
     window.CCapture={FrameWrap:class{

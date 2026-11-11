@@ -11,9 +11,9 @@ The initial point is (0.05, 0.05). Each portrait samples 1,200,000 iterates afte
 
 ## Rendering
 
-Actual iterates accumulate with bilinear splats into four overlapping angular density layers. A bounded exponential response reveals thin structures. Four cached composites animate a continuous periodic lighting sweep; coefficients and orbit geometry stay fixed. Shared cyclic controls also move the camera: zoom 0.65–1.05 and orientation −18°–18° use sine easing by default. Each can be disabled or given independent bounds/easing. All cycles use the same explicit phase and duration. This is artistic illumination of the sampled invariant measure, not continuous physical motion between iterates. Set light motion to zero for a static portrait.
+Actual iterates accumulate with bilinear splats into four overlapping angular density layers. A bounded exponential response reveals thin structures. Four cached composites animate a continuous periodic lighting sweep; coefficients and orbit geometry stay fixed. Shared cyclic controls also move the camera: zoom 0.65–1.05 and orientation −18°–18° use sine easing by default. Each can be disabled or given independent bounds/easing. All cycles use the same explicit phase and duration. This is artistic illumination of the sampled invariant measure, not continuous physical motion between iterates. Set wave strength and light motion to zero and disable both camera cycles for a static portrait.
 
-Rare excursions can dwarf the core. Default framing uses the 1st–99th coordinate percentiles from a deterministic subsample; points outside the viewport are clipped, never modified. Full sampled extent is available. Zoom and orientation affect presentation only. The preview caps its longest edge at 850 pixels and transforms density textures with 3× overscan, without rebuilding geometry or textures as the camera moves. PNG/MP4 rasterize the resolved camera pose directly at output resolution, avoiding enlarged preview pixels. Animated camera exports are consequently slower than playback; each frame yields for cancellation. Native export may look sharper than the cached preview.
+Rare excursions can dwarf the core. Default framing uses the 1st–99th coordinate percentiles from a deterministic subsample; points outside the viewport are clipped, never modified. Full sampled extent is available. Zoom and orientation affect presentation only. The preview caps its longest edge at 850 pixels and transforms density textures with 3.25× overscan, without rebuilding geometry or textures as the camera moves. PNG/MP4 rasterize the resolved camera pose directly at output resolution, avoiding enlarged preview pixels. Animated camera exports are consequently slower than playback; each frame yields for cancellation. Native export may look sharper than the cached preview.
 
 ## Seed discovery
 
@@ -31,3 +31,10 @@ PNG renders directly at 720², 1080² or 2160². MP4 uses `../../shared/frame-ex
 
 Run `node --test dist/experiments/wild-silk/*.test.mjs dist/shared/frame-export.test.mjs`.
 `tests/browser-test.cjs` uses Playwright with `BASE_URL` and optional `CHROMIUM_PATH` to exercise controls, search, seed reload, PNG, responsive layout, and deterministic export via a recorder test double. Actual H.264 encoding remains a separate browser capability check.
+
+
+## Traveling-wave motion
+
+Wave strength defaults to 0.65. Two smooth, time-periodic shears deform the rendered portrait: a horizontal wave varying with y, followed by a vertical wave varying with the displaced x. Their composition is invertible and area preserving, so neighboring structures flow coherently without folds. Integer temporal harmonics close exactly after one loop. This is an artistic display transformation; the map, orbit, seeds and discovery metrics are unchanged.
+
+The same strip compositor is used by preview, seeking, PNG and MP4. It reuses one scratch canvas and processes one-pixel strips with fractional interpolation, without iterating the attractor again. An overscanned source supplies pixels outside the viewport so waves do not reveal blank border strips. Zero strength bypasses this stage entirely. Camera motion and lighting can be disabled to see the wave deformation alone.
