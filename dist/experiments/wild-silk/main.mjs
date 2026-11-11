@@ -1,5 +1,5 @@
-import {presets,encode,decode,inspect,sample} from './core.mjs';
-import {makePainter} from './painter.mjs';
+import {presets,encode,decode,inspect,sample} from './core.mjs?v=2';
+import {makePainter} from './painter.mjs?v=2';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene');
 const settings={palette:'pearl',framing:'core',exposure:1.6,zoom:.8,rotation:0,motion:.6,duration:24};
@@ -73,7 +73,7 @@ function showResults(){
 $('discover').onclick=()=>{
   if(worker){stopSearch();status('Search stopped. Candidates remain available.');return;}
   results=[];showResults();
-  try{worker=new Worker(new URL('./search-worker.mjs',import.meta.url),{type:'module'});}catch(e){status('Search unavailable: '+e.message);return;}
+  try{worker=new Worker(new URL('./search-worker.mjs?v=2',import.meta.url),{type:'module'});}catch(e){status('Search unavailable: '+e.message);return;}
   $('discover').textContent='Stop search';status('Searching…');
   worker.onmessage=({data:d})=>{
     if(d.type==='candidate'){results.push(d);results.sort((a,b)=>b.score-a.score);showResults();}
