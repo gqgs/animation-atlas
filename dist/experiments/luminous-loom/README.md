@@ -28,7 +28,19 @@ Stress preset: 384 fibers × 1536 samples × two passes = 1,179,648 submitted se
 
 ## Capture & validation
 
-Scene URLs retain settings and paused phase. Reduced motion starts paused. PNG and MP4 render to a separate 720/1080/2160-square canvas with resolution-relative strokes. MP4 reuses `../../shared/frame-export.mjs`, samples exact frame indices at 30/60 fps, omits the duplicate endpoint, and supports cancellation/progress. FrameWrap loads on demand and needs WebCodecs. A dense 2160p loop can be expensive. The source ZIP preserves shared import paths.
+Scene URLs retain settings and paused phase. Reduced motion starts paused. PNG, lossless PNG sequence and MP4 render to a separate 720/1080/2160-square canvas with resolution-relative strokes. Both video and image-sequence exports reuse `../../shared/frame-export.mjs`, sample exact frame indices at 30/60 fps, omit the duplicate endpoint and support cancellation/progress. FrameWrap loads on demand for MP4 and needs WebCodecs. A dense 2160p loop can be expensive. The source ZIP preserves shared import paths.
+
+### Lossless image-sequence master
+
+Choose **Export lossless PNG frames** in a Chromium-based browser (Brave, Chrome or Edge), then select a parent directory. A uniquely timestamped child folder contains `frame-000000.png`, `frame-000001.png`, etc., plus `scene-url.txt` and `encode.sh`. Every frame is drawn directly at the selected output size and compressed as PNG without lossy video encoding, frame skipping or temporal prediction. Files are written one at a time through the File System Access API; they are not buffered as an enormous ZIP in RAM. Canceling leaves completed PNGs in the folder, so do not treat a partial sequence as a complete loop. Long 4K/60 fps exports require substantial disk space; Firefox and browsers without directory-write support should use MP4 or single PNG instead.
+
+To encode a high-quality distribution video from inside that folder, run `sh encode.sh`, or equivalently:
+
+```sh
+ffmpeg -framerate 60 -i 'frame-%06d.png' -c:v libx264 -preset slow -crf 14 -pix_fmt yuv420p luminous-loom.mp4
+```
+
+Adjust frame rate to match export. This MP4 is **lossy** for compatibility; the numbered PNGs are the lossless master. For a genuinely lossless encoded archive, retain PNGs or encode with FFV1 (`-c:v ffv1` in a Matroska `.mkv` container, with a pixel-format choice tested against the PNGs). Exporting the same phase as a standalone PNG is a useful check for video-only compression artifacts.
 
 `node --test $(find dist -name '*.test.mjs' -print) .github/tests/*.test.mjs`
 
