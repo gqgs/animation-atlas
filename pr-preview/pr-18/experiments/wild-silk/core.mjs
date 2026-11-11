@@ -1,9 +1,8 @@
 // General 2D map: Antonio Sánchez / Paul Bourke. No singularity clamping.
 export const presets = [
-  ['Undertow · Bourke',[-.8,.4,-1.1,.5,-.6,-.1,-.5,.8,1,-.3,-.6,-.3,-1.2,-.3]],
+  ['Filigree · Atlas',[-.811,.425,-1.136,.505,-.531,-.021,-.585,.736,.964,-.233,-.673,-.392,-1.204,-.435]],
   ['Veil · Atlas',[-.771,.342,-1.145,.479,-.533,-.052,-.575,.848,.912,-.286,-.712,-.266,-1.236,-.277]],
   ['Thorn · Atlas',[-.824,1.057,-1.109,.618,-.571,-.06,-.547,.741,.998,-.292,-.577,-.383,-1.062,-.218]],
-  ['Petal · Atlas',[-.795,.425,-1.036,.433,-.656,-.15,-.524,.708,1.034,-.309,-.527,-.378,-1.256,-.383]],
 ];
 export function encode(a){
   if(a.length!==14||a.some(v=>!Number.isFinite(v)||Math.abs(v)>2))throw Error('Expected 14 coefficients between −2 and 2');
@@ -23,9 +22,9 @@ const derivative=(x,p)=>p===0?0:p*Math.sign(x)*Math.abs(x)**(p-1);
 export function jacobian(x,y,a){return [
   a[1]+a[3]*derivative(x,a[4]),a[2]+a[5]*derivative(y,a[6]),
   a[8]+a[10]*derivative(x,a[11]),a[9]+a[12]*derivative(y,a[13])];}
-export function sample(a,count=180000,burn=1800){
+export function sample(a,count=180000,burn=1800,initialX=.05){
   const points=new Float64Array(count*2);
-  let x=.05,y=.05,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+  let x=initialX,y=.05,minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
   for(let i=-burn;i<count;i++){
     [x,y]=step(x,y,a);
     if(!Number.isFinite(x+y)||Math.max(Math.abs(x),Math.abs(y))>1000)throw Error('Orbit escapes or meets a singularity');

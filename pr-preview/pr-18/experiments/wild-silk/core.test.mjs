@@ -26,7 +26,7 @@ test('rejects collapse and escape without clamping the map',()=>{
   assert.equal(Number.isFinite(step(0,1,presets[0][1])[0]),false);
 });
 test('presets remain finite over the full render horizon',()=>{
-  for(const [,a]of presets){assert.ok(Number.isFinite(inspect(a,16000).lambda));const orbit=sample(a,1200000);assert.equal(orbit.points.length,2400000);assert.ok(orbit.coreBounds.minX>=orbit.bounds.minX);assert.ok(orbit.coreBounds.maxX<=orbit.bounds.maxX);}
+  for(const [name,a]of presets){assert.ok(Number.isFinite(inspect(a,16000).lambda),name);const orbit=sample(a,1200000);assert.equal(orbit.points.length,2400000);assert.ok(orbit.coreBounds.minX>=orbit.bounds.minX);assert.ok(orbit.coreBounds.maxX<=orbit.bounds.maxX);}
 });
 test('nearby and broad candidate streams are reproducible and valid',()=>{
   for(const mode of ['nearby','global']){const r=rng(42),s=rng(42);for(let i=0;i<40;i++){const a=candidate(r,presets[0][1],mode);assert.deepEqual(a,candidate(s,presets[0][1],mode));assert.deepEqual(decode(encode(a)),a);}}
@@ -44,4 +44,8 @@ test('real search worker emits reproducible, scored candidates',async()=>{
     assert.equal(candidates.length,8);assert.equal(messages.at(-1).type,'done');
     for(const c of candidates){assert.equal(c.metrics.accepted,true);assert.equal(c.score,score(c.metrics,'round'));assert.equal(c.orbit.count,100000);}
   }finally{delete globalThis.self;}
+});
+
+test('presets survive tiny initial-condition perturbations',()=>{
+  for(const [name,a]of presets)for(const epsilon of [-2e-12,2e-12])assert.doesNotThrow(()=>sample(a,1200000,1800,.05+epsilon),name);
 });
