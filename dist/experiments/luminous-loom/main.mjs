@@ -2,7 +2,8 @@ import {defaults,limits,normalize,createGeometry,geometryAt,counts} from './core
 import {preparePaths,paint} from './renderer.mjs';
 import {abortable} from './abortable.mjs';
 import {runBenchmark} from './benchmark.mjs';
-import {exportFrames,exportPngSequence,loadFrameWrap} from '../../shared/frame-export.mjs';
+import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
+import {exportPngSequence} from './png-sequence-export.mjs';
 import {createParameterControl} from '../../shared/parameter-controls.mjs';
 import {normalizeTracks} from '../../shared/parameter-tracks.mjs';
 import {parameterSpecs,trackDefinitions,readScene,resolveScene,snapshotScene,writeSceneQuery} from './parameters.mjs';
