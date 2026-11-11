@@ -2,7 +2,7 @@ import {defaults,limits,normalize,createGeometry,geometryAt,counts} from './core
 import {preparePaths,paint} from './renderer.mjs';
 import {abortable} from './abortable.mjs';
 import {runBenchmark} from './benchmark.mjs';
-import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
+import {exportFrames,exportPngSequence,loadFrameWrap} from '../../shared/frame-export.mjs';
 import {createParameterControl} from '../../shared/parameter-controls.mjs';
 import {normalizeTracks} from '../../shared/parameter-tracks.mjs';
 import {parameterSpecs,trackDefinitions,readScene,resolveScene,snapshotScene,writeSceneQuery} from './parameters.mjs';
@@ -89,4 +89,54 @@ $('record').onclick=async()=>{
   download(blob,`luminous-loom-${size}p-${fps}fps.mp4`);download(new Blob([link+'\n'],{type:'text/plain'}),'luminous-loom-scene-url.txt');$('status').textContent=`MP4 exported · ${size} × ${size} · ${fps} fps · exact frame steps`;
  }catch(error){$('status').textContent=error.name==='AbortError'?'Export canceled':'Export failed: '+error.message;if(error.name!=='AbortError')console.error(error);}
  finally{busy=null;playing=wasPlaying;last=performance.now();unlock();$('record').textContent='Export MP4';dirty=true;sync();}
+};
+
+async function writeExportText(directory,name,value){
+ const file=await directory.getFileHandle(name,{create:true}),writable=await file.createWritable();
+ try{await writable.write(value);await writable.close();}
+ catch(error){try{await writable.abort?.();}catch{}throw error;}
+}
+$('frames').onclick=async()=>{
+ if(busy?.kind==='png-sequence'){busy.controller.abort();$('status').textContent='Canceling PNG sequence…';return;}
+ if(busy)return;
+ if(typeof window.showDirectoryPicker!=='function'){
+  $('status').textContent='Lossless PNG sequence export requires a Chromium-based browser with directory access (Brave, Chrome or Edge).';
+  return;
+ }
+ // The picker must be invoked directly from the user's click to retain user activation.
+ let parent;
+ try{parent=await window.showDirectoryPicker({id:'luminous-loom-png',mode:'readwrite'});}
+ catch(error){
+  if(error.name!=='AbortError')$('status').textContent='Could not select an output folder: '+error.message;
+  return;
+ }
+ if(busy)return;
+ const controller=new AbortController(),{settings:scene,tracks:animation}=snapshotScene(p,tracks);
+ const space=createGeometry(scene),wasPlaying=playing,size=Number($('exportSize').value),fps=Number($('exportFps').value);
+ const folderName='luminous-loom-'+size+'p-'+fps+'fps-'+new Date().toISOString().replace(/[:.]/g,'-');
+ const link=sceneURL(0);let completed=0;
+ busy={kind:'png-sequence',controller};playing=false;sync();lock('frames');
+ $('frames').textContent='Cancel PNG sequence';$('status').textContent='Preparing lossless frame folder…';
+ try{
+  const directory=await parent.getDirectoryHandle(folderName,{create:true});
+  const result=await exportPngSequence({
+   width:size,height:size,fps,duration:scene.duration,directory,signal:controller.signal,
+   draw:({canvas:output,phase:position})=>renderAt(output,position,scene,space,animation),
+   onProgress:(done,total)=>{completed=done;if(done===1||done%10===0||done===total)$('status').textContent='Saving lossless PNG '+done+'/'+total+' · '+size+'² · '+fps+' fps';},
+  });
+  if(controller.signal.aborted)throw new DOMException('Canceled','AbortError');
+  await writeExportText(directory,'scene-url.txt',link+'\\n');
+  await writeExportText(directory,'encode.sh',[
+   '#!/bin/sh','set -eu','cd "$(dirname "$0")"',
+   'ffmpeg -framerate '+fps+" -i 'frame-%06d.png' -c:v libx264 -preset slow -crf 14 -pix_fmt yuv420p luminous-loom.mp4",
+   '',
+  ].join('\\n'));
+  $('status').textContent='Saved '+result.frames+' lossless PNG frames to '+folderName+'/ · run sh encode.sh there for a high-quality MP4.';
+ }catch(error){
+  $('status').textContent=(error.name==='AbortError'?'PNG export canceled':'PNG export failed: '+error.message)+
+   (completed?' · '+completed+' complete frames remain in '+folderName+'/':'');
+  if(error.name!=='AbortError')console.error(error);
+ }finally{
+  busy=null;playing=wasPlaying;last=performance.now();unlock();$('frames').textContent='Export lossless PNG frames';dirty=true;sync();
+ }
 };
