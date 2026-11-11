@@ -1,0 +1,50 @@
+# Deterministic browser frame export
+
+`frame-export.mjs` is deliberately scene-agnostic. It samples frames at `frame / fps` instead of relying on wall-clock time or `canvas.captureStream()`. An injected `createRecorder` adapter owns codec selection, buffering and muxing.
+
+## API
+
+```js
+import {exportFrames,loadFrameWrap} from './frame-export.mjs';
+
+const FrameWrap = await loadFrameWrap();
+const video = await exportFrames({
+  width:1080, height:1080, fps:30, duration:10,
+  createRecorder:opts=>new FrameWrap(opts),
+  draw:({canvas,ctx,frame,time,phase})=>{
+    // Produce the entire frame from time/phase; do not advance by real elapsed time.
+    ctx.fillStyle='#000';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    // drawScene(ctx, phase);
+  },
+  onProgress:(completed,total)=>console.log(completed,total),
+});
+```
+
+For a lossless master without browser H.264 encoding, use `exportPngSequence({...})` from the same module. Supply a native `FileSystemDirectoryHandle` as `directory` (from a user-initiated `showDirectoryPicker()` in Chromium) and the same deterministic `draw` callback. It writes `frame-000000.png`, etc. directly to disk, one frame at a time, without building an in-memory archive. It returns the frame plan. The caller owns directory selection, sidecar files and UI feedback; cancellation preserves already completed frames. PNGs are lossless but require substantially more disk space. MP4 encoding via FFmpeg from the PNG sequence is a separate, potentially lossy step.
+
+The returned Blob is not downloaded automatically. The consumer owns file naming and saving. A `signal: AbortSignal` cancels without saving a partial video. Cancellation interrupts pending rendering, recorder operations and cleanup without waiting for an encoder to respond. Cleanup is best-effort: adapters should implement prompt, repeatable `dispose()` that closes their resources, and report failures by rejecting or emitting an `error` event through an optional `on(event, handler)` method. If interrupted setup finishes later, disposal runs again. Late save callbacks are ignored. For unsupported browsers, `loadFrameWrap` or encoding may reject; surface that error to the UI.
+
+## Why CCapture.js v2?
+
+It already provides MP4/WebM WebCodecs encoding and a `FrameWrap` that does **not** monkeypatch time. `FrameWrap` itself does not apply encoder queue backpressure. This adapter invokes its optional `encoder.backpressure()` hook after each capture and requests a two-frame queue limit, preventing a whole clip from piling up in native codec/GPU work. The wait is abortable. It should not be confused with the time-warping `CCapture` wrapper. This module avoids modifying the page's `requestAnimationFrame` or `Date`. Browser-only CDN loading is optional: `createRecorder` can inject an npm-installed `FrameWrap` (or another compatible encoder).
+
+For future reuse, keep render callbacks pure in `(time, phase)`; derive deterministic random seeds if randomness is involved. Frame sampling is repeatable; compressed bytes are not guaranteed identical across encoders, operating systems and GPU drivers.
+
+Test: `node --test dist/shared/frame-export.test.mjs`
+
+If another project uses this helper, consider extracting it to a separate package with explicit dependencies and integration tests rather than creating a new video codec implementation.
+
+## Shared angular geometry
+
+`rotation-sequence.mjs` writes equally spaced unit directions into a Float64Array:
+
+```js
+import {rotationSequence} from './rotation-sequence.mjs';
+const xy = new Float64Array(800 * 2);
+rotationSequence(800, startAngle, angleStep, xy); // angles in radians
+```
+
+Sample i approximates `(cos(startAngle + i*angleStep), sin(...))`. A complex rotation recurrence rebases every 64 samples to limit accumulated roundoff. Output is caller-owned, may be reused, and must have room for 2 × count numbers. Returned fresh arrays are independent. This is floating-point geometry, not bit-identical transcendental output; accuracy is tested over the scenes' supported angles/counts, not arbitrarily huge angles. Every call depends only on its inputs, so seeking or deterministic export needs no playback history.
+
+Chromatic Unwinding reuses one direction buffer across its filaments. Chromatic Chamber caches fixed polygon bases and rotates them by each shard's explicit phase. Rendering, sample density and export timing are unchanged. [Audit, equivalence checks and benchmarks](benchmarks/README.md) retain the original formulas and measure geometry separately from whole Canvas frames.

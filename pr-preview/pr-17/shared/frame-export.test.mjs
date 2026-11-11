@@ -1,0 +1,201 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {exportPlan,exportFrames,exportPngSequence} from './frame-export.mjs';
+
+test('frame plan validates even dimensions and integral frame count',()=>{
+  assert.deepEqual(exportPlan({width:1080,height:1080,fps:30,duration:2}),
+    {width:1080,height:1080,fps:30,duration:2,frames:60});
+  assert.throws(()=>exportPlan({width:1079}),/even integers/);
+  assert.throws(()=>exportPlan({duration:Infinity}),/finite/);
+});
+
+function fakeRecorder(captured,events) {
+  return {
+    async start(){events.push('start');},
+    async capture(canvas){captured.push(canvas.phase);},
+    async stop(){events.push('stop');},
+    async save(cb){events.push('save');cb(new Blob(['ok'],{type:'video/mp4'}));},
+    async dispose(){events.push('dispose');},
+  };
+}
+
+test('renders exact frame-index times, including midpoint, independent of wall-clock',async()=>{
+  const captured=[],events=[],progress=[];
+  const blob=await exportFrames({
+    width:720,height:720,fps:4,duration:2,yieldEvery:0,
+    canvasFactory:()=>({getContext:()=>({})}),
+    createRecorder:()=>fakeRecorder(captured,events),
+    draw:({canvas,frame,phase,time,frames})=>{
+      assert.equal(frames,8);
+      assert.equal(phase,frame/8);
+      assert.equal(time,frame/4);
+      canvas.phase=phase;
+    },
+    onProgress:(done,total)=>progress.push([done,total]),
+  });
+  assert.equal(blob.type,'video/mp4');
+  assert.deepEqual(captured,[0,1/8,2/8,3/8,4/8,5/8,6/8,7/8]);
+  assert.deepEqual(events,['start','stop','save','dispose']);
+  assert.deepEqual(progress.at(-1),[8,8]);
+});
+
+test('cancel stops and disposes encoder without saving partial output',async()=>{
+  const abort=new AbortController(),events=[],captured=[];
+  await assert.rejects(exportFrames({
+    width:720,height:720,fps:4,duration:2,yieldEvery:0,signal:abort.signal,
+    canvasFactory:()=>({getContext:()=>({})}),
+    createRecorder:()=>fakeRecorder(captured,events),
+    draw:({frame})=>{if(frame===2) abort.abort();},
+  }),{name:'AbortError'});
+  assert.equal(captured.length,2);
+  assert.deepEqual(events,['start','stop','dispose']);
+});
+
+const deferred=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};};
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+function fixture(overrides={}){
+  const events=[],recorder=fakeRecorder([],events);
+  Object.assign(recorder,overrides);
+  return {events,recorder,options:{width:2,height:2,fps:1,duration:1,yieldEvery:0,
+    canvasFactory:()=>({getContext:()=>({})}),createRecorder:()=>recorder,draw:()=>{}}};
+}
+for(const stage of ['start','draw','capture','stop','save','dispose']){
+  test(`abort interrupts pending ${stage} and restores caller promptly`,async()=>{
+    const entered=deferred(),blocked=deferred(),abort=new AbortController();
+    const f=fixture(),operation=()=>{entered.resolve();return blocked.promise;};
+    if(stage==='draw')f.options.draw=operation;else f.recorder[stage]=operation;
+    const result=exportFrames({...f.options,signal:abort.signal});
+    await entered.promise;abort.abort();
+    await assert.rejects(Promise.race([result,new Promise((_,reject)=>{
+      const timer=setTimeout(()=>reject(new Error('Cancellation hung')),250);timer.unref();
+    })]),{name:'AbortError'});
+    if(stage!=='dispose')assert.ok(f.events.includes('dispose'));
+    if(!['save','dispose'].includes(stage))assert.ok(!f.events.includes('save'));
+    blocked.resolve();await tick();
+  });
+}
+test('late setup allocation is disposed after cancellation',async()=>{
+  const setup=deferred(),entered=deferred(),abort=new AbortController();let resource=false,disposals=0;
+  const f=fixture({start:async()=>{entered.resolve();await setup.promise;resource=true;},
+    dispose:()=>{disposals++;resource=false;}});
+  const result=exportFrames({...f.options,signal:abort.signal});await entered.promise;abort.abort();
+  await assert.rejects(result,{name:'AbortError'});assert.equal(disposals,1);
+  setup.resolve();await tick();assert.equal(resource,false);assert.equal(disposals,2);
+});
+test('late save callback cannot turn cancellation into success',async()=>{
+  const entered=deferred(),saving=deferred(),abort=new AbortController();let callback;
+  const f=fixture({save:cb=>{callback=cb;entered.resolve();return saving.promise;}});
+  const result=exportFrames({...f.options,signal:abort.signal});await entered.promise;abort.abort();
+  await assert.rejects(result,{name:'AbortError'});callback(new Blob(['late']));saving.resolve();await tick();
+});
+test('emitted codec errors reject even when capture resolves successfully',async()=>{
+  let emit;const codecError=new Error('codec failed');
+  const f=fixture({on:(event,handler)=>{assert.equal(event,'error');emit=handler;},capture:()=>emit(codecError)});
+  await assert.rejects(exportFrames(f.options),error=>error===codecError);
+  assert.deepEqual(f.events,['start','stop','dispose']);
+});
+test('aborting inside progress interrupts UI yield before another frame',async()=>{
+  const abort=new AbortController();const f=fixture();
+  await assert.rejects(exportFrames({...f.options,duration:2,yieldEvery:1,signal:abort.signal,
+    onProgress:()=>abort.abort()}),{name:'AbortError'});
+  assert.deepEqual(f.events,['start','stop','dispose']);
+});
+
+test('abort interrupts an already pending UI yield',async()=>{
+  const original=globalThis.setTimeout,entered=deferred(),abort=new AbortController(),f=fixture();
+  globalThis.setTimeout=(callback,delay,...args)=>{
+    if(delay===0){entered.resolve();return 0;}
+    return original(callback,delay,...args);
+  };
+  try{
+    const result=exportFrames({...f.options,yieldEvery:1,signal:abort.signal});
+    await entered.promise;abort.abort();await assert.rejects(result,{name:'AbortError'});
+    assert.deepEqual(f.events,['start','stop','dispose']);
+  }finally{globalThis.setTimeout=original;}
+});
+test('codec error interrupts an unresolved capture',async()=>{
+  const entered=deferred(),blocked=deferred();let emit;
+  const error=new Error('async encoder failure');
+  const f=fixture({on:(_,handler)=>{emit=handler;},capture:()=>{entered.resolve();return blocked.promise;}});
+  const result=exportFrames(f.options);await entered.promise;emit(error);
+  await assert.rejects(result,cause=>cause===error);assert.deepEqual(f.events,['start','stop','dispose']);
+  blocked.resolve();await tick();
+});
+
+
+test('awaits encoder backpressure before drawing the next frame',async()=>{
+ const events=[],f=fixture({capture:async()=>events.push('capture'),encoder:{backpressure:async()=>{events.push('pressure');await tick();events.push('ready');}}});
+ await exportFrames({...f.options,fps:2,draw:()=>events.push('draw')});
+ assert.deepEqual(events,['draw','capture','pressure','ready','draw','capture','pressure','ready']);
+});
+test('abort interrupts an unresolved encoder backpressure wait',async()=>{
+ const entered=deferred(),blocked=deferred(),abort=new AbortController();
+ const f=fixture({encoder:{backpressure:()=>{entered.resolve();return blocked.promise;}}});
+ const result=exportFrames({...f.options,signal:abort.signal});await entered.promise;abort.abort();
+ await assert.rejects(Promise.race([result,new Promise((_,reject)=>{const timer=setTimeout(()=>reject(new Error('Backpressure cancellation hung')),250);timer.unref();})]),{name:'AbortError'});
+ assert.ok(f.events.includes('dispose'));assert.ok(!f.events.includes('save'));blocked.resolve();
+});
+
+function frameDirectory(){
+ const files=new Map(),writes=[];
+ return {
+  files,writes,
+  async getFileHandle(name,{create}={}){
+   assert.equal(create,true);
+   return {async createWritable(){
+    let contents;
+    return {
+     async write(blob){contents=blob;writes.push(name);},
+     async close(){files.set(name,contents);},
+     async abort(){contents=undefined;},
+    };
+   }};
+  },
+ };
+}
+function pngCanvas(){
+ return {width:0,height:0,phase:0,getContext:()=>({}),
+  toBlob(callback,type){assert.equal(type,'image/png');callback(new Blob([String(this.phase)],{type}));}};
+}
+test('lossless PNG sequence saves exactly indexed PNGs incrementally without an encoder',async()=>{
+ const directory=frameDirectory(),steps=[],progress=[];
+ const plan=await exportPngSequence({
+  width:128,height:128,fps:4,duration:2,yieldEvery:0,directory,
+  canvasFactory:pngCanvas,
+  draw:({canvas,frame,phase,time,frames})=>{
+   assert.equal(frames,8);assert.equal(phase,frame/8);assert.equal(time,frame/4);
+   canvas.phase=phase;steps.push(phase);
+  },
+  onProgress:(done,total)=>{
+   progress.push(done);assert.equal(total,8);
+   assert.equal(directory.files.size,done);
+  },
+ });
+ assert.equal(plan.frames,8);
+ assert.deepEqual(steps,[0,1/8,2/8,3/8,4/8,5/8,6/8,7/8]);
+ assert.deepEqual([...directory.files.keys()],Array.from({length:8},(_,i)=>'frame-'+String(i).padStart(6,'0')+'.png'));
+ assert.equal(directory.files.size,8);
+ assert.equal(await directory.files.get('frame-000004.png').text(),'0.5');
+ assert.equal(directory.files.get('frame-000004.png').type,'image/png');
+ assert.deepEqual(progress,[1,2,3,4,5,6,7,8]);
+});
+test('PNG sequence cancellation leaves only fully completed frames and never draws the next one',async()=>{
+ const abort=new AbortController(),directory=frameDirectory(),drawn=[];
+ await assert.rejects(exportPngSequence({
+  width:128,height:128,fps:4,duration:2,yieldEvery:0,signal:abort.signal,
+  directory,canvasFactory:pngCanvas,
+  draw:({frame})=>drawn.push(frame),
+  onProgress:done=>{if(done===2)abort.abort();},
+ }),{name:'AbortError'});
+ assert.deepEqual(drawn,[0,1]);assert.deepEqual([...directory.files.keys()],['frame-000000.png','frame-000001.png']);
+});
+test('PNG sequence rejects invalid writer and failed PNG encoding',async()=>{
+ await assert.rejects(exportPngSequence({directory:{},draw:()=>{}}),TypeError);
+ const directory=frameDirectory();
+ await assert.rejects(exportPngSequence({
+  width:128,height:128,fps:1,duration:1,directory,
+  canvasFactory:()=>({getContext:()=>({}),toBlob:callback=>callback(null)}),
+  draw:()=>{},
+ }),/PNG encoding returned no image/);
+ assert.equal(directory.files.size,0);
+});
