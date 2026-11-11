@@ -28,7 +28,7 @@ Stress preset: 384 fibers × 1536 samples × two passes = 1,179,648 submitted se
 
 ## Capture & validation
 
-Scene URLs retain settings and paused phase. Reduced motion starts paused. PNG, lossless PNG sequence and MP4 render to a separate 720/1080/2160-square canvas with resolution-relative strokes. Both video and image-sequence exports reuse `../../shared/frame-export.mjs`, sample exact frame indices at 30/60 fps, omit the duplicate endpoint and support cancellation/progress. FrameWrap loads on demand for MP4 and needs WebCodecs. A dense 2160p loop can be expensive. The source ZIP preserves shared import paths.
+Scene URLs retain settings and paused phase. Reduced motion starts paused. PNG, lossless PNG sequence and MP4 render to a separate 720/1080/2160-square canvas with resolution-relative strokes. MP4 reuses `../../shared/frame-export.mjs`; the scene-local `png-sequence-export.mjs` uses its shared frame plan. Both sample exact frame indices at 30/60 fps, omit the duplicate endpoint and support cancellation/progress. FrameWrap loads on demand for MP4 and needs WebCodecs. A dense 2160p loop can be expensive. The source ZIP preserves shared import paths.
 
 ### Lossless image-sequence master
 
