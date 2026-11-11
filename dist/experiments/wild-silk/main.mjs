@@ -1,3 +1,4 @@
+import {mountDiscovery} from './discovery-ui.mjs';
 import {createParameterControl} from '../../shared/parameter-controls.mjs';
 import {normalizeTracks,serializeTracks} from '../../shared/parameter-tracks.mjs';
 import {trackDefinitions,readTracks,cameraAt} from './parameters.mjs?v=4';
@@ -75,6 +76,12 @@ $('presets').onchange=()=>{if($('presets').value){stopSearch();load($('presets')
 $('saved').onchange=()=>{if($('saved').value){stopSearch();load($('saved').value);}};
 $('favorite').onclick=()=>{status('Seed saved in this browser.');remember(seed);};
 let results=[];
+const discovery=mountDiscovery({parent:$('loopDiscovery'),getCurrent:()=>({seed,settings:{...settings},tracks}),
+  getSeeds:()=>[...results.map(r=>r.seed),...saved.slice(-5)],onStart:()=>{stopSearch();playing=false;sync();},isExporting:()=>!!controller,
+  loadConfig:config=>{stopSearch();const before={...settings},oldTracks=tracks;
+    Object.assign(settings,config.settings);tracks=normalizeTracks(config.tracks,trackDefinitions);
+    if(load(config.seed)){playing=true;}else{Object.assign(settings,before);tracks=oldTracks;rebuild();}sync();},
+});
 function showResults(){
   $('results').replaceChildren();
   for(const item of results){
@@ -86,6 +93,7 @@ function showResults(){
   }
 }
 $('discover').onclick=()=>{
+  discovery.stop();
   if(worker){stopSearch();status('Search stopped. Candidates remain available.');return;}
   results=[];showResults();
   try{worker=new Worker(new URL('./search-worker.mjs?v=4',import.meta.url),{type:'module'});}catch(e){status('Search unavailable: '+e.message);return;}
@@ -117,7 +125,7 @@ $('png').onclick=()=>{
 };
 $('record').onclick=async()=>{
   if(controller){controller.abort();return;}
-  stopSearch();controller=new AbortController();const signal=controller.signal,wasPlaying=playing,snapshot={...settings};
+  discovery.stop();stopSearch();controller=new AbortController();const signal=controller.signal,wasPlaying=playing,snapshot={...settings};
   const renderer=makePainter(orbit,snapshot,normalizeTracks(tracks,trackDefinitions),{exact:true}),selectedSeed=seed,size=Number($('exportSize').value),fps=Number($('exportFps').value);
   const controls=[...document.querySelectorAll('aside input,aside select,aside button')].filter(e=>!['record','hide'].includes(e.id));
   controls.forEach(e=>e.disabled=true);playing=false;sync();$('record').textContent='Cancel export';status('Loading MP4 encoder…');

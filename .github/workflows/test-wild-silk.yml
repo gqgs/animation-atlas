@@ -1,0 +1,32 @@
+name: Test Wild Silk
+on:
+  pull_request:
+    paths:
+      - 'dist/experiments/wild-silk/**'
+      - 'dist/shared/**'
+      - '.github/scripts/package-wild-silk.py'
+      - '.github/workflows/test-wild-silk.yml'
+      - 'dist/downloads/wild-silk-source.zip'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - run: |
+          node --test $(find dist -name '*.test.mjs' -print) .github/tests/*.test.mjs
+          python3 .github/scripts/package-wild-silk.py --check
+      - run: |
+          npm install --prefix "$RUNNER_TEMP/qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Browser gallery, saved configurations and cancellation
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/qa/node_modules/playwright
+        run: |
+          python3 -m http.server 8094 --directory dist >/tmp/wild-silk-server.log 2>&1 &
+          node dist/experiments/wild-silk/tests/discovery-browser.cjs
