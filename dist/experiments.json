@@ -622,5 +622,29 @@
     ],
     "cover": "covers/luminous-loom.svg",
     "source": "downloads/luminous-loom-source.zip"
+  },
+  {
+    "id": "wild-silk",
+    "title": "Wild Silk",
+    "index": 27,
+    "category": "Dynamics",
+    "date": "2026-11-11",
+    "url": "experiments/wild-silk/index.html",
+    "description": "Absolute-power strange attractors, illuminated like silk. Discover and save seeds, explore nearby forms, and rank candidates by roundness, balance or sprawl.",
+    "tags": [
+      "strange attractors",
+      "absolute powers",
+      "seed discovery",
+      "Paul Bourke",
+      "generative art"
+    ],
+    "cover": "covers/wild-silk.svg",
+    "source": "downloads/wild-silk-source.zip",
+    "variants": [
+      {
+        "title": "Paul Bourke · General 2D map",
+        "url": "https://paulbourke.net/fractals/2dmap/"
+      }
+    ]
   }
 ]
