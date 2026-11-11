@@ -21,10 +21,10 @@ def bundle():
                           f'<a href="experiments/{SCENE}/">Open Luminous Loom</a>\n').encode()
     files['README.md'] = b'# Luminous Loom source\n\nServe this folder with `python3 -m http.server 8080` and open http://localhost:8080. Keep experiments/ and shared/ together. See experiments/luminous-loom/README.md.\n'
     output = io.BytesIO()
-    with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+    with zipfile.ZipFile(output, 'w', compression=zipfile.ZIP_STORED) as archive:
         for name, content in sorted(files.items()):
             entry = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
-            entry.compress_type = zipfile.ZIP_DEFLATED
+            entry.compress_type = zipfile.ZIP_STORED
             entry.external_attr = 0o644 << 16
             archive.writestr(entry, content)
     return output.getvalue()

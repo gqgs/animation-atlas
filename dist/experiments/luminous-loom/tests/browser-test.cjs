@@ -91,6 +91,63 @@ function probe(file){return JSON.parse(execFileSync('ffprobe',['-v','error','-se
  for(const measured of evidence.workloads)assert.equal(measured.pass,true,'Same-path equivalence: '+measured.name);
  console.log('WORKLOAD_TOTALS '+JSON.stringify(evidence.workloads.map(r=>({name:r.name,size:r.size,timings:r.timings,pixels:r.pixels}))));log('Default, maximum stress and 2160-square workloads measured with raw stage samples and matched pixels');
  const pngWait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.png')});await page.locator('#png').click();const png=await pngWait,pngPath=path.join(output,'own-size.png');await png.saveAs(pngPath);const bytes=await fs.readFile(pngPath);assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');assert.deepEqual([bytes.readUInt32BE(16),bytes.readUInt32BE(20)],[720,720]);log('PNG renders at selected 720 square output independent of preview');
+
+ // Use the real browser PNG encoder; a fake directory handle captures the
+ // browser's incremental writes without opening a native file picker in CI.
+ await page.evaluate(()=>{
+  window.__pngSequence={folder:null,files:new Map(),folders:[]};
+  window.showDirectoryPicker=async()=>({
+   async getDirectoryHandle(name,{create}){
+    if(!create)throw Error('Must create an isolated child folder');
+    const folder={name,files:new Map()};window.__pngSequence.folder=folder;
+    window.__pngSequence.folders.push(folder);
+    return {async getFileHandle(filename,{create:make}={}){
+     if(!make)throw Error('Must create file');
+     return {async createWritable(){
+      let content;
+      return {async write(value){content=value;},async close(){folder.files.set(filename,content);},async abort(){content=null;}};
+     }};
+    }};
+   },
+  });
+ });
+ await page.locator('#frames').click();
+ assert.equal(await page.locator('#fibers').isEnabled(),false);
+ await page.waitForFunction(()=>document.querySelector('#frames').textContent==='Export lossless PNG frames'&&/Saved 120 lossless PNG/.test(document.querySelector('#status').textContent),null,{timeout:480000});
+ assert.equal(await page.locator('#fibers').isEnabled(),true);
+ evidence.pngSequence=await page.evaluate(async()=>{
+  const folder=window.__pngSequence.folder,files=folder.files,frames=[...files].filter(([name])=>name.endsWith('.png'));
+  const first=files.get('frame-000000.png'),mid=files.get('frame-000060.png'),last=files.get('frame-000119.png');
+  const {normalize,createGeometry,geometryAt}=await import('./core.mjs'),{preparePaths,paint}=await import('./renderer.mjs');
+  const p=normalize({fibers:8,samples:128,duration:4}),workspace=createGeometry(p);
+  async function identical(blob,phase){
+   const img=await createImageBitmap(blob),actual=document.createElement('canvas'),reference=document.createElement('canvas');
+   actual.width=actual.height=reference.width=reference.height=720;
+   actual.getContext('2d').drawImage(img,0,0);img.close();
+   const data=geometryAt(workspace,phase);paint(reference,data,p,preparePaths(data,p));
+   const a=actual.getContext('2d').getImageData(0,0,720,720).data,b=reference.getContext('2d').getImageData(0,0,720,720).data;
+   let differences=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])differences++;
+   return differences;
+  }
+  return {name:folder.name,frames:frames.length,first:frames[0][0],last:frames.at(-1)[0],
+   types:[first.type,mid.type,last.type],differentPixels:[await identical(first,0),await identical(mid,.5),await identical(last,119/120)],
+   sidecar:files.get('scene-url.txt'),script:files.get('encode.sh')};
+ });
+ assert.equal(evidence.pngSequence.frames,120);assert.equal(evidence.pngSequence.first,'frame-000000.png');assert.equal(evidence.pngSequence.last,'frame-000119.png');
+ assert.deepEqual(evidence.pngSequence.types,['image/png','image/png','image/png']);
+ assert.deepEqual(evidence.pngSequence.differentPixels,[0,0,0],'Exported PNG pixels must exactly match direct rendering');
+ assert.match(evidence.pngSequence.script,/ffmpeg -framerate 30/);
+ assert.match(evidence.pngSequence.sidecar,/phase=0/);
+ log('120 lossless browser PNG frames exactly match independent reference pixels and sidecars');
+ await page.locator('#frames').click();
+ await page.waitForFunction(()=>/Saving lossless PNG 10\//.test(document.querySelector('#status').textContent),null,{timeout:60000});
+ await page.locator('#frames').click();
+ await page.waitForFunction(()=>document.querySelector('#frames').textContent==='Export lossless PNG frames'&&/PNG export canceled/.test(document.querySelector('#status').textContent),null,{timeout:60000});
+ evidence.pngCancellation=await page.evaluate(()=>{const files=window.__pngSequence.folder.files;return {complete:[...files.keys()].filter(name=>name.endsWith('.png')).length,sidecar:files.has('encode.sh')};});
+ assert.ok(evidence.pngCancellation.complete>0&&evidence.pngCancellation.complete<120);
+ assert.equal(evidence.pngCancellation.sidecar,false);
+ assert.equal(await page.locator('#fibers').isEnabled(),true);
+ log('Canceled PNG sequence retains only completed frames without claiming a finished loop');
  const mp4Wait=page.waitForEvent('download',{predicate:d=>d.suggestedFilename().endsWith('.mp4'),timeout:480000});await page.locator('#record').click();assert.equal(await page.locator('#fibers').isEnabled(),false);const mp4=await mp4Wait,mp4Path=path.join(output,'loom-720-30.mp4');await mp4.saveAs(mp4Path);await page.waitForFunction(()=>document.querySelector('#record').textContent==='Export MP4');assert.equal(await page.locator('#fibers').isEnabled(),true);assert.equal(await page.locator('#play').textContent(),'Play');
  evidence.mp4=probe(mp4Path);assert.equal(evidence.mp4.codec_name,'h264');assert.equal(evidence.mp4.width,720);assert.equal(evidence.mp4.height,720);assert.equal(evidence.mp4.r_frame_rate,'30/1');assert.equal(Number(evidence.mp4.nb_read_frames),120);assert.ok(Math.abs(Number(evidence.mp4.duration)-4)<.05);
  const decoded=execFileSync('ffmpeg',['-v','error','-i',mp4Path,'-vf','select=eq(n\\,0)+eq(n\\,60)+eq(n\\,119)','-vsync','0','-f','rawvideo','-pix_fmt','rgb24','pipe:1'],{maxBuffer:8*1024*1024,timeout:60000}),frameBytes=720*720*3;assert.equal(decoded.length,3*frameBytes);let lo=255,hi=0,change=0;for(let i=0;i<frameBytes;i++){lo=Math.min(lo,decoded[i]);hi=Math.max(hi,decoded[i]);change+=Math.abs(decoded[i]-decoded[i+frameBytes]);}assert.ok(hi-lo>32);assert.ok(change/frameBytes>.01);log('Actual shared-exporter MP4: H.264, 720 square, 30 FPS, 120 nonblank changing frames, four seconds');
