@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Chromatic Chamber · EigenDynamics</title><link rel="stylesheet" href="style.css"></head><body>
+<canvas id="scene" aria-label="Colorful polygons reflected through a circular kaleidoscope. Click to pause."></canvas>
+<header><a href="../../">EIGENDYNAMICS / STUDY 020</a><h1>Chromatic Chamber</h1><p>Small motions. Impossible flowers.</p></header>
+<aside id="panel"><div class="eyebrow">KALEIDOSCOPE / DIHEDRAL SYMMETRY</div>
+<label>Composition<select id="preset"><option value="jewel">Jewel chamber</option><option value="ember">Ember bloom</option><option value="lagoon">Tidal glass</option><option value="porcelain">Porcelain snow</option></select></label>
+<label>Palette<select id="palette"><option value="jewel">Full spectrum</option><option value="ember">Amber / amethyst</option><option value="lagoon">Lagoon / violet</option><option value="porcelain">Porcelain</option></select></label>
+<div id="sliders"></div>
+<label class="check"><input type="checkbox" id="rotation"> Rotate the whole chamber</label>
+<label class="check"><input type="checkbox" id="mirrors"> Show mirror boundaries</label>
+<label>Seed <input id="seed" type="number" min="0" max="4294967295" step="1" value="13013"></label>
+<div class="buttons"><button id="new">New arrangement</button><button id="reset">Restart loop</button></div>
+<label>Loop position <output id="phaseValue">0%</output><input id="phase" type="range" min="0" max="1" step="0.0001" value="0"></label>
+<div class="buttons"><button id="play">Pause</button><button id="hide">Hide UI · H</button><button id="full">Fullscreen</button><button id="png">Save PNG</button><button id="record">Record loop</button><button id="link">Copy scene link</button></div>
+<p id="status" role="status">Click the scene or press Space to pause · H for a clean view.</p>
+<details><summary>Inside the chamber</summary><p>Inspired by <a href="https://www.gregegan.net/APPLETS/13/13.html" target="_blank" rel="noreferrer">Greg Egan’s Kaleidoscope (2000)</a>. A collection of colored regular polygons drifts and turns between two mirrors separated by π/n. Clipping to that wedge and repeating its reflection creates 2n sectors, with n-fold rotational symmetry.</p><p>The polygons move on closed elliptical paths. Each turns by one vertex spacing per loop, so the final arrangement equals the first. Shapes crossing a mirror merge with their reflections; nothing is simulated outside the original wedge.</p><p>This independent implementation adds continuous motion, seeded arrangements, palettes, a timeline and capture controls. The seed and controls are stored in the scene link. Loading a link restores a paused frame. Record loop saves a real-time WebM at a 30 fps target; performance depends on your device.</p><a href="../../downloads/chromatic-chamber-source.zip">Source & geometry checks</a></details>
+</aside><button id="show" hidden>Show controls · H</button><footer>REFLECTION / ROTATION / CONTINUOUS RETURN <span id="meter"></span></footer><script type="module" src="main.js"></script></body></html>
