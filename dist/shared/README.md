@@ -21,6 +21,8 @@ const video = await exportFrames({
 });
 ```
 
+For a lossless master without browser H.264 encoding, use `exportPngSequence({...})` from the same module. Supply a native `FileSystemDirectoryHandle` as `directory` (from a user-initiated `showDirectoryPicker()` in Chromium) and the same deterministic `draw` callback. It writes `frame-000000.png`, etc. directly to disk, one frame at a time, without building an in-memory archive. It returns the frame plan. The caller owns directory selection, sidecar files and UI feedback; cancellation preserves already completed frames. PNGs are lossless but require substantially more disk space. MP4 encoding via FFmpeg from the PNG sequence is a separate, potentially lossy step.
+
 The returned Blob is not downloaded automatically. The consumer owns file naming and saving. A `signal: AbortSignal` cancels without saving a partial video. Cancellation interrupts pending rendering, recorder operations and cleanup without waiting for an encoder to respond. Cleanup is best-effort: adapters should implement prompt, repeatable `dispose()` that closes their resources, and report failures by rejecting or emitting an `error` event through an optional `on(event, handler)` method. If interrupted setup finishes later, disposal runs again. Late save callbacks are ignored. For unsupported browsers, `loadFrameWrap` or encoding may reject; surface that error to the UI.
 
 ## Why CCapture.js v2?
