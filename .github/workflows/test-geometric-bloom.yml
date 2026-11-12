@@ -1,0 +1,26 @@
+name: Test Geometric Bloom
+on:
+  pull_request:
+    paths:
+      - 'dist/experiments/geometric-bloom/**'
+      - 'dist/shared/**'
+      - '.github/workflows/test-geometric-bloom.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Geometry and shared regression tests
+        run: node --test $(find dist -name '*.test.mjs' -print) .github/tests/*.test.mjs
+      - name: Browser tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/bloom-qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/bloom-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Controls and complete deterministic video cycle
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/bloom-qa/node_modules/playwright
+        run: node dist/experiments/geometric-bloom/tests/browser.cjs
