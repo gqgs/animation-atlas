@@ -1,0 +1,7 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {buildAttractor,defaults,readSettings,settingsQuery} from './core.mjs';
+import {lightMask,buildLightTrail,trailStart,trailCount} from './patterns.mjs';
+test('light trail is a real contiguous section of the original trajectory, with both lobes',()=>{const model=buildAttractor(),trail=buildLightTrail(model);assert.equal(trail.count,trailCount);let left=0,right=0;for(let i=0;i<trail.count;i++){for(let k=0;k<3;k++)assert.equal(trail.data[i*4+k],model.data[(trailStart+i)*4+k]);if(trail.data[i*4]<-.4)left++;if(trail.data[i*4]>.4)right++;}assert.ok(left>1000&&right>1000);assert.equal(trail.data[3],0);assert.equal(trail.data.at(-1),1);});
+test('light masks loop smoothly, fade finite endpoints and actually travel forward',()=>{for(let u=0;u<=1;u+=.007){assert.ok(Math.abs(lightMask(u,0)-lightMask(u,1))<1e-12);const h=1e-7,left=(lightMask(u,0)-lightMask(u,1-h))/h,right=(lightMask(u,h)-lightMask(u,0))/h;assert.ok(Math.abs(left-right)<.08);}for(let phase=0;phase<1;phase+=.01){assert.equal(lightMask(0,phase),0);assert.equal(lightMask(1,phase),0);}assert.ok(lightMask(.23,.25)>.8);assert.ok(lightMask(.48,.5)>.8);assert.ok(lightMask(.23,.5)<.01);});
+test('scene links preserve traveling light and the original comparison',()=>{for(const pattern of ['ribbons','original']){const p={...defaults,pattern,motion:'still'};assert.deepEqual(readSettings(settingsQuery(p,.3)).parameters,p);}assert.equal(readSettings('?pattern=unknown').parameters.pattern,'ribbons');});
