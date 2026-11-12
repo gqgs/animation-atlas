@@ -646,5 +646,21 @@
         "url": "https://paulbourke.net/fractals/2dmap/"
       }
     ]
+  },
+  {
+    "id": "geometric-bloom",
+    "title": "Geometric Bloom",
+    "category": "Geometry",
+    "date": "2026-11-12",
+    "url": "experiments/geometric-bloom/",
+    "description": "A crystalline pyramid unfolds into a rigid, connected flower. Six hinges, one seamless breath.",
+    "tags": [
+      "folding",
+      "polyhedra",
+      "cyclic",
+      "3d"
+    ],
+    "cover": "covers/geometric-bloom.svg",
+    "color": "cyan"
   }
 ]
