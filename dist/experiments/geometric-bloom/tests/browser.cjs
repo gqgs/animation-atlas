@@ -10,7 +10,7 @@ await page.goto('http://127.0.0.1:8765/dist/experiments/geometric-bloom/?phase=.
 assert.equal(await page.locator('#openingCyclic').isChecked(),true);
 await page.locator('#phase').evaluate(e=>{e.value='.5';e.dispatchEvent(new Event('input'));});await page.waitForTimeout(100);
 assert.equal(await page.locator('#openingValue').textContent(),'1.00');
-await page.locator('#openingCyclic').uncheck();await page.locator('#opening').fill('.45');await page.locator('#opening').dispatchEvent('input');
+await page.locator('#openingCyclic').uncheck();await page.locator('#opening').fill('0.45');await page.locator('#opening').dispatchEvent('input');
 await page.locator('#openingCyclic').check();
 await page.locator('#exportSize').selectOption('720');await page.locator('#exportFps').selectOption('30');
 await page.locator('#duration').fill('4');await page.locator('#duration').dispatchEvent('input');
