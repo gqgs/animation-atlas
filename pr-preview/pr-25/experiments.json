@@ -720,9 +720,9 @@
     "category": "Geometry",
     "date": "2026-11-13",
     "url": "experiments/aperture-vault/",
-    "description": "Six glass triangles close at a common apex. A moving prism intercepts a white beam and refracts a spectrum onto the floor.",
+    "description": "Six glass triangles close at a common apex, then unfold as softbox reflections sweep across the glass and floor.",
     "tags": [
-      "dispersion",
+      "reflections",
       "folding",
       "Three.js",
       "cyclic"

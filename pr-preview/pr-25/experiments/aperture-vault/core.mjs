@@ -8,7 +8,7 @@ export const definitions = {
   rotation:{min:-180,max:180,step:1,defaultValue:0},
   elevation:{min:15,max:75,step:1,defaultValue:33},
 };
-export const defaults={opening:0,zoom:1,rotation:0,elevation:33,duration:12,lighting:'dispersion'};
+export const defaults={opening:0,zoom:1,rotation:0,elevation:33,duration:12,lighting:'reflections'};
 export const defaultTracks=normalizeTracks({opening:{min:0,max:.86,easing:'smootherstep'}},definitions);
 export const poseAt=(settings,tracks,phase)=>resolveParameters(settings,tracks,phase,definitions);
 export function readState(params){
@@ -17,7 +17,7 @@ export function readState(params){
     const n=Number(params.get(key));
     if(params.has(key)&&params.get(key).trim()&&Number.isFinite(n)) settings[key]=Math.min(max,Math.max(min,n));
   }
-  if(params.get('lighting')==='mono') settings.lighting='mono';
+  if(params.get('lighting')==='direct') settings.lighting='direct';
   return {settings,tracks:params.has('tracks')?parseTracks(params.get('tracks'),definitions):structuredClone(defaultTracks)};
 }
 
@@ -42,85 +42,52 @@ export const facesAt=opening=>{
   });
 };
 
-const theta=TAU/12, radial=[Math.cos(theta),0,Math.sin(theta)];
-const tangent=[-Math.sin(theta),0,Math.cos(theta)];
-const local=(r,y,z)=>add(add(mul(radial,r),[0,y,0]),mul(tangent,z));
-export const SOURCE=[0,1.55,0];
-const aim=unit(local(1,-.39,0));
-
-// Closed wedge section (radial, tangential); the prism extrudes vertically.
-// Its two optical planes are nonparallel and the whole prism rotates about face 0's hinge.
-const section=[[.57,-.19],[.57,.21],[.812,-.19]];
-const yLow=1.24,yHigh=1.55;
-export function prismAt(opening){
-  const angle=closedAngle*clamp(opening),c=Math.cos(angle),s=Math.sin(angle);
-  const rotate=([r,y,z])=>{
-    const dy=y-BASE_Y,dr=r-a;
-    return local(a+dr*c+dy*s,BASE_Y+dy*c-dr*s,z);
-  };
-  const v=[...section.map(([r,z])=>rotate([r,yLow,z])),...section.map(([r,z])=>rotate([r,yHigh,z]))];
-  const polygons=[[0,2,1],[3,4,5],[0,1,4,3],[1,2,5,4],[2,0,3,5]].map(p=>p.map(i=>v[i]));
-  return {vertices:v,polygons};
+export const SOURCE=[0,1.42,0];
+export const normalAt=([a,b,c])=>unit(cross(sub(b,a),sub(c,a)));
+export const reflect=(dir,n)=>sub(dir,mul(n,2*dot(dir,n)));
+export const mirrorPoint=(point,face,n=normalAt(face))=>add(face[0],reflect(sub(point,face[0]),n));
+export const fresnel=cosine=>.04+.96*(1-Math.abs(cosine))**5;
+export function centerOf(points){
+  return mul(points.reduce(add,[0,0,0]),1/points.length);
 }
 
-function rayTriangle(origin,dir,a,b,c){
-  const e1=sub(b,a),e2=sub(c,a),h=cross(dir,e2),det=dot(e1,h);
-  if(Math.abs(det)<1e-8) return null;
-  const s=sub(origin,a),u=dot(s,h)/det;
-  if(u<0||u>1) return null;
-  const q=cross(s,e1),v=dot(dir,q)/det;
-  if(v<0||u+v>1) return null;
-  const t=dot(e2,q)/det;
-  return t>1e-5?{t,point:add(origin,mul(dir,t)),normal:unit(cross(e1,e2))}:null;
-}
-
-function firstHit(origin,dir,{polygons}){
-  let nearest=null;
-  for(const [face,p] of polygons.entries()) for(let i=1;i<p.length-1;i++){
-    const hit=rayTriangle(origin,dir,p[0],p[i],p[i+1]);
-    if(hit&&(!nearest||hit.t<nearest.t)) nearest={...hit,face};
-  }
-  return nearest;
-}
-
-// Snell's law in vector form. Orient the interface normal toward the incoming
-// ray; nFrom/nTo determines the critical angle and direction change.
-export function refract(dir,normal,nFrom,nTo){
-  if(dot(dir,normal)>0) normal=mul(normal,-1);
-  const ratio=nFrom/nTo,c=-dot(dir,normal),k=1-ratio*ratio*(1-c*c);
-  return k<0?null:unit(add(mul(dir,ratio),mul(normal,ratio*c-Math.sqrt(k))));
-}
-
-// SCHOTT N-SF11 Sellmeier coefficients. Wavelength is in micrometres here.
-export const wavelengthIndex=nm=>{
-  const l2=(nm/1000)**2;
-  return Math.sqrt(1+1.73759695*l2/(l2-.013188707)+.313747346*l2/(l2-.0623068142)+1.89878101*l2/(l2-155.23629));
-};
-export const spectrum=[
-  [650,'#ff3c42'],[610,'#ff732e'],[580,'#ffd54a'],[550,'#9bf86b'],
-  [510,'#42f9cb'],[470,'#559bff'],[435,'#a96dff'],
+// The softboxes are out of frame. Each rectangular emitter is specified
+// by its center and full edge vectors. Mirror images are clipped to the face.
+export const softboxes=[
+  {center:[3.34,1.97,3.10],u:[-.50,0,.54],v:[0,3.42,0],color:'#c6e5ff',gain:10.2},
+  {center:[2.13,1.45,-4.10],u:[.72,0,.38],v:[0,3.30,0],color:'#ffc78b',gain:8.2},
+  {center:[-3.40,1.27,.05],u:[0,0,.77],v:[0,3.04,0],color:'#96cedf',gain:5.1},
+  {center:[-1.95,4.55,-.67],u:[2.34,0,.61],v:[-.18,0,.69],color:'#b4d4ff',gain:5.3},
+  {center:[.57,3.45,1.20],u:[1.75,0,-.14],v:[.10,0,1.12],color:'#edf1ff',gain:5.4},
 ];
+export function reflectionAt(face,eye,box){
+  const n=normalAt(face),f=face[0];
+  const eyeSide=dot(sub(eye,f),n);
+  const sourceSide=dot(sub(box.center,f),n);
+  if(eyeSide*sourceSide<=0) return null;
+  const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>add(box.center,add(mul(box.u,u/2),mul(box.v,v/2))));
+  return {
+    points:corners.map(p=>mirrorPoint(p,face,n)),
+    opacity:Math.min(.84,box.gain*fresnel(dot(unit(sub(eye,centerOf(face))),n))),
+  };
+}
 
-export function tracePrism(opening,mode='dispersion',offsetY=0){
-  const prism=prismAt(opening);
-  const origin=add(SOURCE,[0,offsetY,0]);
-  const whiteFloor=add(origin,mul(aim,-origin[1]/aim[1]));
-  const entry=firstHit(origin,aim,prism);
-  if(!entry) return {prism,entry:null,rays:[],whiteEnd:whiteFloor,origin};
-  const rays=[];
-  const samples=mode==='mono'?[[550,'#fff4dc']]:spectrum;
-  for(const [wavelength,color] of samples){
-    const n=wavelengthIndex(wavelength);
-    const inside=refract(aim,entry.normal,1,n);
-    if(!inside) continue;
-    const exit=firstHit(add(entry.point,mul(inside,1e-4)),inside,prism);
-    if(!exit) continue;
-    const direction=refract(inside,exit.normal,n,1);
-    if(!direction||direction[1]>=-.04) continue;
-    const distance=-exit.point[1]/direction[1];
-    if(distance>24) continue;
-    const floor=add(exit.point,mul(direction,distance));
-    rays.push({wavelength,color,exit,direction,floor});
-  }
-  return {prism,entry,rays,whiteEnd:entry.point,origin};
+// One representative specular reflection from the central emitter per face.
+// Reflect toward the receiver through the centroid; reject upward and
+// degenerate rays. The renderer paints a broad lobe rather than a hard caustic.
+export function floorReflection(face,source=SOURCE){
+  const n=normalAt(face),c=centerOf(face);
+  const start=c, d=unit(sub(start,source));
+  const incoming=dot(n,d),r=reflect(d,n);
+  if(r[1]>=-.06) return null;
+  const t=-start[1]/r[1];
+  const point=add(start,mul(r,t));
+  const extent=Math.hypot(point[0],point[2]);
+  if(extent<1.43||extent>8.5) return null;
+  const boundary=clamp((extent-1.43)/.50)*clamp((8.5-extent)/2);
+  return {
+    point, direction:r,
+    strength:boundary*(.25+.75*Math.abs(incoming))*Math.min(1,4/(1+t*t)),
+    radius:Math.min(.64,.26+t*.08), length:Math.min(1.45,.45+t*.14),
+  };
 }
