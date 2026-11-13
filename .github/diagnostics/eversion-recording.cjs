@@ -39,11 +39,18 @@ try{
   for(const frame of selected){draw(fresh,settings,tracks,frame/total);await save('fresh-'+frame+'.png',fresh);}
   return {size,fps,duration,total,selected,settings,tracks,pausedPhase:Number(new URLSearchParams(location.search).get('phase')),exportFirstPhase:0,encoders,seconds:(performance.now()-start)/1000,videoBytes:blob.size,userAgent:navigator.userAgent};
  },{size,exact});
+ // A second, ordinary UI export has no PNG readbacks or injected waits in draw.
+ // This prevents diagnostic readback synchronization from hiding a GPU handoff race.
+ await page.locator('#exportSize').selectOption(String(size));await page.locator('#exportFps').selectOption('60');
+ const download=page.waitForEvent('download',{timeout:900000});await page.locator('#record').click();await (await download).saveAs(path.join(out,'ui-export.mp4'));
+ result.uiStatus=await page.locator('#status').textContent();assert.equal(result.uiStatus,'MP4 export complete.');
  result.errors=errors;fs.writeFileSync(path.join(out,'capture.json'),JSON.stringify(result,null,2));assert.deepEqual(errors,[]);
  const probe=JSON.parse(execFileSync('ffprobe',['-v','error','-select_streams','v:0','-show_entries','stream=width,height,nb_frames,r_frame_rate,codec_name,pix_fmt,duration','-of','json',path.join(out,'export.mp4')],{encoding:'utf8'}));fs.writeFileSync(path.join(out,'probe.json'),JSON.stringify(probe,null,2));
  assert.equal(Number(probe.streams[0].nb_frames),result.total);assert.equal(probe.streams[0].width,size);assert.equal(probe.streams[0].height,size);
  const filter='select='+result.selected.map(i=>'eq(n\\,'+i+')').join('+');
  execFileSync('ffmpeg',['-v','error','-i',path.join(out,'export.mp4'),'-vf',filter,'-vsync','0',path.join(out,'decoded-%03d.png')]);
+ execFileSync('ffmpeg',['-v','error','-i',path.join(out,'ui-export.mp4'),'-vf',filter,'-vsync','0',path.join(out,'ui-decoded-%03d.png')]);
+ result.selected.forEach((frame,i)=>fs.renameSync(path.join(out,'ui-decoded-'+String(i+1).padStart(3,'0')+'.png'),path.join(out,'ui-decoded-'+frame+'.png')));
  result.selected.forEach((frame,i)=>fs.renameSync(path.join(out,'decoded-'+String(i+1).padStart(3,'0')+'.png'),path.join(out,'decoded-'+frame+'.png')));
  console.log(JSON.stringify(result));
 }finally{await browser?.close();server.kill();}

@@ -3,6 +3,9 @@ on:
   push:
     branches: [investigate/eversion-recording]
   workflow_dispatch:
+concurrency:
+  group: diagnose-eversion-recording
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
