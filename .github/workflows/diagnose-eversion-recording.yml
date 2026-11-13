@@ -1,0 +1,48 @@
+name: Diagnose Eversion recording
+on:
+  push:
+    branches: [investigate/eversion-recording]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {scene: exact, size: 1080}
+          - {scene: exact, size: 2160}
+          - {scene: default, size: 1080}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Browser and comparison tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install pillow numpy
+          npm install --prefix "$RUNNER_TEMP/qa" --no-save playwright@1.62.1
+          "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Capture exact raw inputs and decode full export
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/qa/node_modules/playwright
+          QA_OUTPUT: ${{ runner.temp }}/eversion-evidence
+          QA_SCENE: ${{ matrix.scene }}
+          QA_SIZE: ${{ matrix.size }}
+        run: node .github/diagnostics/eversion-recording.cjs
+      - name: Compare rendered, fresh-seek and decoded pixels
+        run: python .github/diagnostics/eversion-compare.py "$RUNNER_TEMP/eversion-evidence"
+      - name: Preserve image and numerical evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eversion-recording-${{ matrix.scene }}-${{ matrix.size }}
+          path: |
+            ${{ runner.temp }}/eversion-evidence/*.json
+            ${{ runner.temp }}/eversion-evidence/*.png
+            ${{ runner.temp }}/eversion-evidence/*.jpg
+          retention-days: 7
