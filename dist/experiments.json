@@ -662,5 +662,22 @@
     ],
     "cover": "covers/geometric-bloom.svg",
     "color": "cyan"
+  },
+  {
+    "id": "hypar",
+    "title": "Hypar",
+    "category": "Geometry",
+    "date": "2026-11-13",
+    "url": "experiments/hypar/",
+    "description": "Eight pleated saddles twist and breathe as a traveling wave circles a sculptural ring.",
+    "tags": [
+      "folding",
+      "hypar",
+      "traveling wave",
+      "cyclic",
+      "3d"
+    ],
+    "cover": "covers/hypar.svg",
+    "color": "cyan"
   }
 ]
