@@ -1,6 +1,0 @@
-<!doctype html>
-<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Rotation sequence equivalence and Canvas benchmark</title>
-<style>body{font:16px system-ui;margin:2rem;background:#f6f2f7;color:#18202c}button{padding:.7rem}pre{white-space:pre-wrap;overflow-wrap:anywhere}canvas{max-width:32vw;height:auto;border:1px solid #aaa}</style>
-<h1>Rotation sequence benchmark</h1><p>Frozen original geometry and painter versus optimized geometry and extracted production painter. Timings are CPU wall times including a readback flush, not animation FPS. Speed is non-gating.</p>
-<button id="run">Run bounded benchmark</button> <button id="download" disabled>Download JSON</button><p id="status">Ready. Keep this tab foregrounded; avoid other heavy activity.</p><canvas id="baseline" width="1080" height="1080"></canvas> <canvas id="candidate" width="1080" height="1080"></canvas><pre id="output"></pre>
-<script type="module" src="./canvas.mjs"></script></html>
