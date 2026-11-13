@@ -696,5 +696,22 @@
     ],
     "cover": "covers/hinged-lantern.svg",
     "color": "amber"
+  },
+  {
+    "id": "eversion-bloom",
+    "title": "Eversion Bloom",
+    "category": "Geometry",
+    "date": "2026-11-13",
+    "url": "experiments/eversion-bloom/",
+    "description": "A fluted annular shell rolls its inner face outward in counter-traveling waves. Seven lobes, two material sides, one seamless reversal.",
+    "tags": [
+      "surface inversion",
+      "pleats",
+      "traveling waves",
+      "WebGL2",
+      "cyclic"
+    ],
+    "cover": "covers/eversion-bloom.svg",
+    "color": "purple"
   }
 ]
