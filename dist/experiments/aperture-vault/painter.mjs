@@ -30,7 +30,9 @@ function build() {
     return result;
   }
   const rim = material(0x9a603b,.34,.52);
-  const panelOutside = material(0x25404d,.35,.36);
+  const panelOutside = material(0x355565,.42,.25);
+  panelOutside.emissive.setHex(0x203743);
+  panelOutside.emissiveIntensity = .45; // fixed cool fill, identical in both modes
   const inner = material(0xb56d35,.49,.31);
   const seam = material(0x5d9998,.48,.37);
   const stone = material(0x252939,.88,.08);
@@ -103,9 +105,9 @@ function build() {
     const leaf = new T.Group();
     joint.add(leaf);
     mesh(shellGeo,rim,leaf,{shadow:true});
-    mesh(insetGeo,panelOutside,leaf).position.z = .047;
-    mesh(insetInside,inner,leaf).position.z = -.002;
-    for(const z of [.053,-.006]) {
+    mesh(insetGeo,panelOutside,leaf).position.z = .065;
+    mesh(insetInside,inner,leaf).position.z = -.020;
+    for(const z of [.071,-.026]) {
       const m = z>0?seam:rim;
       rib(leaf,[0,.19,z],[0,1.47,z],m);
       for(const x of [-1,1]) {
@@ -113,29 +115,35 @@ function build() {
         rib(leaf,[0,.58,z],[x*.26,.30,z],m);
       }
     }
-    const bounce = new T.SpotLight(0xffa05b,0,6.5,1.0,.85,2);
+    const bounce = new T.SpotLight(0xff8b53,0,7.2,.9,.90,2);
     scene.add(bounce,bounce.target);
     panels.push({leaf,bounce});
   }
 
   const corePosition = new T.Vector3(0,CORE_Y,0);
-  const direct = new T.PointLight(0xffc07b,72,10,2);
+  const direct = new T.PointLight(0xffb66d,112,11,2);
   direct.position.copy(corePosition);
   direct.castShadow = true;
-  direct.shadow.mapSize.set(256,256);
+  direct.shadow.mapSize.set(512,512);
   direct.shadow.camera.near = .10;
-  direct.shadow.camera.far = 10;
+  direct.shadow.camera.far = 11;
   direct.shadow.bias = -.0006;
   direct.shadow.normalBias = .02;
   direct.shadow.radius = 2;
   scene.add(direct);
 
-  const core = mesh(new T.IcosahedronGeometry(.28,1),new T.MeshBasicMaterial({color:new T.Color(5.2,2.7,.85)}),scene,{receive:false});
+  const coreGeo = new T.IcosahedronGeometry(.27,0);
+  const facets = coreGeo.getAttribute('position').count / 3;
+  const colors = [0xffcc76,0xffe3a4,0xfff2ca,0xffb653].map(c=>new T.Color(c));
+  const faceColors = new Float32Array(facets*9);
+  for(let i=0;i<facets;i++)for(let j=0;j<3;j++) colors[i%colors.length].toArray(faceColors,i*9+j*3);
+  coreGeo.setAttribute('color',new T.BufferAttribute(faceColors,3));
+  const core = mesh(coreGeo,new T.MeshBasicMaterial({vertexColors:true,toneMapped:false,fog:false}),scene,{receive:false});
   core.position.copy(corePosition);
   const wire = mesh(new T.IcosahedronGeometry(.35,0),new T.MeshBasicMaterial({color:0xffc779,wireframe:true}),scene,{receive:false});
   wire.position.copy(corePosition);
-  const hemi = new T.HemisphereLight(0xaac7f5,0x293b56,1.18);
-  const cool = new T.DirectionalLight(0xb4d8ff,1.35);
+  const hemi = new T.HemisphereLight(0xaac7f5,0x293b56,1.42);
+  const cool = new T.DirectionalLight(0xb4d8ff,1.65);
   cool.position.set(-4,6,1.3);
   const edge = new T.DirectionalLight(0x629fe4,1.20);
   edge.position.set(3,4,-5);
@@ -167,9 +175,11 @@ function build() {
         leaf.localToWorld(point);
         towardCore.copy(corePosition).sub(point);
         const distanceSquared=towardCore.lengthSq();
-        bounce.intensity = p.lighting==='bounce' ? 23*bounceWeight(normal.dot(towardCore.normalize()),distanceSquared) : 0;
+        bounce.intensity = p.lighting==='bounce' ? 30*bounceWeight(normal.dot(towardCore.normalize()),distanceSquared) : 0;
         bounce.position.copy(point).addScaledVector(normal,.08);
-        bounce.target.position.copy(bounce.position).addScaledVector(normal,1.4);
+        // Aim the broad floor contribution at the lower part of the diffuse lobe.
+        bounce.target.position.copy(bounce.position).addScaledVector(normal,4.4);
+        bounce.target.position.y=.05;
       }
       renderer.render(scene,camera);
       return surface;
