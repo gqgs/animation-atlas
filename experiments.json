@@ -713,5 +713,21 @@
     ],
     "cover": "covers/eversion-bloom.svg",
     "color": "purple"
+  },
+  {
+    "id": "aperture-vault",
+    "title": "Aperture Vault",
+    "category": "Geometry",
+    "date": "2026-11-13",
+    "url": "experiments/aperture-vault/",
+    "description": "Six glass triangles close at a common apex, then unfold as softbox reflections sweep across the glass and floor.",
+    "tags": [
+      "reflections",
+      "folding",
+      "Three.js",
+      "cyclic"
+    ],
+    "cover": "covers/aperture-vault.svg",
+    "color": "amber"
   }
 ]
