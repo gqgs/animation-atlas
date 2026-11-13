@@ -1,16 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Hexagonal glass pyramid and a prism scattering white light">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Studio light reflected by a six-sided glass pyramid">
 <defs>
-<radialGradient id="room"><stop stop-color="#263851"/><stop offset="1" stop-color="#090f1f"/></radialGradient>
-<radialGradient id="glow"><stop stop-color="#fff6db"/><stop offset=".25" stop-color="#a3c4ff" stop-opacity=".76"/><stop offset="1" stop-color="#a3c4ff" stop-opacity="0"/></radialGradient>
+<radialGradient id="room"><stop stop-color="#344660"/><stop offset="1" stop-color="#0c1323"/></radialGradient>
+<radialGradient id="light"><stop stop-color="#e9d6b4" stop-opacity=".66"/><stop offset="1" stop-color="#a0bfdc" stop-opacity="0"/></radialGradient>
+<linearGradient id="cool"><stop stop-color="#9cc4ea" stop-opacity=".03"/><stop offset=".48" stop-color="#b7ddf5" stop-opacity=".76"/><stop offset="1" stop-color="#9cc4ea" stop-opacity=".03"/></linearGradient>
+<linearGradient id="warm"><stop stop-color="#eed2a6" stop-opacity=".04"/><stop offset=".52" stop-color="#eed2a6" stop-opacity=".60"/><stop offset="1" stop-color="#eed2a6" stop-opacity=".04"/></linearGradient>
 </defs>
 <path fill="url(#room)" d="M0 0h480v300H0z"/>
-<g fill="none" stroke="#829dc0" opacity=".31"><ellipse cx="235" cy="184" rx="125" ry="55"/><ellipse cx="235" cy="184" rx="150" ry="66"/><ellipse cx="235" cy="184" rx="183" ry="80"/></g>
-<path d="m139 166 50-32h79l55 32-38 40H179z" fill="#2f4564" stroke="#8199b7"/>
-<path d="m231 53-92 113 40 40h106l38-40zm0 0-52 153m52-153 54 153m-54-153-42 81m42-81 37 81" fill="#89b8ef" fill-opacity=".11" stroke="#a8c9e6"/>
-<path d="m221 143 15-11 24 12-20 19z" fill="#93baf1" fill-opacity=".28" stroke="#d1ecff"/>
-<circle cx="229" cy="115" r="19" fill="url(#glow)"/><circle cx="229" cy="115" r="5" fill="#fff2d9"/>
-<path d="m229 115 10 33" stroke="#fff3db" stroke-width="2"/>
-<g fill="none" stroke-width="2" stroke-linecap="round">
-<path d="m242 151 80 91" stroke="#ff5153"/><path d="m242 151 86 90" stroke="#ff9648"/><path d="m242 151 92 89" stroke="#fff268"/><path d="m242 151 98 88" stroke="#93ef77"/><path d="m242 151 104 87" stroke="#5ae8d9"/><path d="m242 151 111 86" stroke="#569bff"/><path d="m242 151 118 84" stroke="#af77ff"/>
-</g>
+<g fill="none" stroke="#859ebf" opacity=".31"><ellipse cx="239" cy="187" rx="121" ry="47"/><ellipse cx="239" cy="187" rx="154" ry="61"/><ellipse cx="239" cy="187" rx="191" ry="80"/></g>
+<g fill="url(#light)"><ellipse cx="132" cy="211" rx="45" ry="12" transform="rotate(-14 132 211)"/><ellipse cx="333" cy="208" rx="47" ry="12" transform="rotate(18 333 208)"/><ellipse cx="233" cy="239" rx="35" ry="13"/></g>
+<path d="m142 168 49-27h94l48 27-38 46H183z" fill="#334761" stroke="#7991ae"/>
+<path d="m238 55-96 113 41 46h112l38-46zm0 0-55 159m55-159 57 159m-57-159-47 86m47-86 47 86" fill="#89b8ef" fill-opacity=".13" stroke="#abc9e5" stroke-opacity=".63"/>
+<path d="m211 109 12 5-19 93-25-3z" fill="url(#cool)"/>
+<path d="m262 111 11 4 47 59-18 23z" fill="url(#warm)"/>
+<circle cx="238" cy="137" r="28" fill="url(#light)"/><path d="m238 127 8 6v8l-8 6-8-6v-8z" fill="#ffe9ca"/>
 </svg>

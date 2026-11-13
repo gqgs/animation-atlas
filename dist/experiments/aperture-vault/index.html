@@ -7,12 +7,12 @@
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-<main><div class="caption"><span>EIGENDYNAMICS / LIGHT STUDY</span><h1>Aperture Vault</h1><p>A glass vault teaches white light to split.</p></div><canvas id="scene" aria-label="Six triangular glass panels close at a shared apex. One carries a prism that splits a white beam across the floor. Click to pause."></canvas></main>
+<main><div class="caption"><span>EIGENDYNAMICS / LIGHT STUDY</span><h1>Aperture Vault</h1><p>Studio light unfolds across six glass faces.</p></div><canvas id="scene" aria-label="Six triangular glass panels close at a shared apex and unfold through sweeping reflections. Click to pause."></canvas></main>
 <aside aria-label="Scene controls">
 <a class="eyebrow" href="../../">← ANIMATION ATLAS</a>
-<label class="lighting">Glass comparison
-<select id="lighting"><option value="dispersion">Dispersive prism</option><option value="mono">Single index · white beam</option></select></label>
-<p class="hint">Pause at closure to compare the two glasses. <span id="renderer"></span></p>
+<label class="lighting">Reflection comparison
+<select id="lighting"><option value="reflections">Direct light + reflections</option><option value="direct">Direct light only</option></select></label>
+<p class="hint">Pause at any pose to isolate the reflections. <span id="renderer"></span></p>
 <div class="actions"><button id="play">Pause</button><button id="hide">Hide UI · H</button></div>
 <label>Loop position<input id="phase" type="range" min="0" max="1" step=".0001"></label>
 <div id="sliders"></div>
@@ -21,7 +21,7 @@
 <div class="actions"><label>Export size<select id="exportSize"><option value="720">720²</option><option value="1080" selected>1080²</option><option value="2160">2160²</option></select></label><label>Frame rate<select id="exportFps"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select></label></div>
 <div class="actions"><button id="png">Save PNG</button><button id="record">Export MP4</button></div>
 <p id="status" role="status"></p>
-<details><summary>How the light works</summary><p>Six rigid triangular faces close at one apex. A triangular glass prism travels with one face. Near closure it crosses the white beam and refracts the wavelengths at two nonparallel interfaces. The soft halos visualize the computed paths; they are not volumetric simulation. Both renderers use the same optics.</p><a href="./README.md">Implementation &amp; export notes</a></details>
+<details><summary>How the light works</summary><p>Six rigid triangular faces close at one apex. Rectangular light sources mirror across the moving faces and brighten at grazing angles. A representative reflected ray per face and source places soft light on the floor. Both renderers use the same approximation.</p><a href="./README.md">Implementation &amp; export notes</a></details>
 </aside>
 <button id="show" hidden>Show controls · H</button>
 <script type="module" src="./main.mjs"></script>
