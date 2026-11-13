@@ -38,3 +38,7 @@ Run `node --test dist/experiments/wild-silk/*.test.mjs dist/shared/frame-export.
 Wave strength defaults to 0.65. Two smooth, time-periodic shears deform the rendered portrait: a horizontal wave varying with y, followed by a vertical wave varying with the displaced x. Their composition is invertible and area preserving, so neighboring structures flow coherently without folds. Integer temporal harmonics close exactly after one loop. This is an artistic display transformation; the map, orbit, seeds and discovery metrics are unchanged.
 
 The same strip compositor is used by preview, seeking, PNG and MP4. It reuses one scratch canvas and processes one-pixel strips with fractional interpolation, without iterating the attractor again. An overscanned source supplies pixels outside the viewport so waves do not reveal blank border strips. Zero strength bypasses this stage entirely. Camera motion and lighting can be disabled to see the wave deformation alone.
+
+## Loop discovery
+
+“Find a moving loop” searches motion and camera settings on known seeds, with broad and nearby modes, sampled previews, complete-loop favorites and an unfiltered comparison. See [screening and limitations](docs/loop-discovery.md). Load a candidate for smooth full-detail playback and export.
