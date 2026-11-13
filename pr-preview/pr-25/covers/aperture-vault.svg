@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Octagonal lantern aperture and light pools">
+<defs>
+<radialGradient id="room"><stop stop-color="#303a4a"/><stop offset="1" stop-color="#0b101c"/></radialGradient>
+<radialGradient id="light"><stop stop-color="#ffedb5"/><stop offset=".55" stop-color="#e89750"/><stop offset="1" stop-color="#a75033" stop-opacity=".08"/></radialGradient>
+<path id="beam" d="M224 147l-37 112q53 13 106 0l-37-112z"/>
+<path id="leaf" d="M216 173l-12 35 36 29 36-29-12-35-24-18z"/>
+</defs>
+<path fill="url(#room)" d="M0 0h480v300H0z"/>
+<g fill="none" stroke="#637287" opacity=".38">
+<circle cx="240" cy="147" r="109"/><circle cx="240" cy="147" r="116"/><circle cx="240" cy="147" r="137"/>
+</g>
+<g fill="url(#light)" opacity=".52">
+<use href="#beam"/><use href="#beam" transform="rotate(45 240 147)"/><use href="#beam" transform="rotate(90 240 147)"/><use href="#beam" transform="rotate(135 240 147)"/><use href="#beam" transform="rotate(180 240 147)"/><use href="#beam" transform="rotate(225 240 147)"/><use href="#beam" transform="rotate(270 240 147)"/><use href="#beam" transform="rotate(315 240 147)"/>
+</g>
+<g fill="#293d4c" stroke="#d09b66" stroke-width="2">
+<use href="#leaf"/><use href="#leaf" transform="rotate(45 240 147)"/><use href="#leaf" transform="rotate(90 240 147)"/><use href="#leaf" transform="rotate(135 240 147)"/><use href="#leaf" transform="rotate(180 240 147)"/><use href="#leaf" transform="rotate(225 240 147)"/><use href="#leaf" transform="rotate(270 240 147)"/><use href="#leaf" transform="rotate(315 240 147)"/>
+</g>
+<circle cx="240" cy="147" r="30" fill="url(#light)"/>
+<path d="m240 130 15 8v18l-15 9-15-9v-18z" fill="#fff2c7" stroke="#f9bd74" stroke-width="3"/>
+</svg>

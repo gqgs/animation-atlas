@@ -1,0 +1,13 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Eversion Bloom · EigenDynamics</title><link rel="stylesheet" href="./style.css"></head><body>
+<main><div class="caption"><span>EIGENDYNAMICS / FOLD STUDY</span><h1>Eversion Bloom</h1><p>The inside learns to be outside.</p></div><canvas id="scene" aria-label="A continuous pleated shell rolling its plum inner face through a teal outer face in traveling waves. Click to pause."></canvas></main>
+<aside><a class="eyebrow" href="../../">← ANIMATION ATLAS</a>
+<div class="actions"><button id="play">Pause</button><button id="hide">Hide UI · H</button></div>
+<div id="sliders"></div>
+
+<label>Loop seconds <output id="durationValue"></output><input id="duration" type="range" min="4" max="90" step="1"></label>
+<label>Loop position<input id="phase" type="range" min="0" max="1" step=".0001"></label>
+<button id="copyLink">Copy scene URL</button>
+<div class="actions"><label>Export size<select id="exportSize"><option value="720">720²</option><option value="1080" selected>1080²</option><option value="2160">2160²</option></select></label><label>Frame rate<select id="exportFps"><option value="30">30 fps</option><option value="60" selected>60 fps</option></select></label></div>
+<div class="actions"><button id="png">Save PNG</button><button id="record">Export MP4</button></div><p id="status" role="status"></p>
+<details><summary>The construction</summary><p>A continuous annular shell rolls its rim past vertical. Two counter-traveling waves carry the reversal around seven fluted lobes. Teal is one material side; plum-copper is the other. The camera stays fixed by default.</p><p>Reversal controls the curl. Pleat relief shapes the fine radial folds. This is a stylized surface inversion, not rigid origami or a topological sphere eversion. The sheet stretches. A depth buffer resolves visibility; the shape does not depend on self-intersection.</p><a href="./README.md">Geometry &amp; export notes</a></details>
+</aside><button id="show" hidden>Show controls · H</button><script type="module" src="./main.mjs"></script></body></html>

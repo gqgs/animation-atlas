@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080d18">
+  <meta name="description" content="EigenDynamics Lab 01: a falsifiable single-equation combat experiment">
+  <title>EigenDynamics · Dynamics Lab 01</title>
+  <style>
+:root{color-scheme:dark;--bg:#080d18;--panel:#0e1727;--border:#26364b;--text:#e8f3fa;--muted:#8ca3b8;--blue:#5ddaf4;--cyan:#4debca;--orange:#ffc17c;--pink:#ff5d91;--lance:#64ceef;--fan:#e6aa7e;--ring:#df6ba8;--font:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 48% -12%,#17314c 0,#0b1220 43%,var(--bg) 85%);font:14px/1.55 var(--font);color:var(--text)}button,select,input{font:inherit}button{cursor:pointer;color:var(--text);border:1px solid #365069;background:#15263c;padding:9px 13px;border-radius:6px;font-weight:700;letter-spacing:.07em;font-size:11px;transition:background .15s}button:hover{background:#21415d}button:active{transform:translateY(1px)}button:focus-visible,select:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--blue);outline-offset:3px}.shell{width:min(1440px,100%);margin:auto;padding:24px clamp(12px,3vw,34px) 34px}header{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid #294056;padding-bottom:19px}.brand{display:flex;align-items:center;gap:17px}.brand-mark{font-size:36px;line-height:1;color:var(--cyan);text-shadow:0 0 24px #58dbcc80}.eyebrow,.label,.build-tag,.hud-caption,footer{font-size:10px;font-weight:800;letter-spacing:.16em;color:#91adc2}h1{font-size:clamp(20px,2.45vw,34px);letter-spacing:-.035em;line-height:1.12;font-weight:650;margin:6px 0 0}.build-tag{white-space:nowrap;text-align:right}.dot,.dot-soft{display:inline-block;background:var(--cyan);width:7px;height:7px;border-radius:100%;margin-left:8px;box-shadow:0 0 10px var(--cyan)}.dot-soft{opacity:.45}.topline{display:flex;align-items:center;gap:clamp(16px,5vw,80px);margin:17px 0 22px}.equation{font-size:clamp(16px,1.9vw,24px);font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;white-space:nowrap;font-weight:600;color:#dff4f7}.equation em{font-style:normal;color:var(--cyan)}.topline p{max-width:620px;line-height:1.6;color:#8fa8bc;margin:0;font-size:12px}.panel{background:linear-gradient(155deg,#111c2d,#0a1422);border:1px solid var(--border);border-radius:9px;box-shadow:0 12px 45px #00000020;min-width:0}.sectionhead{height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 16px;border-bottom:1px solid #23354b}.sectionhead .label{display:flex;align-items:center;gap:13px}.mono{font:10px/1.2 ui-monospace,monospace;color:#607e98;letter-spacing:.06em}.phase{font:700 11px ui-monospace,monospace;letter-spacing:.16em;color:var(--orange)}.main-grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(280px,.86fr);gap:16px}.stage{overflow:hidden}.game-area{height:clamp(325px,40vw,520px);position:relative;overflow:hidden;background:#06101c}.game-area canvas{height:100%;width:100%;display:block;touch-action:none}.game-bottom{position:absolute;left:14px;right:14px;bottom:13px;display:grid;grid-template-columns:1fr 1fr;gap:20px;pointer-events:none}.hud-item{display:grid;grid-template-columns:1fr auto;align-items:center;gap:5px 10px;font:10px ui-monospace,monospace;color:#cbd9e9}.hud-caption{grid-column:1/-1;letter-spacing:.08em}.hud-meter{height:5px;border-radius:10px;background:#274259;overflow:hidden}.fill{height:100%;width:100%;transition:width .18s}.hp{background:linear-gradient(90deg,#3682bd,#7ae3f8)}.mu{background:linear-gradient(90deg,#27b7a2,#8af1c9)}.message{min-height:37px;font:11px/1.5 ui-monospace,Consolas,monospace;padding:10px 16px;background:#0c1a2b;color:#afcadb;border-top:1px solid #1e3449}.foot{padding:10px 17px;display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;font:10px ui-monospace,monospace;color:#6c8aa2}.sidebar{display:flex;flex-direction:column;gap:16px}.controls{padding-bottom:17px}.controls>label,.sliderline{display:block;margin:18px 17px 7px;color:#b6cddd;font-size:12px}.controls select{display:block;width:calc(100% - 34px);margin:0 17px;background:#102034;color:#eaf4fc;border:1px solid #314860;border-radius:5px;height:42px;padding:0 12px}.sliderline{display:flex;justify-content:space-between;margin-top:17px}.sliderline output{font:13px ui-monospace,monospace;color:var(--cyan)}.controls input[type=range]{accent-color:var(--cyan);width:calc(100% - 34px);margin:0 17px;height:18px;cursor:pointer}.range-labels{display:flex;justify-content:space-between;color:#52738b;font:10px ui-monospace,monospace;margin:0 17px}.smallbutton{border:0;background:transparent;color:#9ec9dc;font-size:10px;padding:5px}.buttonrow{display:grid;grid-template-columns:1fr 1.25fr;gap:9px;margin:20px 17px 0}.primary{background:#2b726e;color:#e2fffa;border-color:#4fc8b4}.primary:hover{background:#358c83}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;padding:18px}.metric{border:1px solid #253c50;background:#0c1828;border-radius:6px;padding:13px}.metric span{display:block;font-size:11px;color:#88a3b7}.metric strong{display:block;font:650 25px ui-monospace,Consolas,monospace;letter-spacing:-.07em;margin:4px 0 0;color:#ebf8fb}.metric strong small{font-size:11px;letter-spacing:0;color:#7795a8}.bottom-grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(280px,.86fr);gap:16px;margin-top:16px}.trace-panel{padding-bottom:15px}.trace-panel canvas{display:block;width:calc(100% - 34px);height:94px;margin:14px 17px 2px}.trace-caption{padding:0 17px;font-size:11px;color:#819bae}.trace-caption span{color:var(--cyan)}.legend{display:flex;gap:9px;align-items:center;font:9px ui-monospace,monospace;color:#9badbb}.legend span{white-space:nowrap}.legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px}.legend-lance{background:var(--lance)}.legend-fan{background:var(--fan)}.legend-ring{background:var(--ring)}.verdict{padding-bottom:16px}.claim{margin:16px 17px 12px;color:#addacb;font-size:13px;font-weight:600;line-height:1.5}.verdict-stats{margin:0 17px}.verdict-stats>div{display:flex;align-items:center;justify-content:space-between;gap:15px;border-top:1px solid #213549;padding:6px 0}.verdict-stats span{font-size:11px;color:#7fa0b7}.verdict-stats strong{font:700 13px ui-monospace,monospace;color:#d8e8ec;white-space:nowrap}.subtle{margin:11px 17px 0;color:#657f96;font-size:10px;line-height:1.6}footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;margin-top:20px;font-size:9px;color:#57718a}.game-overlay{position:absolute;inset:0;z-index:10;background:#050d18b9;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:17px}.game-overlay[hidden]{display:none}.outcome{font-size:clamp(20px,3.5vw,36px);font-weight:800;letter-spacing:.1em;color:var(--cyan);text-shadow:0 0 30px #51ceb977}.mobile-controls{display:none}
+@media(max-width:940px){.topline{display:block}.topline p{margin-top:10px}.main-grid,.bottom-grid{grid-template-columns:minmax(0,1fr)}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:12px}.game-area{height:clamp(330px,50vw,520px)}.metrics{padding:14px;gap:8px}.metric strong{font-size:21px}.bottom-grid{gap:12px}}@media(max-width:620px){.shell{padding:15px 10px 25px}.brand{gap:9px}.brand-mark{font-size:28px}.build-tag{display:none}header{padding-bottom:15px}h1{font-size:23px}.eyebrow{font-size:9px}.topline{margin:14px 0}.topline p{font-size:11px}.sidebar{display:flex}.game-area{height:350px}.game-bottom{bottom:13px;gap:9px;left:8px;right:8px}.hud-caption{font-size:8px}.foot{display:none}.mobile-controls{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0e1c2e;border-top:1px solid #294058;gap:12px;touch-action:none}.dpad{text-align:center}.dpad button{min-height:38px;min-width:45px;margin:1px;padding:6px;background:#1a3147;touch-action:none}.dpad>div{display:flex}.actions{display:flex;gap:8px;align-self:stretch;align-items:center}.actions button{height:60px;min-width:63px;touch-action:none}.actions .strike{background:#2b716d;color:#dafff6}.actions .dodge{background:#523a55;color:#fadcf6}.label{font-size:9px}.sectionhead{padding:0 12px;height:44px}.mono{font-size:9px}.trace-panel canvas{height:80px}.legend{font-size:8px;gap:5px}.legend i{margin-right:3px}footer{font-size:8px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div class="brand"><div class="brand-mark">◈</div><div><div class="eyebrow">EIGENDYNAMICS / RESEARCH 01</div><h1>One equation. Four behaviors.</h1></div></div>
+    <div class="build-tag">ISOLATED EXPERIMENT <span class="dot"></span> LOCAL ONLY</div>
+  </header>
+  <section class="topline">
+    <div class="equation">x<sub>n+1</sub> = <em>r</em> · x<sub>n</sub> (1 − x<sub>n</sub>)</div>
+    <p>The mathematical update and attack decoder are identical for every opponent. Only <em>r</em> changes. Tiny perturbations are tested separately from distinct gameplay archetypes.</p>
+  </section>
+  <section class="main-grid">
+    <div class="stage panel">
+      <div class="sectionhead"><div class="label">LIVE COMBAT <span class="mono" id="tick">TICK 00000</span></div><div class="phase" id="phase">IDLE</div></div>
+      <div class="game-area"><canvas id="arena" aria-label="2D arena; use WASD to move, J to strike and Space to dodge" tabindex="0"></canvas>
+        <div class="game-overlay" id="overlay" hidden><div class="outcome" id="outcome">CORE COLLAPSED</div><button id="again-overlay" type="button">RETRY EXPERIMENT ↻</button></div>
+        <div class="game-bottom"><div class="hud-item"><span class="hud-caption">PLAYER / VITALITY</span><div class="hud-meter"><div id="hpbar" class="fill hp"></div></div><span id="hptext">100 / 100</span></div><div class="hud-item"><span class="hud-caption">ENEMY / CORE VIABILITY</span><div class="hud-meter"><div id="mubar" class="fill mu"></div></div><span id="mutext">μ 1.00</span></div></div>
+      </div>
+      <div class="message" id="cue">Move near the core; attack during recovery.</div>
+      <div class="mobile-controls"><div class="dpad"><button data-hold="up" aria-label="Move up">▲</button><div><button data-hold="left" aria-label="Move left">◀</button><button data-hold="down" aria-label="Move down">▼</button><button data-hold="right" aria-label="Move right">▶</button></div></div><div class="actions"><button class="act dodge" data-action="dodge">DODGE</button><button class="act strike" data-action="strike">STRIKE</button></div></div>
+      <div class="foot"><span>WASD / arrows · move</span><span>J / tap · strike</span><span>Space · dodge</span><span>R · reset</span></div>
+    </div>
+    <aside class="sidebar">
+      <section class="panel controls"><div class="sectionhead"><div class="label">EXPERIMENT CONTROLS</div><button id="reset" type="button" class="smallbutton">RESET ↻</button></div>
+        <label for="regime">Dynamical regime</label><select id="regime"><option value="fixed">01 / Fixed point</option><option value="duet" selected>02 / Period 2</option><option value="quartet">03 / Period 4</option><option value="chaos">04 / Chaotic</option><option value="custom">05 / Custom r</option></select>
+        <div class="sliderline"><label for="r">Control parameter, r</label><output id="rvalue">3.20000</output></div><input id="r" type="range" min="2.6" max="3.99" step="0.00001" value="3.2"><div class="range-labels"><span>2.60</span><span>3.99</span></div>
+        <div class="sliderline"><label for="eps">Perturbation, ε</label><output id="epsvalue">10⁻⁶</output></div><input id="eps" type="range" min="2" max="8" step="1" value="6"><div class="range-labels"><span>10⁻²</span><span>10⁻⁸</span></div>
+        <div class="buttonrow"><button id="pause" type="button">PAUSE</button><button id="export" type="button" class="primary">EXPORT EVIDENCE ↓</button></div>
+      </section>
+      <section class="panel metricpanel"><div class="sectionhead"><div class="label">MODEL DIAGNOSTICS</div><div class="dot-soft"></div></div><div class="metrics">
+        <div class="metric"><span>Period estimate</span><strong id="period">2</strong></div><div class="metric"><span>Finite-time λ</span><strong id="lyap">−0.92</strong></div><div class="metric"><span>Attack entropy</span><strong id="entropy">1.00 <small>bit</small></strong></div><div class="metric"><span>CPU p95 / tick</span><strong id="tickcost">—</strong></div><div class="metric"><span>Next-attack uncertainty</span><strong id="conditional">—</strong></div><div class="metric"><span>Scripted baseline match</span><strong id="baseline">—</strong></div></div>
+      </section>
+    </aside>
+  </section>
+  <section class="bottom-grid">
+    <div class="panel trace-panel"><div class="sectionhead"><div class="label">ATTACK-SEQUENCE COMPARISON <span class="mono">96-ATTACK WINDOW</span></div><div class="legend"><span><i class="legend-lance"></i>LANCE</span><span><i class="legend-fan"></i>FAN</span><span><i class="legend-ring"></i>RING</span></div></div><canvas id="trace" aria-label="The first 96 predicted attack symbols under parameter r and parameter r plus epsilon"></canvas><div class="trace-caption">Row A: <span id="rowa">r</span> · Row B: r + ε · Each tile is one future attack. Identical colors do not imply identical internal states.</div></div>
+    <div class="panel verdict"><div class="sectionhead"><div class="label">FALSIFICATION CHECK</div></div><div class="claim" id="claim">Measuring...</div><div class="verdict-stats"><div><span>First state separation &gt; 0.1</span><strong id="firststate">—</strong></div><div><span>First attack difference</span><strong id="firstattack">—</strong></div><div><span>Histogram divergence · JS</span><strong id="js">—</strong></div></div><p class="subtle">A divergent trajectory is not proof of a distinct archetype. The JS score ignores ordering; readable combat still requires player observation.</p></div>
+  </section>
+  <footer><span>AUTHORITATIVE: 60 Hz · SEEDED · FROZEN ATTACK TELEGRAPHS · CORE COLLAPSE AT μ ≤ 0</span><span>EXPERIMENT, NOT PRODUCTION GAME BALANCE</span></footer>
+</main>
+<script type="module">
+// EIGENDYNAMICS LAB 01 — isolated, fixed-step gameplay hypothesis test.
+// No DOM, wall clock, Math.random, network, or renderer dependency.
+const HZ = 60;
+const DT = 1 / HZ;
+const SEED = 0.217;
+const PRESETS = Object.freeze([
+  {id:'fixed', name:'Fixed', r:2.8, behavior:'attracting fixed point'},
+  {id:'duet', name:'Duet', r:3.2, behavior:'period-two orbit'},
+  {id:'quartet', name:'Quartet', r:3.5, behavior:'period-four orbit'},
+  {id:'chaos', name:'Chaos', r:3.9, behavior:'chaotic regime'},
+]);
+const ATTACKS = Object.freeze(['lance','fan','ring']);
+// Explicit low-complexity controls. Their authored order is intentionally not a result of the map.
+const SCRIPTED = Object.freeze({fixed:['fan'],duet:['fan','ring'],quartet:['lance','ring','fan','ring']});
+const WINDUP = 54;
+const ACTIVE = 36;
+const RECOVERY = 42;
+const BETWEEN = 24;
+const RADIUS = 6.7;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function logistic(x,r){
+  if(!Number.isFinite(x)||x<0||x>1||!Number.isFinite(r)||r<=0||r>4)throw new RangeError('Logistic map domain: 0 <= x <= 1; 0 < r <= 4');
+  const next=r*x*(1-x);
+  if(!Number.isFinite(next)||next<0||next>1)throw new Error('Numerical domain breach');
+  return next;
+}
+function classify(x){return x<.4?'lance':x<.7?'fan':'ring';}
+function afterBurnIn(r,seed=SEED,count=2048){
+  let x=seed;
+  for(let i=0;i<count;i++)x=logistic(x,r);
+  return x;
+}
+function sequence(r,{seed=SEED,burn=2048,samples=512}={}){
+  let x=afterBurnIn(r,seed,burn);const states=[],types=[];
+  for(let i=0;i<samples;i++){x=logistic(x,r);states.push(x);types.push(classify(x));}
+  return {states,types};
+}
+function periodOf(states,maxPeriod=16,tolerance=1e-5){
+  const len=states.length, window=Math.min(64,len-1);
+  for(let p=1;p<=maxPeriod&&p<=len-window;p++){
+    let ok=true;
+    for(let i=len-window;i<len;i++)if(Math.abs(states[i]-states[i-p])>tolerance){ok=false;break;}
+    if(ok)return p;
+  }
+  return null;
+}
+function histogram(types){
+  const counts={lance:0,fan:0,ring:0};for(const type of types)counts[type]++;
+  return Object.fromEntries(ATTACKS.map(k=>[k,counts[k]/Math.max(1,types.length)]));
+}
+const log2=x=>Math.log(x)/Math.LN2;
+function entropy(hist){return -ATTACKS.reduce((s,k)=>s+(hist[k]>0?hist[k]*log2(hist[k]):0),0);}
+function conditionalEntropy(types){
+  const count={lance:0,fan:0,ring:0},pairs={};
+  for(let i=0;i<types.length-1;i++){const a=types[i],b=types[i+1];count[a]++;const key=`${a}/${b}`;pairs[key]=(pairs[key]||0)+1;}
+  const n=types.length-1;if(!n)return 0;
+  let h=0;
+  for(const a of ATTACKS)if(count[a])for(const b of ATTACKS){
+    const joint=(pairs[`${a}/${b}`]||0)/n,p= (pairs[`${a}/${b}`]||0)/count[a];
+    if(p)h-=joint*log2(p);
+  }
+  return h;
+}
+function scriptedAgreement(r,{seed=SEED,samples=512}={}){
+  const p=PRESETS.find(p=>p.r===r),pattern=p?SCRIPTED[p.id]:null;
+  if(!pattern)return null;
+  const actual=sequence(r,{seed,samples}).types;
+  const matching=actual.reduce((s,type,i)=>s+Number(type===pattern[i%pattern.length]),0);
+  return {pattern:[...pattern],matching,total:samples,fraction:matching/samples};
+}
+function jsDivergence(a,b){
+  const m=Object.fromEntries(ATTACKS.map(k=>[k,(a[k]+b[k])/2]));
+  function kl(p,q){return ATTACKS.reduce((s,k)=>s+(p[k]>0?p[k]*log2(p[k]/q[k]):0),0);}
+  return .5*(kl(a,m)+kl(b,m)); // [0,1] bits, not sequence/order distance
+}
+function analyze(r,{seed=SEED,burn=2048,samples=512}={}){
+  const {states,types}=sequence(r,{seed,burn,samples});
+  let logDeriv=0;
+  for(const x of states)logDeriv+=Math.log(Math.max(1e-15,Math.abs(r*(1-2*x))));
+  const hist=histogram(types);
+  return {r,seed,burn,samples,period:periodOf(states),lyapunov:logDeriv/samples,entropy:entropy(hist),conditionalEntropy:conditionalEntropy(types),scripted:scriptedAgreement(r,{seed,samples}),hist,types,states};
+}
+function epsilonComparison(r,epsilon,{seed=SEED,samples=2048}={}){
+  if(epsilon<=0||!Number.isFinite(epsilon)||r+epsilon>4)throw new RangeError('Positive epsilon with r+epsilon <=4 required');
+  let x=seed,y=seed,firstStateDifference=null,firstAttackDifference=null;
+  for(let i=1;i<=Math.min(512,samples);i++){
+    x=logistic(x,r);y=logistic(y,r+epsilon);
+    if(firstStateDifference===null&&Math.abs(x-y)>.1)firstStateDifference=i;
+    if(firstAttackDifference===null&&classify(x)!==classify(y))firstAttackDifference=i;
+  }
+  const a=analyze(r,{seed,samples});const b=analyze(r+epsilon,{seed,samples});
+  return {r,epsilon,firstStateDifference,firstAttackDifference,
+    jsDivergence:jsDivergence(a.hist,b.hist),periodA:a.period,periodB:b.period,
+    lyapunovA:a.lyapunov,lyapunovB:b.lyapunov,entropyA:a.entropy,entropyB:b.entropy,
+    histogramA:a.hist,histogramB:b.hist};
+}
+const finite = n => {if(!Number.isFinite(n))throw new Error('Nonfinite authoritative state');return n;};
+function createArena({r=3.2,seed=SEED}={}){
+  if(!Number.isFinite(seed)||seed<=0||seed>=1)throw new RangeError('Seed must be inside (0,1)');
+  const x=afterBurnIn(r,seed);
+  return {tick:0,r,seed,x,score:0,status:'playing',
+    player:{x:-5.8,y:0,radius:.32,hp:100,invulnerableUntil:0,dodgeTicks:0,dodgeCooldown:0,dodgeVector:{x:0,y:0},strikeCooldown:0},
+    enemy:{x:3.8,y:0,mu:1,viableCoreCount:1,attack:null,readyIn:48,sequence:0},
+    events:[],pastAttacks:[],lastCue:'Move near the core; attack during recovery.'};
+}
+function attackDescriptor(s){
+  const e=s.enemy,p=s.player;
+  s.x=logistic(s.x,s.r);
+  const u=s.x,type=classify(u),angle=Math.atan2(p.y-e.y,p.x-e.x);
+  e.sequence++;
+  return {id:e.sequence,type,u,angle,x:e.x,y:e.y,age:0,windup:WINDUP,active:ACTIVE,recovery:RECOVERY,
+    reach:RADIUS,width:type==='lance'?.46:type==='ring'?.43:.28+u*.3,hitPlayer:false};
+}
+function phase(a){if(!a)return 'idle';if(a.age<a.windup)return 'windup';if(a.age<a.windup+a.active)return 'active';return 'recovery';}
+function hitByAttack(a,p){
+  if(phase(a)!=='active')return false;
+  const dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy);
+  if(a.type==='lance'){
+    const along=dx*Math.cos(a.angle)+dy*Math.sin(a.angle), across=Math.abs(-dx*Math.sin(a.angle)+dy*Math.cos(a.angle));
+    return along>=-p.radius&&along<=a.reach+p.radius&&across<=a.width+p.radius;
+  }
+  if(a.type==='fan'){
+    const yaw=Math.atan2(dy,dx), diff=Math.atan2(Math.sin(yaw-a.angle),Math.cos(yaw-a.angle));
+    return d<=a.reach+p.radius&&Math.abs(diff)<=a.width+Math.asin(Math.min(1,p.radius/Math.max(d,p.radius)));
+  }
+  // Expanding swept annulus. Visual front and collision both derive from the same descriptor.
+  const from=clamp((a.age-a.windup)/a.active,0,1)*a.reach;
+  const to=clamp((a.age-a.windup+1)/a.active,0,1)*a.reach;
+  return d>=from-a.width-p.radius&&d<=to+a.width+p.radius;
+}
+const emit=(s,type,extra={})=>{
+  const item={tick:s.tick,type,...extra};s.events.push(item);if(s.events.length>40)s.events.shift();
+};
+function stepArena(s,input={}){
+  if(s.status!=='playing')return s;
+  s.tick++;
+  const p=s.player,e=s.enemy;
+  p.dodgeCooldown=Math.max(0,p.dodgeCooldown-1);
+  p.strikeCooldown=Math.max(0,p.strikeCooldown-1);
+  let dx=clamp(Number(input.dx)||0,-1,1),dy=clamp(Number(input.dy)||0,-1,1);
+  const magnitude=Math.hypot(dx,dy);if(magnitude>1){dx/=magnitude;dy/=magnitude;}
+  if(input.dodge&&p.dodgeCooldown===0&&p.dodgeTicks===0){
+    const fallback=Math.atan2(p.y-e.y,p.x-e.x),hasDirection=Math.hypot(dx,dy)>.01;
+    p.dodgeVector={x:hasDirection?dx:Math.cos(fallback),y:hasDirection?dy:Math.sin(fallback)};
+    p.dodgeTicks=18;p.dodgeCooldown=70;emit(s,'dodge');
+  }
+  if(p.dodgeTicks>0){
+    p.x+=p.dodgeVector.x*9*DT;p.y+=p.dodgeVector.y*9*DT;p.dodgeTicks--;
+  }else{p.x+=dx*4.5*DT;p.y+=dy*4.5*DT;}
+  p.x=clamp(p.x,-9,9);p.y=clamp(p.y,-5.35,5.35);
+  if(input.strike&&p.strikeCooldown===0){
+    p.strikeCooldown=20;
+    const d=dist(p,e);
+    if(d<=2.55&&e.viableCoreCount>0&&phase(e.attack)==='recovery'){
+      e.mu=Math.max(0,Math.round((e.mu-.26)*1e6)/1e6);s.score++;emit(s,'coreHit',{mu:e.mu});
+      if(e.mu<=0){
+        e.viableCoreCount=0;e.attack=null;s.status='won';s.lastCue='Core collapsed. Attack capability removed.';
+        emit(s,'coreCollapsed');emit(s,'enemyDefeated');
+      }else s.lastCue=`Core eroded to μ=${e.mu.toFixed(2)}. It still attacks.`;
+    }else{emit(s,'strikeMiss',{reason:d>2.55?'outOfRange':'notRecovering'});s.lastCue=d>2.55?'Move closer to the enemy core.':'Strike during blue recovery, not its warning.';}
+  }
+  if(s.status!=='playing')return s;
+  if(!e.attack){
+    if(--e.readyIn<=0){
+      e.attack=attackDescriptor(s);
+      s.pastAttacks.push(e.attack.type);if(s.pastAttacks.length>48)s.pastAttacks.shift();
+      s.lastCue=`${e.attack.type.toUpperCase()} — warning locked to current position`;
+      emit(s,'telegraph',{attack:e.attack.type,sequence:e.sequence,u:e.attack.u});
+    }
+  }else{
+    const a=e.attack;
+    a.age++;
+    if(phase(a)==='active'&&!a.hitPlayer&&hitByAttack(a,p)){
+      a.hitPlayer=true;
+      if(s.tick>=p.invulnerableUntil&&p.dodgeTicks===0){
+        p.hp=Math.max(0,p.hp-20);p.invulnerableUntil=s.tick+36;emit(s,'playerHit',{attack:a.type,hp:p.hp});
+        if(p.hp<=0){s.status='lost';s.lastCue='Defeated. Reset to try a new trace.';emit(s,'playerDefeated');}
+      }else emit(s,'attackEvaded',{attack:a.type});
+    }
+    if(s.status==='playing'&&a.age>=a.windup+a.active+a.recovery){e.attack=null;e.readyIn=BETWEEN;}
+  }
+  for(const n of [p.x,p.y,p.hp,e.mu,s.x])finite(n);
+  return s;
+}
+function publicSnapshot(s){
+  return {tick:s.tick,r:s.r,seed:s.seed,x:s.x,score:s.score,status:s.status,
+    player:{...s.player,dodgeVector:{...s.player.dodgeVector}},
+    enemy:{...s.enemy,attack:s.enemy.attack?{...s.enemy.attack}:null},
+    events:s.events.map(x=>({...x})),pastAttacks:[...s.pastAttacks]};
+}
+
+
+const $=id=>document.getElementById(id);
+const canvas=$('arena'),traceCanvas=$('trace');
+const ctx=canvas.getContext('2d',{alpha:false}),tctx=traceCanvas.getContext('2d');
+const COLORS={lance:'#62cff2',fan:'#f6b67f',ring:'#f37eb5'};
+let r=3.2,epsilon=1e-6,paused=false,s=createArena({r});
+let framePrev=0,accumulator=0,slowFrames=0,inputLog=[],eventLog=[],stepCosts=[],samplesA=[],samplesB=[];
+const held=new Set();let strikePending=false,dodgePending=false;
+const WIN_X=10,WIN_Y=6.1;
+function reset(){
+  s=createArena({r,seed:SEED});accumulator=0;inputLog=[];eventLog=[];stepCosts=[];paused=false;
+  $('pause').textContent='PAUSE';$('overlay').hidden=true;updateHUD();
+}
+function getInput(){return {
+  dx:Number(held.has('d')||held.has('arrowright')||held.has('right'))-Number(held.has('a')||held.has('arrowleft')||held.has('left')),
+  dy:Number(held.has('s')||held.has('arrowdown')||held.has('down'))-Number(held.has('w')||held.has('arrowup')||held.has('up')),
+  strike:strikePending,dodge:dodgePending,
+};}
+function advanceTick(){
+  const input=getInput();strikePending=false;dodgePending=false;
+  if(s.status!=='playing')return;
+  const start=performance.now();stepArena(s,input);const cost=performance.now()-start;
+  stepCosts.push(cost);if(stepCosts.length>512)stepCosts.shift();
+  inputLog.push([input.dx,input.dy,Number(input.strike),Number(input.dodge)]);
+  if(inputLog.length>7200)inputLog.shift();
+  for(const e of s.events)if(e.tick===s.tick){eventLog.push(e);if(eventLog.length>256)eventLog.shift();}
+  if(s.status!=='playing'){
+    $('overlay').hidden=false;$('outcome').textContent=s.status==='won'?'CORE COLLAPSED':'PLAYER DEFEATED';
+    $('outcome').style.color=s.status==='won'?'#7df7d6':'#ff91ad';
+  }
+}
+const attackName=t=>({lance:'LINE',fan:'SECTOR',ring:'RING'})[t]||'IDLE';
+function updateHUD(){
+  const a=s.enemy.attack,p=s.player,mode=phase(a);
+  $('tick').textContent=`TICK ${String(s.tick).padStart(5,'0')}`;
+  $('phase').textContent=a?`${attackName(a.type)} / ${mode.toUpperCase()}`:'IDLE / RECHARGING';
+  $('phase').style.color=mode==='active'?'#ff6c9a':mode==='recovery'?'#5beecb':'#fbc38c';
+  $('hpbar').style.width=`${p.hp}%`;$('hptext').textContent=`${p.hp} / 100`;
+  $('mubar').style.width=`${100*s.enemy.mu}%`;
+  $('mutext').textContent=`μ ${s.enemy.mu.toFixed(2)} · ${s.enemy.viableCoreCount} core`;
+  $('cue').textContent=s.lastCue;
+  if(stepCosts.length>20){const sorted=[...stepCosts].sort((a,b)=>a-b);$('tickcost').textContent=`${(sorted[Math.floor(.95*(sorted.length-1))]*1000).toFixed(0)} µs`;}
+}
+function scaleCanvas(element,c){
+  const box=element.getBoundingClientRect();const ratio=Math.min(devicePixelRatio||1,2);
+  const w=Math.max(1,Math.round(box.width*ratio)),h=Math.max(1,Math.round(box.height*ratio));
+  if(element.width!==w||element.height!==h){element.width=w;element.height=h;}
+  c.setTransform(ratio,0,0,ratio,0,0);
+  return {w:box.width,h:box.height};
+}
+function drawArena(){
+  const {w,h}=scaleCanvas(canvas,ctx);const unit=Math.min(w/(WIN_X*2),h/(WIN_Y*2));
+  const cx=w*.5,cy=h*.495;
+  ctx.fillStyle='#06101c';ctx.fillRect(0,0,w,h);
+  const grad=ctx.createRadialGradient(cx+unit*3.8,cy,1,cx+unit*3.8,cy,unit*12);
+  grad.addColorStop(0,'#1a2b48');grad.addColorStop(.54,'#0a1b2d');grad.addColorStop(1,'#06101c');
+  ctx.fillStyle=grad;ctx.fillRect(0,0,w,h);
+  ctx.save();ctx.translate(cx,cy);ctx.scale(unit,unit);
+  ctx.lineWidth=1/unit;ctx.strokeStyle='#223c5350';
+  for(let x=-9;x<=9;x++){ctx.beginPath();ctx.moveTo(x,-5.4);ctx.lineTo(x,5.4);ctx.stroke();}
+  for(let y=-5;y<=5;y++){ctx.beginPath();ctx.moveTo(-9,y);ctx.lineTo(9,y);ctx.stroke();}
+  ctx.strokeStyle='#40678770';ctx.lineWidth=.045;ctx.strokeRect(-9,-5.35,18,10.7);
+  const t=s.tick*DT;
+  // Cosmetic field: deterministic and deliberately excluded from attack positions.
+  for(let i=0;i<55;i++){
+    const x=Math.sin(i*91.17)*7.7,y=Math.cos(i*37.91)*4.9;
+    const f=.3+.35*Math.sin(t*.6+i*.7);
+    ctx.fillStyle=`rgba(120,200,239,${Math.max(.03,f*.16)})`;
+    ctx.beginPath();ctx.arc(x,y,.018+(i%4)*.008,0,Math.PI*2);ctx.fill();
+  }
+  const e=s.enemy,p=s.player,a=e.attack;
+  ctx.strokeStyle='#488aa640';ctx.lineWidth=.05;
+  for(let k=0;k<3;k++){
+    ctx.beginPath();ctx.arc(e.x,e.y,1.3+k*.9,0,Math.PI*2);ctx.stroke();
+  }
+  if(a){
+    const mode=phase(a),active=mode==='active';
+    if(mode==='windup'||active){
+      ctx.save();ctx.lineWidth=a.width*2;ctx.strokeStyle=active?'rgba(255,77,137,.72)':'rgba(255,189,107,.62)';
+      ctx.fillStyle=active?'rgba(255,67,130,.20)':'rgba(255,179,97,.10)';
+      if(a.type==='lance'){
+        const ex=a.x+Math.cos(a.angle)*a.reach,ey=a.y+Math.sin(a.angle)*a.reach;
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(ex,ey);ctx.stroke();
+        ctx.setLineDash([.12,.14]);ctx.lineWidth=.05;ctx.strokeStyle=active?'#ffa2c0':'#ffd8ac';ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(ex,ey);ctx.stroke();
+      }else if(a.type==='fan'){
+        ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.arc(a.x,a.y,a.reach,a.angle-a.width,a.angle+a.width);ctx.closePath();ctx.fill();
+        ctx.lineWidth=.055;ctx.stroke();
+      }else{
+        const front=active?Math.max(.02,Math.min(1,(a.age-a.windup+1)/a.active))*a.reach:a.reach;
+        if(!active){ctx.setLineDash([.13,.24]);ctx.lineWidth=.09;}
+        ctx.beginPath();ctx.arc(a.x,a.y,front,0,Math.PI*2);ctx.stroke();
+        if(!active){ctx.globalAlpha=.22;ctx.beginPath();ctx.arc(a.x,a.y,a.reach/3,0,Math.PI*2);ctx.arc(a.x,a.y,2*a.reach/3,0,Math.PI*2);ctx.stroke();}
+      }
+      ctx.restore();
+    }
+  }
+  if(a&&phase(a)==='recovery'){
+    ctx.beginPath();ctx.arc(e.x,e.y,.87,0,Math.PI*2);ctx.setLineDash([.1,.14]);ctx.strokeStyle='#69f1d8';ctx.lineWidth=.065;ctx.stroke();ctx.setLineDash([]);
+  }
+  // Core geometry uses local stability margin; it never changes lethal contact shapes.
+  const mu=e.mu,circle=1.15+Math.sqrt(mu)*.65;
+  for(let i=0;i<12;i++){
+    const ang=i*Math.PI/6+t*.14,rad=circle*(.75+.11*Math.sin(ang*3+t*.2));
+    ctx.strokeStyle=e.viableCoreCount?'rgba(81,222,213,.34)':'rgba(141,157,177,.22)';ctx.lineWidth=.05;
+    ctx.beginPath();ctx.moveTo(e.x+Math.cos(ang)*.44,e.y+Math.sin(ang)*.44);ctx.lineTo(e.x+Math.cos(ang)*rad,e.y+Math.sin(ang)*rad);ctx.stroke();
+  }
+  ctx.save();ctx.translate(e.x,e.y);ctx.rotate(t*.13);
+  ctx.fillStyle=e.viableCoreCount?'#b7fff0':'#45586c';ctx.shadowColor='#4fe2c6';ctx.shadowBlur=unit*.7;
+  ctx.beginPath();ctx.moveTo(0,-.63*Math.sqrt(mu));ctx.lineTo(.54*Math.sqrt(mu),0);ctx.lineTo(0,.63*Math.sqrt(mu));ctx.lineTo(-.54*Math.sqrt(mu),0);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;ctx.strokeStyle='#efffff';ctx.lineWidth=.06;ctx.stroke();ctx.restore();
+  ctx.font='.29px ui-monospace,monospace';ctx.textAlign='center';ctx.fillStyle='#bbd7de';ctx.fillText(s.status==='won'?'DISSOLVED':'STABLE CORE',e.x,e.y-1.05);
+  // Player silhouette: no particle impact on collision positions.
+  ctx.save();ctx.translate(p.x,p.y);const invulnerable=s.tick<p.invulnerableUntil||p.dodgeTicks>0;
+  ctx.shadowColor='#79daff';ctx.shadowBlur=unit*.47;
+  ctx.fillStyle=invulnerable?'#bbf6ff':'#7ccbf1';ctx.beginPath();ctx.arc(0,0,p.radius,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;ctx.strokeStyle='#f0ffff';ctx.lineWidth=.05;ctx.stroke();
+  ctx.rotate(Math.atan2(e.y-p.y,e.x-p.x));ctx.fillStyle='#e6ffff';ctx.beginPath();ctx.moveTo(.49,0);ctx.lineTo(.23,-.12);ctx.lineTo(.23,.12);ctx.fill();ctx.restore();
+  if(p.strikeCooldown>13){ctx.strokeStyle='#77f4d0aa';ctx.lineWidth=.06;ctx.beginPath();ctx.arc(p.x,p.y,2.55,0,Math.PI*2);ctx.stroke();}
+  // No fatal geometry inherits procedural rendering offsets.
+  ctx.restore();
+  ctx.textAlign='left';ctx.fillStyle='#74a9bf';ctx.font='10px ui-monospace,monospace';ctx.fillText('AUTHORITATIVE / XY PLANE',14,19);
+  ctx.textAlign='right';ctx.fillStyle='#6590a4';ctx.fillText(`r = ${r.toFixed(5)}  |  ε = ${epsilon.toExponential(0)}`,w-14,19);
+  if(paused){ctx.fillStyle='#06101cc0';ctx.fillRect(0,0,w,h);ctx.fillStyle='#c2e9f1';ctx.font='700 23px ui-monospace,monospace';ctx.textAlign='center';ctx.fillText('PAUSED',w/2,h/2);}
+}
+function drawTrace(){
+  const {w,h}=scaleCanvas(traceCanvas,tctx);tctx.clearRect(0,0,w,h);
+  const labelW=24,margin=6,columns=Math.min(96,Math.floor((w-labelW-12)/6));
+  const cw=(w-labelW-2*margin)/Math.max(1,columns);
+  const rows=[samplesA,samplesB];
+  rows.forEach((seq,j)=>{
+    const y=12+j*38;
+    tctx.fillStyle='#78a9c4';tctx.font='11px ui-monospace,monospace';tctx.textAlign='left';tctx.fillText(j===0?'A':'B',3,y+12);
+    for(let i=0;i<columns;i++){
+      tctx.fillStyle=COLORS[seq[i]]||'#25394a';
+      tctx.globalAlpha=.85;tctx.fillRect(labelW+i*cw,y,Math.max(1,cw-1.5),19);tctx.globalAlpha=1;
+    }
+  });
+  tctx.fillStyle='#7894a9';tctx.textAlign='left';tctx.font='9px ui-monospace,monospace';tctx.fillText('NEXT ATTACK →',labelW,h-2);
+}
+function inspect(){
+  const metrics=analyze(r,{samples:512});const cmp=epsilonComparison(r,epsilon,{samples:2048});
+  samplesA=sequence(r,{samples:96}).types;samplesB=sequence(r+epsilon,{samples:96}).types;
+  $('rvalue').textContent=r.toFixed(5);$('epsvalue').textContent=`10⁻${Math.round(-Math.log10(epsilon))}`;
+  $('period').textContent=metrics.period?`${metrics.period}`:'not ≤ 16';
+  $('lyap').textContent=(metrics.lyapunov>=0?'+':'')+metrics.lyapunov.toFixed(3);
+  $('entropy').innerHTML=`${metrics.entropy.toFixed(2)} <small>bits</small>`;
+  $('conditional').innerHTML=`${metrics.conditionalEntropy.toFixed(2)} <small>bits</small>`;
+  $('baseline').textContent=metrics.scripted?`${(metrics.scripted.fraction*100).toFixed(0)}%`:'no short script';
+  $('rowa').textContent=`r=${r.toFixed(5)}`;
+  $('firststate').textContent=cmp.firstStateDifference?`${cmp.firstStateDifference} updates`:'not by 512';
+  $('firstattack').textContent=cmp.firstAttackDifference?`${cmp.firstAttackDifference} updates`:'not by 512';
+  $('js').textContent=cmp.jsDivergence.toFixed(4)+' bits';
+  let claim;
+  if(cmp.jsDivergence>=.15)claim='Different attack distributions observed. Test whether players can distinguish and learn them.';
+  else if(cmp.periodA!==cmp.periodB)claim='Bifurcation changes the detected orbit period; perceptual significance remains unverified.';
+  else if(cmp.firstStateDifference!==null)claim='Trajectory divergence detected; no meaningful attack-histogram separation at this threshold.';
+  else claim='No large trajectory separation within 512 updates. Tiny ε alone is insufficient evidence of a new enemy.';
+  $('claim').textContent=claim;
+  drawTrace();
+}
+function frame(now){
+  if(!framePrev)framePrev=now;
+  const dt=Math.min(.085,Math.max(0,(now-framePrev)/1000));framePrev=now;
+  if(!paused&&s.status==='playing'){
+    accumulator+=dt;let steps=0;
+    while(accumulator+1e-10>=DT&&steps<5){advanceTick();accumulator-=DT;steps++;}
+    if(steps===5&&accumulator>=DT){accumulator=0;slowFrames++;}
+  }else accumulator=0;
+  drawArena();
+  if(s.tick%8===0)updateHUD();
+  requestAnimationFrame(frame);
+}
+function setRegime(id){const preset=PRESETS.find(p=>p.id===id);if(preset){r=preset.r;$('r').value=String(r);}
+  inspect();reset();}
+$('regime').addEventListener('change',ev=>setRegime(ev.target.value));
+$('r').addEventListener('input',ev=>{r=Number(ev.target.value);$('regime').value='custom';inspect();});
+$('r').addEventListener('change',()=>reset());
+$('eps').addEventListener('input',ev=>{epsilon=10**(-Number(ev.target.value));inspect();});
+$('reset').addEventListener('click',reset);$('again-overlay').addEventListener('click',reset);
+$('pause').addEventListener('click',()=>{paused=!paused;$('pause').textContent=paused?'RESUME':'PAUSE';accumulator=0;});
+function action(name){if(name==='strike')strikePending=true;if(name==='dodge')dodgePending=true;}
+const moveKeys=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
+document.addEventListener('keydown',ev=>{
+  if(ev.target instanceof HTMLElement&&ev.target.closest('input,select,button'))return;
+  const key=ev.key.toLowerCase();
+  if(moveKeys.includes(key)||key===' '){ev.preventDefault();}
+  if(moveKeys.includes(key))held.add(key);
+  if(key==='j'||key==='enter'){if(!ev.repeat)action('strike');}
+  if(key===' '&&!ev.repeat)action('dodge');
+  if(key==='r'&&!ev.repeat)reset();
+  if(['1','2','3','4'].includes(key)&&!ev.repeat){$('regime').value=PRESETS[Number(key)-1].id;setRegime($('regime').value);}
+});
+document.addEventListener('keyup',ev=>held.delete(ev.key.toLowerCase()));
+window.addEventListener('blur',()=>{held.clear();paused=true;accumulator=0;$('pause').textContent='RESUME';});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){held.clear();paused=true;accumulator=0;$('pause').textContent='RESUME';}});
+canvas.addEventListener('pointerdown',ev=>{if(ev.pointerType!=='mouse'||ev.button===0)action('strike');canvas.focus({preventScroll:true});});
+for(const button of document.querySelectorAll('[data-hold]')){
+  const key=button.dataset.hold;
+  button.addEventListener('pointerdown',ev=>{ev.preventDefault();held.add(key);button.setPointerCapture(ev.pointerId);});
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,()=>held.delete(key));
+}
+for(const button of document.querySelectorAll('[data-action]'))button.addEventListener('pointerdown',ev=>{ev.preventDefault();action(button.dataset.action);});
+$('export').addEventListener('click',()=>{
+  const samples=[...stepCosts].sort((a,b)=>a-b);
+  const data={schema:'eigendynamics/epsilon-lab-evidence',version:1,
+    hypothesis:'Tiny epsilon yields different attack archetypes, not only separated states',
+    configuration:{r,epsilon,seed:SEED,simulationHz:HZ,slowFrames},
+    snapshot:publicSnapshot(s),
+    analysis:{baseline:analyze(r,{samples:512}),epsilon:epsilonComparison(r,epsilon,{samples:2048})},
+    performance:{ticksObserved:samples.length,p95TickMs:samples.length?samples[Math.floor(.95*(samples.length-1))]:null},
+    inputEncoding:'[dx,dy,strike,dodge] one record per authoritative tick; bounded to last 7200 ticks',
+    inputTrace:inputLog,events:eventLog,
+    limitations:'No blinded player readability test or representative GPU measurement. JSON includes JS double-derived chaotic sequences.'};
+  // Avoid duplicating the 512 saved numeric trajectory into a large evidence blob.
+  delete data.analysis.baseline.states;delete data.analysis.baseline.types;
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=`eigendynamics-epsilon-r${r.toFixed(5)}-tick${s.tick}.json`;
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);
+});
+window.addEventListener('resize',drawTrace);
+inspect();updateHUD();requestAnimationFrame(frame);
+
+</script>
+</body>
+</html>

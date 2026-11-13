@@ -1,0 +1,654 @@
+{
+  "baselineCommit": "dffcf34ef2c5b4e4995fb6358521f1db6990f5c0",
+  "environment": {
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+    "platform": "Linux x86_64",
+    "hardwareConcurrency": 9,
+    "devicePixelRatio": 1,
+    "visibility": "visible",
+    "date": "2026-11-10T10:12:01.276Z"
+  },
+  "method": {
+    "samples": 9,
+    "warmup": 2,
+    "seed": 20903,
+    "phases": [
+      0,
+      0.173,
+      0.5,
+      0.731
+    ],
+    "resolution": 1080,
+    "pixelResolutions": [
+      1080,
+      2160
+    ],
+    "order": "seeded randomized paired interleaving",
+    "geometry": "same phase and shards; excludes chamber generation",
+    "draw": "production Canvas2D commands plus synchronous 1px readback flush; includes bounds/color costs in painters",
+    "full": "geometry + draw + flush, not FPS and not compositor presentation",
+    "pixelTolerance": {
+      "maxChannelDelta": 32,
+      "maxFractionPixelsOver2": 0.0001,
+      "maxMeanAbsoluteChannelDelta": 0.01
+    },
+    "speedIsNonGating": true
+  },
+  "geometryAccuracy": {
+    "comparisons": 3214,
+    "scalars": 2002615,
+    "maxAbsoluteError": 5.826339410930359e-12,
+    "tolerance": 1e-09,
+    "pass": true
+  },
+  "results": [
+    {
+      "case": "unwinding/default",
+      "settings": {
+        "steps": 360,
+        "filaments": 48,
+        "spread": 1.2,
+        "width": 2.4,
+        "duration": 48,
+        "zoom": 1,
+        "palette": "iridescent",
+        "mode": "silk"
+      },
+      "reference": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.6000000014901161,
+          "p95Ms": 1.8999999985098839,
+          "minMs": 0.3999999985098839,
+          "maxMs": 1.8999999985098839
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 86.80000000074506,
+          "p95Ms": 147.5,
+          "minMs": 48.69999999925494,
+          "maxMs": 147.5
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 87.30000000074506,
+          "p95Ms": 148.40000000223517,
+          "minMs": 49.099999997764826,
+          "maxMs": 148.40000000223517
+        }
+      },
+      "optimized": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.30000000074505806,
+          "p95Ms": 1,
+          "minMs": 0.19999999925494194,
+          "maxMs": 1
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 92.09999999776483,
+          "p95Ms": 166,
+          "minMs": 49,
+          "maxMs": 166
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 92.80000000074506,
+          "p95Ms": 166.30000000074506,
+          "minMs": 50,
+          "maxMs": 166.30000000074506
+        }
+      }
+    },
+    {
+      "case": "unwinding/max-ui",
+      "settings": {
+        "steps": 800,
+        "filaments": 64,
+        "spread": 2,
+        "width": 4,
+        "duration": 120,
+        "zoom": 2,
+        "palette": "iridescent",
+        "mode": "silk"
+      },
+      "reference": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 1.8999999985098839,
+          "p95Ms": 2.099999997764826,
+          "minMs": 1.300000000745058,
+          "maxMs": 2.099999997764826
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 209.80000000074506,
+          "p95Ms": 558,
+          "minMs": 94.60000000149012,
+          "maxMs": 558
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 211.69999999925494,
+          "p95Ms": 559.8999999985099,
+          "minMs": 96.10000000149012,
+          "maxMs": 559.8999999985099
+        }
+      },
+      "optimized": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.8000000007450581,
+          "p95Ms": 1.3999999985098839,
+          "minMs": 0.6999999992549419,
+          "maxMs": 1.3999999985098839
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 205.30000000074506,
+          "p95Ms": 504.0999999977648,
+          "minMs": 99.19999999925494,
+          "maxMs": 504.0999999977648
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 206.10000000149012,
+          "p95Ms": 504.8999999985099,
+          "minMs": 99.89999999850988,
+          "maxMs": 504.8999999985099
+        }
+      }
+    },
+    {
+      "case": "chamber/default",
+      "settings": {
+        "seed": 13013,
+        "symmetry": 12,
+        "sides": 4,
+        "density": 1.1,
+        "size": 0.075,
+        "drift": 0.09,
+        "duration": 48,
+        "zoom": 1,
+        "rotation": 0,
+        "palette": "jewel",
+        "mirrors": false
+      },
+      "reference": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.19999999925494194,
+          "p95Ms": 0.5,
+          "minMs": 0.10000000149011612,
+          "maxMs": 0.5
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 7.800000000745058,
+          "p95Ms": 10.699999999254942,
+          "minMs": 5.399999998509884,
+          "maxMs": 10.699999999254942
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 8,
+          "p95Ms": 10.800000000745058,
+          "minMs": 5.5,
+          "maxMs": 10.800000000745058
+        }
+      },
+      "optimized": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.19999999925494194,
+          "p95Ms": 0.6000000014901161,
+          "minMs": 0.09999999776482582,
+          "maxMs": 0.6000000014901161
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 6.799999997019768,
+          "p95Ms": 7.399999998509884,
+          "minMs": 5.899999998509884,
+          "maxMs": 7.399999998509884
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 6.899999998509884,
+          "p95Ms": 7.699999999254942,
+          "minMs": 6,
+          "maxMs": 7.699999999254942
+        }
+      }
+    },
+    {
+      "case": "chamber/max-ui",
+      "settings": {
+        "seed": 13013,
+        "symmetry": 32,
+        "sides": 8,
+        "density": 2.5,
+        "size": 0.14,
+        "drift": 0.24,
+        "duration": 120,
+        "zoom": 2,
+        "rotation": 1,
+        "palette": "jewel",
+        "mirrors": true
+      },
+      "reference": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.10000000149011612,
+          "p95Ms": 0.19999999925494194,
+          "minMs": 0,
+          "maxMs": 0.19999999925494194
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 2.800000000745058,
+          "p95Ms": 3.5,
+          "minMs": 2.5,
+          "maxMs": 3.5
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 2.899999998509884,
+          "p95Ms": 3.600000001490116,
+          "minMs": 2.600000001490116,
+          "maxMs": 3.600000001490116
+        }
+      },
+      "optimized": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 0.09999999776482582,
+          "p95Ms": 0.19999999925494194,
+          "minMs": 0,
+          "maxMs": 0.19999999925494194
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 2.800000000745058,
+          "p95Ms": 3.899999998509884,
+          "minMs": 2.5,
+          "maxMs": 3.899999998509884
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 2.800000000745058,
+          "p95Ms": 4,
+          "minMs": 2.5,
+          "maxMs": 4
+        }
+      }
+    },
+    {
+      "case": "chamber/max-workload",
+      "settings": {
+        "seed": 13013,
+        "symmetry": 3,
+        "sides": 8,
+        "density": 2.5,
+        "size": 0.035,
+        "drift": 0.24,
+        "duration": 120,
+        "zoom": 2,
+        "rotation": 1,
+        "palette": "jewel",
+        "mirrors": true
+      },
+      "reference": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 6.399999998509884,
+          "p95Ms": 8.300000000745058,
+          "minMs": 5.699999999254942,
+          "maxMs": 8.300000000745058
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 35.79999999701977,
+          "p95Ms": 44.099999997764826,
+          "minMs": 32.399999998509884,
+          "maxMs": 44.099999997764826
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 42,
+          "p95Ms": 50,
+          "minMs": 38.79999999701977,
+          "maxMs": 50
+        }
+      },
+      "optimized": {
+        "geometry": {
+          "samples": 9,
+          "medianMs": 5.300000000745058,
+          "p95Ms": 11,
+          "minMs": 4.900000002235174,
+          "maxMs": 11
+        },
+        "draw": {
+          "samples": 9,
+          "medianMs": 35.5,
+          "p95Ms": 38.099999997764826,
+          "minMs": 31.399999998509884,
+          "maxMs": 38.099999997764826
+        },
+        "full": {
+          "samples": 9,
+          "medianMs": 41.099999997764826,
+          "p95Ms": 49.099999997764826,
+          "minMs": 36.30000000074506,
+          "maxMs": 49.099999997764826
+        }
+      }
+    }
+  ],
+  "pixels": [
+    {
+      "case": "unwinding/default",
+      "size": 1080,
+      "phase": 0,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/default",
+      "size": 1080,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/default",
+      "size": 1080,
+      "phase": 0.5,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/default",
+      "size": 1080,
+      "phase": 0.731,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/default",
+      "size": 2160,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/max-ui",
+      "size": 1080,
+      "phase": 0,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/max-ui",
+      "size": 1080,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/max-ui",
+      "size": 1080,
+      "phase": 0.5,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/max-ui",
+      "size": 1080,
+      "phase": 0.731,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "unwinding/max-ui",
+      "size": 2160,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/default",
+      "size": 1080,
+      "phase": 0,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/default",
+      "size": 1080,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/default",
+      "size": 1080,
+      "phase": 0.5,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/default",
+      "size": 1080,
+      "phase": 0.731,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/default",
+      "size": 2160,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-ui",
+      "size": 1080,
+      "phase": 0,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-ui",
+      "size": 1080,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-ui",
+      "size": 1080,
+      "phase": 0.5,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-ui",
+      "size": 1080,
+      "phase": 0.731,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-ui",
+      "size": 2160,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-workload",
+      "size": 1080,
+      "phase": 0,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-workload",
+      "size": 1080,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-workload",
+      "size": 1080,
+      "phase": 0.5,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-workload",
+      "size": 1080,
+      "phase": 0.731,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    },
+    {
+      "case": "chamber/max-workload",
+      "size": 2160,
+      "phase": 0.173,
+      "maxChannelDelta": 0,
+      "meanAbsoluteChannelDelta": 0,
+      "changedPixels": 0,
+      "changedFraction": 0,
+      "pixelsOver2": 0,
+      "fractionOver2": 0,
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "candidateCommit": "ad3608c43a80778c45a52cbab1779d6af5226762"
+}

@@ -1,0 +1,46 @@
+{
+  "passed": 10,
+  "epsilon": 0.035,
+  "checks": [
+    {
+      "name": "Exact single-atom cone interpolation with unequal masses",
+      "passed": true
+    },
+    {
+      "name": "Above cutoff: no transport; quadratic creation and destruction",
+      "passed": true
+    },
+    {
+      "name": "Coincident atoms follow Fisher–Rao square-root mass interpolation",
+      "passed": true
+    },
+    {
+      "name": "Cutoff boundary is finite and chooses pure reaction",
+      "passed": true
+    },
+    {
+      "name": "Small separation and large reaction cost approach conservative transport",
+      "passed": true
+    },
+    {
+      "name": "corona: endpoints, finiteness, solver convergence and time reversal",
+      "passed": true
+    },
+    {
+      "name": "spiral: endpoints, finiteness, solver convergence and time reversal",
+      "passed": true
+    },
+    {
+      "name": "separated: endpoints, finiteness, solver convergence and time reversal",
+      "passed": true
+    },
+    {
+      "name": "Cost control changes behavior for separated halos",
+      "passed": true
+    },
+    {
+      "name": "Default production grid preserves all endpoint mass",
+      "passed": true
+    }
+  ]
+}

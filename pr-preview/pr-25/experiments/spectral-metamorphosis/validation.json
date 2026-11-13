@@ -1,0 +1,32 @@
+{
+  "method": "Scalar stationary Gaussian amplitude geodesic; procedural spectra and artistic phase dynamics",
+  "grid": 64,
+  "seed": 16031,
+  "passed": true,
+  "results": {
+    "fftRoundtripMaxError": 2.220446049250313e-15,
+    "endpointExpectedVariances": [
+      0.9999999999999999,
+      0.9999999999999947
+    ],
+    "imaginaryLeakage": 1.1105064513389567e-15,
+    "deterministicSeed": true,
+    "midpointExpectedVariance": {
+      "spectral": 0.7189502508197151,
+      "independentPixelCrossfade": 0.5000000000000006
+    },
+    "coupledFieldLinearityMaxError": 8.881784197001252e-16,
+    "smallTimeStepRMS": 0.00002289307876891314,
+    "rotationPreservesTotalPowerError": 2.161919037795816e-15,
+    "parsevalError": 9.992007221626409e-16,
+    "productionGrid": {
+      "size": 256,
+      "finite": true,
+      "imaginaryLeakage": 2.979071630679802e-15
+    },
+    "temporalStepRMS": {
+      "highCoherence": 0.0008062595424791441,
+      "lowCoherence": 0.004658983052772552
+    }
+  }
+}
