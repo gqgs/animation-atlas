@@ -1,6 +1,6 @@
 import {
   TAU, BASE_Y, BASE_RADIUS, SOURCE, add, sub, mul, dot, unit,
-  normalAt, centerOf, reflectionAt, softboxes, floorReflection, fresnel,
+  normalAt, centerOf, reflectionAt, softboxes, floorReflection, fresnel, coreLightAt, colorScale, coreAt, coreRings, coreRingPoint,
 } from './core.mjs';
 
 const rad=Math.PI/180;
@@ -92,7 +92,7 @@ function drawPatch(ctx,project,patch,color,weight){
 export function drawReflections(ctx,p,faces,project,scale){
   const w=ctx.canvas.width,h=ctx.canvas.height;
   const camera=cameraPose(p);
-  const eye=camera.position;
+  const eye=camera.position, light=coreLightAt(p);
   if(p.lighting!=='direct'){
     ctx.save();
     ctx.globalCompositeOperation='screen';
@@ -101,7 +101,7 @@ export function drawReflections(ctx,p,faces,project,scale){
     ctx.beginPath();ctx.rect(0,0,w,h);path(ctx,loop(1.65,BASE_Y).map(project));ctx.clip('evenodd');
     for(const face of faces){
       const core=floorReflection(face);
-      if(core)drawPatch(ctx,project,core,'#ffc48b',.86);
+      if(core&&light.strength>0)drawPatch(ctx,project,core,light.color,.67*light.strength);
       for(const box of softboxes){
         const patch=floorReflection(face,box.center);
         if(patch)drawPatch(ctx,project,patch,box.color,box.color==='#ffc78b'?.87:.62);
@@ -127,17 +127,26 @@ export function drawReflections(ctx,p,faces,project,scale){
 
   const from=project(SOURCE);
   ctx.save();ctx.globalCompositeOperation='screen';
-  glow(ctx,from,38*scale,'#ffd2a5',.25);
-  glow(ctx,from,17*scale,'#fff0d1',.49);
+  if(light.strength>0){
+    glow(ctx,from,(37+12*light.emission)*scale,light.color,.32*light.emission);
+    glow(ctx,from,17*scale,colorScale(light.color,1,.24),.67*light.emission);
+  }
   ctx.restore();
 }
 
-export function drawFallback(canvas,p,faces){
+export function drawFallback(canvas,p,faces,phase){
   const ctx=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
-  const project=projector(p,w,h),scale=Math.min(w,h)/850;
+  const project=projector(p,w,h),scale=Math.min(w,h)/850,light=coreLightAt(p);
   const bg=ctx.createRadialGradient(w*.48,h*.52,0,w*.48,h*.52,Math.max(w,h)*.65);
   bg.addColorStop(0,'#253049');bg.addColorStop(.62,'#121b2d');bg.addColorStop(1,'#080d17');
   ctx.fillStyle=bg;ctx.fillRect(0,0,w,h);
+  // Project a broad nearby light footprint. This matches the light controls,
+  // not the precise PBR falloff of the WebGL point light.
+  if(light.strength>0){
+    ctx.save();ctx.globalCompositeOperation='screen';
+    drawPatch(ctx,project,{point:[0,0,0],direction:[1,0,0],length:3.85,radius:3.85,strength:light.emission},light.color,.53);
+    ctx.restore();
+  }
   for(const [i,r] of [1.8,2.02,2.8,3.44,4.1,4.2,5.02,6.12].entries()){
     polygon(ctx,loop(r,0,96).map(project),null,i%3===0?'#68769256':'#586e9130',.8*scale);
   }
@@ -150,6 +159,13 @@ export function drawFallback(canvas,p,faces){
     [1.54,.23,'#273146','#6b819f'],[BASE_RADIUS,BASE_Y,'#303d55','#879aab'],
   ])polygon(ctx,loop(radius,y).map(project),fill,stroke,1.2*scale);
 
+  if(light.strength>0){
+    ctx.save();
+    ctx.beginPath();path(ctx,loop(BASE_RADIUS,BASE_Y).map(project));ctx.clip();
+    ctx.globalCompositeOperation='screen';
+    drawPatch(ctx,project,{point:[0,BASE_Y,0],direction:[1,0,0],length:1.70,radius:1.70,strength:light.emission},light.color,.64);
+    ctx.restore();
+  }
   const from=project(SOURCE),camera=cameraPose(p);
   const panels=faces.map(f=>({f,pts:f.map(project)})).sort((a,b)=>depth(a.pts)-depth(b.pts));
   const glass=({f,pts})=>{
@@ -165,7 +181,27 @@ export function drawFallback(canvas,p,faces){
   for(const [r,y,fill,stroke] of [[.33,.40,'#6d7482','#c7cde1'],[.21,.61,'#2e3a58','#889ab1']]){
     polygon(ctx,loop(r,y,16).map(project),fill,stroke,scale);
   }
-  const gem=[[0,SOURCE[1]+.16,0],[.133,SOURCE[1],.04],[0,SOURCE[1]-.15,0],[-.12,SOURCE[1],-.04]].map(project);
-  polygon(ctx,gem,'#ffe6bf','#fff3d8',scale);
+  const segments=[];
+  for(const [i,ring] of coreRings.entries()){
+    for(let k=0;k<64;k++){
+      const a=project(coreRingPoint(ring,k*TAU/64)),b=project(coreRingPoint(ring,(k+1)*TAU/64));
+      segments.push({a,b,front:(a[2]+b[2])/2>=from[2],i,k});
+    }
+  }
+  const cage=front=>{
+    for(const {a,b,front:f,i,k} of segments)if(f===front){
+      line(ctx,a,b,front?'#b9a483':'#897c6b',scale*(i===2?2.1:1.4));
+      if(i===2&&k%8===0){
+        ctx.beginPath();ctx.arc(a[0],a[1],1.7*scale,0,TAU);ctx.fillStyle='#d6bf98';ctx.fill();
+      }
+    }
+  };
+  cage(false);
+  const gem=coreAt(phase).map(({verts,shade})=>({points:verts.map(project),shade})).sort((a,b)=>depth(a.points)-depth(b.points));
+  for(const {points,shade} of gem){
+    const fill=colorScale(light.color,.105+.98*light.emission*shade,.02+.12*light.emission*shade);
+    polygon(ctx,points,fill,light.strength>0?colorScale(light.color,.49+.61*light.emission,.09):'#3b3c42',.50*scale);
+  }
+  cage(true);
   for(const panel of panels)if(depth(panel.pts)>=from[2])glass(panel);
 }

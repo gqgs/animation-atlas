@@ -3,7 +3,7 @@ import test from 'node:test';
 import {
   BASE_Y, APEX_HEIGHT, defaults, defaultTracks, definitions, facesAt,
   poseAt, readState, sub, dot, mul, add, unit, normalAt, reflect, mirrorPoint,
-  fresnel, reflectionAt, floorReflection, softboxes, centerOf,
+  fresnel, reflectionAt, floorReflection, softboxes, centerOf, coreAt, coreLightAt, coreRings, coreRingPoint, SOURCE,
 } from './core.mjs';
 import {serializeTracks} from '../../shared/parameter-tracks.mjs';
 
@@ -68,4 +68,31 @@ test('validated URL settings retain cyclic controls and the lighting mode',()=>{
   assert.equal(settings.lighting,'direct');
   assert.deepEqual(tracks,defaultTracks);
   assert.deepEqual(readState(new URLSearchParams({tracks:'{}'})).tracks,{});
+});
+
+test('core light strength and validated color travel through pose and cyclic state',()=>{
+  const params=new URLSearchParams({intensity:'1.7',coreColor:'#5BC2FF',tracks:'{"v":1,"t":{"intensity":[0,2,"sine"]}}'});
+  const {settings,tracks}=readState(params);
+  assert.equal(settings.intensity,1.7);
+  assert.equal(settings.coreColor,'#5bc2ff');
+  const low=coreLightAt(poseAt(settings,tracks,0));
+  const high=coreLightAt(poseAt(settings,tracks,.5));
+  assert.deepEqual(low,{color:'#5bc2ff',strength:0,pointPower:0,emission:0});
+  assert.equal(high.color,low.color);
+  assert.ok(high.pointPower>0&&high.emission>0);
+  assert.deepEqual(low,coreLightAt(poseAt(settings,tracks,1)));
+  assert.equal(readState(new URLSearchParams({coreColor:'#xyz',intensity:'100'})).settings.coreColor,defaults.coreColor);
+  assert.equal(readState(new URLSearchParams({intensity:'100'})).settings.intensity,2.4);
+});
+
+test('faceted core loops and the cage stays centered at the light source',()=>{
+  assert.deepEqual(coreAt(0),coreAt(1));
+  assert.notDeepEqual(coreAt(.2),coreAt(0));
+  assert.ok(coreAt(0).length>20);
+  for(const ring of coreRings){
+    const a=coreRingPoint(ring,0),b=coreRingPoint(ring,Math.PI);
+    close(distance(a,b),2*ring.radius);
+    const center=mul(add(a,b),.5);
+    close(center[0],SOURCE[0]);close(center[1],SOURCE[1]+ring.offset);close(center[2],SOURCE[2]);
+  }
 });

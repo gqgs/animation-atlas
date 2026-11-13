@@ -3,12 +3,13 @@ import {normalizeTracks, parseTracks, resolveParameters} from '../../shared/para
 export const TAU = 2*Math.PI;
 export const BASE_Y=.34, BASE_RADIUS=1.50, APEX_HEIGHT=2.03;
 export const definitions = {
+  intensity:{min:0,max:2.4,step:.05,defaultValue:1},
   opening:{min:0,max:1,step:.01,defaultValue:0},
   zoom:{min:.58,max:1.40,step:.01,defaultValue:1},
   rotation:{min:-180,max:180,step:1,defaultValue:0},
   elevation:{min:15,max:75,step:1,defaultValue:33},
 };
-export const defaults={opening:0,zoom:1,rotation:0,elevation:33,duration:12,lighting:'reflections'};
+export const defaults={opening:0,zoom:1,rotation:0,elevation:33,duration:12,lighting:'reflections',intensity:1,coreColor:'#ffcf91'};
 export const defaultTracks=normalizeTracks({opening:{min:0,max:.86,easing:'smootherstep'}},definitions);
 export const poseAt=(settings,tracks,phase)=>resolveParameters(settings,tracks,phase,definitions);
 export function readState(params){
@@ -18,6 +19,7 @@ export function readState(params){
     if(params.has(key)&&params.get(key).trim()&&Number.isFinite(n)) settings[key]=Math.min(max,Math.max(min,n));
   }
   if(params.get('lighting')==='direct') settings.lighting='direct';
+  if(/^#[0-9a-f]{6}$/i.test(params.get('coreColor')||'')) settings.coreColor=params.get('coreColor').toLowerCase();
   return {settings,tracks:params.has('tracks')?parseTracks(params.get('tracks'),definitions):structuredClone(defaultTracks)};
 }
 
@@ -90,4 +92,50 @@ export function floorReflection(face,source=SOURCE){
     strength:boundary*(.25+.75*Math.abs(incoming))*Math.min(1,4/(1+t*t)),
     radius:Math.min(.64,.26+t*.08), length:Math.min(1.45,.45+t*.14),
   };
+}
+
+export function coreLightAt(p){
+  const strength=clamp(p.intensity/2.4)*2.4;
+  return {
+    color:p.coreColor,
+    strength,
+    pointPower:7.4*strength,
+    // Gradual highlight compression for drawing an emissive surface in SDR.
+    emission:1-Math.exp(-1.35*strength),
+  };
+}
+
+export function colorScale(hex,scale,white=0){
+  const channels=hex.slice(1).match(/../g).map(v=>parseInt(v,16));
+  return '#'+channels.map(v=>Math.round(Math.max(0,Math.min(255,v*scale*(1-white)+255*white))).toString(16).padStart(2,'0')).join('');
+}
+
+const coreLayers=[[-.198,.085],[-.118,.173],[.104,.173],[.198,.073]];
+const facets=8;
+const gemRing=(y,r,phase)=>Array.from({length:facets},(_,i)=>{
+  const a=TAU*i/facets+phase;
+  return add(SOURCE,[r*Math.cos(a),y,r*Math.sin(a)]);
+});
+export const coreRings=[
+  {radius:.280,tilt:.46,azimuth:.26,offset:.023},
+  {radius:.280,tilt:-.48,azimuth:1.24,offset:-.023},
+  {radius:.234,tilt:.08,azimuth:0,offset:0},
+];
+export function coreAt(phase){
+  const angle=TAU*(((phase%1)+1)%1);
+  const layers=coreLayers.map(([y,r])=>gemRing(y,r,angle));
+  const panels=[];
+  for(let l=0;l<layers.length-1;l++)for(let i=0;i<facets;i++){
+    const j=(i+1)%facets;
+    panels.push({verts:[layers[l][i],layers[l][j],layers[l+1][j],layers[l+1][i]],shade:(l===1?.76:1)*(1-(i%3)*.10)});
+  }
+  panels.push({verts:layers[0].slice().reverse(),shade:.62},{verts:layers.at(-1),shade:1.0});
+  return panels;
+}
+
+export function coreRingPoint(ring,angle){
+  const {radius,tilt,azimuth,offset}=ring,c=Math.cos(azimuth),s=Math.sin(azimuth);
+  const x=radius*Math.cos(angle),z=radius*Math.sin(angle);
+  const zTilt=z*Math.cos(tilt),y=offset-z*Math.sin(tilt);
+  return add(SOURCE,[x*c+zTilt*s,y,-x*s+zTilt*c]);
 }

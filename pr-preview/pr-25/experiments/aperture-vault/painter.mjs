@@ -1,5 +1,5 @@
 import * as T from '../../vendor/0.180.0/build/three.module.js';
-import {BASE_Y,BASE_RADIUS,SOURCE,TAU,facesAt,poseAt} from './core.mjs';
+import {BASE_Y,BASE_RADIUS,SOURCE,TAU,facesAt,poseAt,coreAt,coreRings,coreRingPoint,coreLightAt,colorScale} from './core.mjs';
 import {CAMERA_TARGET,cameraPose,drawFallback,drawReflections,projector} from './fallback.mjs';
 
 const renderers=new WeakMap();
@@ -78,10 +78,24 @@ function build(){
   const mainGlass=glassStyle(0xabc9e8,.13);
   const nearGlass=glassStyle(0xbde1f5,.16);
   const faces=Array.from({length:6},(_,i)=>shape(3,i===0?nearGlass:mainGlass));
-  const core=mesh(new T.IcosahedronGeometry(.148,0),new T.MeshBasicMaterial({color:0xffefd9,toneMapped:false}));
-  core.position.set(...SOURCE);
-  const lamp=new T.PointLight(0xffdfae,4.1,7,2);
-  lamp.position.copy(core.position);scene.add(lamp);
+  const coreGeometry=new T.BufferGeometry();
+  const nTriangles=coreAt(0).reduce((sum,f)=>sum+f.verts.length-2,0);
+  const vertices=new Float32Array(9*nTriangles),colors=new Float32Array(9*nTriangles);
+  coreGeometry.setAttribute('position',new T.BufferAttribute(vertices,3));
+  coreGeometry.setAttribute('color',new T.BufferAttribute(colors,3));
+  const core=mesh(coreGeometry,new T.MeshBasicMaterial({vertexColors:true,toneMapped:false,side:T.DoubleSide}));
+  core.frustumCulled=false;
+  const cage=new T.MeshStandardMaterial({color:0xac9374,metalness:.63,roughness:.32});
+  for(const [i,ring] of coreRings.entries()){
+    const path=new T.CatmullRomCurve3(Array.from({length:48},(_,k)=>new T.Vector3(...coreRingPoint(ring,TAU*k/48))),true);
+    mesh(new T.TubeGeometry(path,72,i===2?.011:.008,6,true),cage);
+    if(i===2){
+      const beadGeometry=new T.SphereGeometry(.018,8,6);
+      for(let k=0;k<8;k++)mesh(beadGeometry,cage).position.set(...coreRingPoint(ring,k*TAU/8));
+    }
+  }
+  const lamp=new T.PointLight(0xffcf91,7.4,8,2);
+  lamp.position.set(...SOURCE);scene.add(lamp);
   scene.add(new T.HemisphereLight(0xb8d5ff,0x233657,1.60));
   const softbox=new T.DirectionalLight(0xadc3ea,1.28);softbox.position.set(0,6,5);scene.add(softbox);
   const edgeLight=new T.DirectionalLight(0x8899bc,1.25);edgeLight.position.set(-5,3,-4);scene.add(edgeLight);
@@ -96,7 +110,18 @@ function build(){
       camera.updateProjectionMatrix();
       camera.position.set(...cameraPose(p).position);
       camera.lookAt(...CAMERA_TARGET);
-      core.rotation.set(.35,TAU*(((phase%1)+1)%1),.14);
+      const light=coreLightAt(p);
+      lamp.color.set(light.color);
+      lamp.intensity=light.pointPower;
+      let k=0;
+      for(const {verts,shade} of coreAt(phase)){
+        const color=new T.Color(colorScale(light.color,.105+.98*light.emission*shade,.02+.12*light.emission*shade));
+        for(let i=1;i<verts.length-1;i++)for(const q of [verts[0],verts[i],verts[i+1]]){
+          vertices.set(q,k);color.toArray(colors,k);k+=3;
+        }
+      }
+      coreGeometry.attributes.position.needsUpdate=true;
+      coreGeometry.attributes.color.needsUpdate=true;
       for(const [i,f] of panels.entries()) faces[i](f);
       renderer.render(scene,camera);
       return surface;
@@ -121,7 +146,7 @@ export function draw(target,settings,tracks,phase){
   const panels=facesAt(p.opening),w=target.width,h=target.height;
   const ctx=target.getContext('2d');
   if(r)ctx.drawImage(r.render(p,panels,phase,w,h),0,0);
-  else drawFallback(target,p,panels);
+  else drawFallback(target,p,panels,phase);
   drawReflections(ctx,p,panels,projector(p,w,h),Math.min(w,h)/850);
   return r?'WebGL2 · planar reflections':'Canvas 2D · planar reflections';
 }

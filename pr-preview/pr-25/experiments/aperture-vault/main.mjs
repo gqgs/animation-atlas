@@ -8,8 +8,8 @@ const $=id=>document.getElementById(id),canvas=$('scene'),params=new URLSearchPa
 let {settings,tracks}=readState(params),phase=Math.max(0,Math.min(1,Number(params.get('phase'))||0));
 let playing=!params.has('phase')&&!matchMedia('(prefers-reduced-motion: reduce)').matches,controller=null,dirty=true,last=performance.now();
 const controls=new Map(),status=s=>$('status').textContent=s;
-for(const [key,label] of [['opening','Opening'],['zoom','Zoom'],['rotation','Orientation'],['elevation','Elevation']]){
- controls.set(key,createParameterControl({parent:$('sliders'),key,label,definition:definitions[key],value:settings[key],track:tracks[key],
+for(const [key,label] of [['intensity','Core intensity'],['opening','Opening'],['zoom','Zoom'],['rotation','Orientation'],['elevation','Elevation']]){
+ controls.set(key,createParameterControl({parent:$(key==='intensity'?'coreSliders':'sliders'),key,label,definition:definitions[key],value:settings[key],track:tracks[key],
  onValue:value=>{settings[key]=value;dirty=true;sync();},
  onTrack:track=>{tracks=normalizeTracks({...tracks,[key]:track},definitions);dirty=true;sync();}}));
 }
@@ -18,6 +18,7 @@ function sync(){
  for(const [key,c]of controls)c.sync({value:settings[key],track:tracks[key],resolved:pose[key],disabled:!!controller});
  for(const key of ['duration']){$(key).value=settings[key];$(key+'Value').textContent=settings[key];}
  $('lighting').value=settings.lighting;
+ $('coreColor').value=settings.coreColor;
  $('play').textContent=playing?'Pause':'Play';$('phase').value=phase;
 }
 function resize(){const r=canvas.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(r.width*ratio);canvas.height=Math.round(r.height*ratio);dirty=true;}
@@ -27,6 +28,7 @@ requestAnimationFrame(tick);
 function toggle(){if(!controller){playing=!playing;sync();}}
 $('play').onclick=toggle;canvas.onclick=toggle;
 $('lighting').onchange=()=>{settings.lighting=$('lighting').value;dirty=true;sync();};
+$('coreColor').oninput=()=>{settings.coreColor=$('coreColor').value;dirty=true;};
 $('phase').oninput=()=>{phase=Number($('phase').value);playing=false;dirty=true;sync();};
 for(const key of ['duration'])$(key).oninput=()=>{settings[key]=Number($(key).value);dirty=true;sync();};
 function hide(){document.body.classList.toggle('clean');$('show').hidden=!document.body.classList.contains('clean');resize();}

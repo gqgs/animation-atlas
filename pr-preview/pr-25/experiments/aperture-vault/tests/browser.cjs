@@ -60,6 +60,30 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     // Canvas antialias coverage can round by one byte at a clipped edge.
     assert.ok(seam.max<=1&&seam.changed<=32,'Loop seam differs: '+JSON.stringify(seam));
 
+    // With the studio reflection layer off, changing the core still changes
+    // rendered pixels away from the emitter (the near floor and plinth).
+    await seek(.14);
+    await page.locator('#lighting').selectOption('direct');
+    await page.locator('#intensity').fill('0');
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    const nearbySurface=()=>page.locator('#scene').evaluate(c=>{
+      const data=c.getContext('2d').getImageData(c.width*.42,c.height*.56,c.width*.16,c.height*.09).data;
+      const sum=[0,0,0];
+      for(let i=0;i<data.length;i+=4)for(let j=0;j<3;j++)sum[j]+=data[i+j];
+      return sum.map(x=>x*4/data.length);
+    });
+    const unlit=await nearbySurface();
+    await page.locator('#intensity').fill('2.1');
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    const warm=await nearbySurface();
+    assert.ok(warm[0]>unlit[0]+2,'Core intensity must light a nearby surface');
+    await page.locator('#coreColor').fill('#5bc2ff');
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+    const blue=await nearbySurface();
+    assert.ok(blue[2]-blue[0]>warm[2]-warm[0]+3,'Core color must tint the nearby surface');
+    await page.screenshot({path:path.join(output,'custom-core.png')});
+    await page.locator('#intensityCyclic').check();
+    assert.equal(await page.locator('#intensity').isDisabled(),true);
     await page.locator('#rotationCyclic').check();
     assert.equal(await page.locator('#rotation').isDisabled(),true);
     await page.context().grantPermissions(['clipboard-read','clipboard-write']);
@@ -70,6 +94,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     await page.goto(url);
     assert.equal(await page.locator('#lighting').inputValue(),'direct');
     assert.equal(await page.locator('#rotationCyclic').isChecked(),true);
+    assert.equal(await page.locator('#intensityCyclic').isChecked(),true);
+    assert.equal(await page.locator('#coreColor').inputValue(),'#5bc2ff');
 
     await page.locator('#exportSize').selectOption('720');
     await page.locator('#exportFps').selectOption('30');
@@ -84,6 +110,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
       await page.locator('#duration').fill('4');
       await page.locator('#record').click();
       assert.equal(await page.locator('#lighting').isDisabled(),true);
+      assert.equal(await page.locator('#coreColor').isDisabled(),true);
       await page.locator('#record').click();
       await page.waitForFunction(()=>document.querySelector('#status').textContent==='Export canceled.');
       assert.equal(await page.locator('#lighting').isDisabled(),false);
