@@ -8,7 +8,7 @@ const $=id=>document.getElementById(id),canvas=$('scene'),params=new URLSearchPa
 let {settings,tracks}=readState(params),phase=Math.max(0,Math.min(1,Number(params.get('phase'))||0));
 let playing=!params.has('phase')&&!matchMedia('(prefers-reduced-motion: reduce)').matches,controller=null,dirty=true,last=performance.now();
 const controls=new Map(),status=s=>$('status').textContent=s;
-for(const [key,label] of [['opening','Opening'],['cascade','Hinge cascade'],['zoom','Zoom'],['rotation','Orientation'],['elevation','Elevation']]){
+for(const [key,label] of [['opening','Opening'],['zoom','Zoom'],['rotation','Orientation'],['elevation','Elevation']]){
  controls.set(key,createParameterControl({parent:$('sliders'),key,label,definition:definitions[key],value:settings[key],track:tracks[key],
  onValue:value=>{settings[key]=value;dirty=true;sync();},
  onTrack:track=>{tracks=normalizeTracks({...tracks,[key]:track},definitions);dirty=true;sync();}}));

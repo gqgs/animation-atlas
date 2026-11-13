@@ -720,9 +720,9 @@
     "category": "Geometry",
     "date": "2026-11-13",
     "url": "experiments/aperture-vault/",
-    "description": "Eight hinged shutters turn a glowing core into moving pools of light. Compare direct shadows with a first-bounce approximation.",
+    "description": "Six glass triangles close at a common apex. A moving prism intercepts a white beam and refracts a spectrum onto the floor.",
     "tags": [
-      "lighting",
+      "dispersion",
       "folding",
       "Three.js",
       "cyclic"
