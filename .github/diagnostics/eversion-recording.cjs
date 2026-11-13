@@ -15,10 +15,10 @@ try{
  const result=await page.evaluate(async({size,exact})=>{
   const {readState,poseAt,geometryAt,indices}=await import('./core.mjs'),{draw}=await import('./painter.mjs'),{loadFrameWrap,exportFrames}=await import('../../shared/frame-export.mjs');
   const {settings,tracks}=readState(new URLSearchParams(location.search)),fps=60,duration=settings.duration,total=Math.round(duration*fps);
-  const selected=[...new Set([0,Math.round(.14098841*total),84,85,86,Math.round(total*.5),Math.round(total*.75),total-1])].filter(i=>i<total);
+  const selected=[...new Set([0,Math.round(.14098841*total),84,85,86,238,239,240,Math.round(total*.5),Math.round(total*.75),total-1])].filter(i=>i<total);
   const encoders=[],NativeEncoder=VideoEncoder;
   // Observe the config without changing the encoder selection or capture path.
-  VideoEncoder=class extends NativeEncoder{configure(c){encoders.push(c);return super.configure(c);}};
+  VideoEncoder=class extends NativeEncoder{configure(c){encoders.push(c);return super.configure(c);} encode(frame,options){return super.encode(frame,{...options,keyFrame:true});}};
   const save=(name,c)=>window.saveEvidence(name,c.toDataURL('image/png').split(',')[1]);
   const background=document.createElement('canvas');background.width=background.height=size;const bc=background.getContext('2d');const g=bc.createRadialGradient(size*.5,size*.52,0,size*.5,size*.52,size*.68);g.addColorStop(0,'#26313a');g.addColorStop(.55,'#101922');g.addColorStop(1,'#080d16');bc.fillStyle=g;bc.fillRect(0,0,size,size);await save('background.png',background);
   const mask=document.createElement('canvas');mask.width=mask.height=size;const mc=mask.getContext('2d');
