@@ -679,5 +679,22 @@
     ],
     "cover": "covers/hypar.svg",
     "color": "cyan"
+  },
+  {
+    "id": "hinged-lantern",
+    "title": "Hinged Lantern",
+    "category": "Geometry",
+    "date": "2026-11-13",
+    "url": "experiments/hinged-lantern/",
+    "description": "Ten rigid panels swing about shared hinges: an open ribbon curls into a lantern and unfolds without detaching.",
+    "tags": [
+      "hinged transformations",
+      "rigid linkage",
+      "folding",
+      "cyclic",
+      "3d"
+    ],
+    "cover": "covers/hinged-lantern.svg",
+    "color": "amber"
   }
 ]
