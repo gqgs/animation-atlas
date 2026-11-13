@@ -1,6 +1,7 @@
 import {createParameterControl} from '../../shared/parameter-controls.mjs';
 import {normalizeTracks,serializeTracks} from '../../shared/parameter-tracks.mjs';
 import {exportFrames,loadFrameWrap} from '../../shared/frame-export.mjs';
+import {createIntraRecorder} from './recording.mjs';
 import {definitions,readState,poseAt} from './core.mjs';
 import {draw} from './painter.mjs';
 const $=id=>document.getElementById(id),canvas=$('scene'),params=new URLSearchParams(location.search);
@@ -43,7 +44,7 @@ $('record').onclick=async()=>{
  inputs.forEach(e=>e.disabled=true);playing=false;sync();$('record').textContent='Cancel export';status('Loading MP4 encoder…');
  try{
  const FrameWrap=await loadFrameWrap();if(signal.aborted)throw new DOMException('Canceled','AbortError');
- const blob=await exportFrames({width:size,height:size,fps,duration:snapshot.duration,signal,yieldEvery:1,bitrate:Math.round(24000000*(size/1080)**2*(fps/30)),createRecorder:options=>new FrameWrap(options),
+ const blob=await exportFrames({width:size,height:size,fps,duration:snapshot.duration,signal,yieldEvery:1,bitrate:Math.round(24000000*(size/1080)**2*(fps/30)),createRecorder:options=>createIntraRecorder(FrameWrap,options),
  draw:({canvas,phase})=>draw(canvas,snapshot,savedTracks,phase),onProgress:(n,total)=>status(`Encoding ${n}/${total} frames`)});
  download(blob,'eversion-bloom-'+size+'p.mp4');status('MP4 export complete.');
  }catch(e){status(e.name==='AbortError'?'Export canceled.':'Export failed: '+e.message);}
