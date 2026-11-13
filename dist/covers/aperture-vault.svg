@@ -1,20 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Octagonal lantern aperture and light pools">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-label="Hexagonal glass pyramid and a prism scattering white light">
 <defs>
-<radialGradient id="room"><stop stop-color="#303a4a"/><stop offset="1" stop-color="#0b101c"/></radialGradient>
-<radialGradient id="light"><stop stop-color="#ffedb5"/><stop offset=".55" stop-color="#e89750"/><stop offset="1" stop-color="#a75033" stop-opacity=".08"/></radialGradient>
-<path id="beam" d="M224 147l-37 112q53 13 106 0l-37-112z"/>
-<path id="leaf" d="M216 173l-12 35 36 29 36-29-12-35-24-18z"/>
+<radialGradient id="room"><stop stop-color="#263851"/><stop offset="1" stop-color="#090f1f"/></radialGradient>
+<radialGradient id="glow"><stop stop-color="#fff6db"/><stop offset=".25" stop-color="#a3c4ff" stop-opacity=".76"/><stop offset="1" stop-color="#a3c4ff" stop-opacity="0"/></radialGradient>
 </defs>
 <path fill="url(#room)" d="M0 0h480v300H0z"/>
-<g fill="none" stroke="#637287" opacity=".38">
-<circle cx="240" cy="147" r="109"/><circle cx="240" cy="147" r="116"/><circle cx="240" cy="147" r="137"/>
+<g fill="none" stroke="#829dc0" opacity=".31"><ellipse cx="235" cy="184" rx="125" ry="55"/><ellipse cx="235" cy="184" rx="150" ry="66"/><ellipse cx="235" cy="184" rx="183" ry="80"/></g>
+<path d="m139 166 50-32h79l55 32-38 40H179z" fill="#2f4564" stroke="#8199b7"/>
+<path d="m231 53-92 113 40 40h106l38-40zm0 0-52 153m52-153 54 153m-54-153-42 81m42-81 37 81" fill="#89b8ef" fill-opacity=".11" stroke="#a8c9e6"/>
+<path d="m221 143 15-11 24 12-20 19z" fill="#93baf1" fill-opacity=".28" stroke="#d1ecff"/>
+<circle cx="229" cy="115" r="19" fill="url(#glow)"/><circle cx="229" cy="115" r="5" fill="#fff2d9"/>
+<path d="m229 115 10 33" stroke="#fff3db" stroke-width="2"/>
+<g fill="none" stroke-width="2" stroke-linecap="round">
+<path d="m242 151 80 91" stroke="#ff5153"/><path d="m242 151 86 90" stroke="#ff9648"/><path d="m242 151 92 89" stroke="#fff268"/><path d="m242 151 98 88" stroke="#93ef77"/><path d="m242 151 104 87" stroke="#5ae8d9"/><path d="m242 151 111 86" stroke="#569bff"/><path d="m242 151 118 84" stroke="#af77ff"/>
 </g>
-<g fill="url(#light)" opacity=".52">
-<use href="#beam"/><use href="#beam" transform="rotate(45 240 147)"/><use href="#beam" transform="rotate(90 240 147)"/><use href="#beam" transform="rotate(135 240 147)"/><use href="#beam" transform="rotate(180 240 147)"/><use href="#beam" transform="rotate(225 240 147)"/><use href="#beam" transform="rotate(270 240 147)"/><use href="#beam" transform="rotate(315 240 147)"/>
-</g>
-<g fill="#293d4c" stroke="#d09b66" stroke-width="2">
-<use href="#leaf"/><use href="#leaf" transform="rotate(45 240 147)"/><use href="#leaf" transform="rotate(90 240 147)"/><use href="#leaf" transform="rotate(135 240 147)"/><use href="#leaf" transform="rotate(180 240 147)"/><use href="#leaf" transform="rotate(225 240 147)"/><use href="#leaf" transform="rotate(270 240 147)"/><use href="#leaf" transform="rotate(315 240 147)"/>
-</g>
-<circle cx="240" cy="147" r="30" fill="url(#light)"/>
-<path d="m240 130 15 8v18l-15 9-15-9v-18z" fill="#fff2c7" stroke="#f9bd74" stroke-width="3"/>
 </svg>

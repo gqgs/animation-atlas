@@ -1,9 +1,9 @@
 # Aperture Vault
 
-Eight hinged shutters uncover a small incandescent core. Its WebGL2 point-light shadow maps move over the floor as the shutters open. **Direct only** retains the same cool fill and camera as **Direct + approximate bounce**, which adds one diffuse reflection proxy per inner face. Each proxy scales by the face’s angle and distance to the core; it is unshadowed, so light leaks are possible. Without WebGL2, Canvas 2D projects the panel outlines from the light onto the floor and approximates the bounce with painted light pools. Neither path performs ThreeRT hardware tracing or general global illumination.
+Six rigid triangular glass faces close at one apex, then unfold around a hexagonal base. One carries a thick optical wedge. Near closure it intercepts a narrow white beam; the WebGL2 scene and Canvas fallback visualize the same computed ray paths.
 
-Pause or scrub before switching lighting for an A/B at the same pose. The opening track and staggered hinges return to their initial state at the seam. Zoom, camera angles, and motion tracks are shareable in the scene URL.
+The beam intersects the moving prism, applies Snell’s law at two nonparallel surfaces, and intersects the floor. Its index varies with wavelength using [SCHOTT N-SF11](https://media.schott.com/api/public/content/2561be5fa45d40d0b572c2de0604c1bb?v=f5c3d685) coefficients. Switch to **Single index** at closure for an otherwise identical white ray. Thin glass faces, beam haze, and soft light patches are illustrative. No path tracing, scattering simulation, or internal reflections.
 
-PNG samples the current phase. MP4 renders a full cycle from phase zero at the selected square resolution and frame rate using the shared deterministic exporter and independently encoded H.264 frames. It requires a browser with WebCodecs H.264 support.
+Pause and scrub to inspect closure. Loop position, cyclic tracks and the glass mode are shareable. PNG samples the selected pose. MP4 renders the complete cycle from phase zero at the selected square resolution using the shared deterministic exporter and independent H.264 frames; it needs WebCodecs H.264 support.
 
 To run the browser regression from the repo root, serve it on port 8780 and run `node dist/experiments/aperture-vault/tests/browser.cjs` with Playwright installed. Set `TEST_MP4=1` for a full 720p/30 fps cycle check with ffprobe.
