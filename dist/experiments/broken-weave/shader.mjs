@@ -5,7 +5,7 @@ void main() {
 }
 `;
 
-export const fragmentShader = `#version 300 es
+export const fieldShader = `#version 300 es
 precision highp float;
 
 uniform vec2 resolution;
@@ -40,7 +40,7 @@ float pocket(vec2 p, vec4 shape, float t, float skew) {
 }
 
 // In sync with carrier() in field.mjs.
-float carrier(vec2 p) {
+vec3 carrier(vec2 p) {
   vec2 uv = rotate(p, framing.y) / framing.x;
   p = twist(twist(uv, foldA), foldB);
   p.x += amplitudes.x * sin(frequencies.x * p.y + phases.x);
@@ -49,14 +49,17 @@ float carrier(vec2 p) {
   p.y += amplitudes.w * sin(frequencies.w * p.x + phases.w);
   float t = framing.w;
   float crossed = .15 * sin(3.4 * p.x + 2.9 * p.y + t) * sin(2.1 * p.x - 1.9 * p.y - 2.0 * t);
-  return density * (1.24 * p.y + .29 * sin(3.6 * p.x + .66 * sin(2.5 * p.y + phases.y))
+  float band = density * (1.24 * p.y + .29 * sin(3.6 * p.x + .66 * sin(2.5 * p.y + phases.y))
     + .075 * sin(7.2 * p.x - 2.7 * p.y + phases.z) + framing.z * crossed
     + pocket(uv, pocketA, t, .58) + pocket(uv, pocketB, -2.0 * t, -.35));
+  return vec3(band, p.x, p.y);
 }
+`;
 
+export const fragmentShader = `${fieldShader}
 void main() {
   vec2 p = (2.0 * gl_FragCoord.xy - resolution) / min(resolution.x, resolution.y);
-  float band = carrier(p);
+  float band = carrier(p).x;
 
   // Normalized gradient: the color response to compression should not
   // change when a still or video is rendered at a different resolution.
