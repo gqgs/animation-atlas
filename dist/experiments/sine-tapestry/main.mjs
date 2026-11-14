@@ -13,6 +13,8 @@ const progress = byId('export-progress');
 const exportStatus = byId('export-status');
 const phaseInput = byId('phase');
 const time = byId('time');
+const durationInput = byId('duration');
+const durationValue = byId('duration-value');
 const seedInput = byId('seed');
 const paletteInput = byId('palette');
 const search = byId('search');
@@ -26,6 +28,9 @@ let seed = Number.isInteger(requestedSeed) && requestedSeed >= 0 && requestedSee
   ? requestedSeed : 3932820960;
 let palette = Object.hasOwn(palettes, initial.get('palette')) ? initial.get('palette') : 'vermilion';
 let parameters = seedParameters(seed);
+const requestedDuration = Number(initial.get('duration'));
+let duration = Number.isInteger(requestedDuration) && requestedDuration >= 4 && requestedDuration <= 90
+  ? requestedDuration : LOOP_SECONDS;
 let seconds = 0;
 let playing = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 let previous = null;
@@ -36,6 +41,7 @@ let recording = null;
 
 seedInput.value = seed;
 paletteInput.value = palette;
+syncTimeline();
 play.textContent = playing ? 'Pause' : 'Play';
 
 function message(value) {
@@ -46,6 +52,7 @@ function message(value) {
 function syncControls() {
   play.disabled = !renderer || Boolean(recording);
   phaseInput.disabled = !renderer;
+  durationInput.disabled = Boolean(recording);
   save.disabled = !renderer || renderer.maxSize < 4096 || Boolean(recording);
   const canRecord = renderer && !sizeInput.selectedOptions[0].disabled;
   record.disabled = !recording && !canRecord;
@@ -83,17 +90,20 @@ function draw() {
   if (!renderer) return;
   const size = Math.max(1, Math.min(renderer.maxSize, 3072,
     Math.round(canvas.clientWidth * devicePixelRatio)));
-  renderer.draw({ size, parameters, palette, phase: seconds / LOOP_SECONDS });
+  renderer.draw({ size, parameters, palette, phase: seconds / duration });
 }
 
 function syncTimeline() {
+  phaseInput.max = duration;
   phaseInput.value = seconds;
-  time.value = `${seconds.toFixed(1)} / ${LOOP_SECONDS} s`;
+  durationInput.value = duration;
+  durationValue.value = duration + ' s';
+  time.value = `${seconds.toFixed(1)} / ${duration} s`;
 }
 
 function tick(now) {
   animation = 0;
-  if (previous !== null) seconds = (seconds + (now - previous) / 1000) % LOOP_SECONDS;
+  if (previous !== null) seconds = (seconds + (now - previous) / 1000) % duration;
   previous = now;
   draw();
   syncTimeline();
@@ -121,6 +131,7 @@ function saveSettings() {
   const url = new URL(location.href);
   url.searchParams.set('seed', seed);
   url.searchParams.set('palette', palette);
+  url.searchParams.set('duration', duration);
   history.replaceState(null, '', url);
 }
 
@@ -134,6 +145,17 @@ function applySeed(value) {
   saveSettings();
   draw();
 }
+
+durationInput.addEventListener('input', () => {
+  const nextDuration = durationInput.valueAsNumber;
+  if (recording || !Number.isInteger(nextDuration) || nextDuration < 4 || nextDuration > 90) return;
+  seconds = seconds / duration * nextDuration;
+  duration = nextDuration;
+  previous = null;
+  syncTimeline();
+  saveSettings();
+  draw();
+});
 
 play.addEventListener('click', () => setPlaying(!playing));
 phaseInput.addEventListener('input', () => {
@@ -173,7 +195,7 @@ save.addEventListener('click', async () => {
   let output;
   try {
     output = createRenderer(target);
-    output.draw({ size: 4096, parameters, palette, phase: seconds / LOOP_SECONDS });
+    output.draw({ size: 4096, parameters, palette, phase: seconds / duration });
     const blob = await new Promise(resolve => target.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('The browser did not encode a PNG.');
     download(blob, filename);
@@ -196,7 +218,7 @@ record.addEventListener('click', async () => {
 
   const controller = new AbortController();
   const { signal } = controller;
-  const snapshot = { parameters, palette };
+  const snapshot = { parameters, palette, duration };
   const size = Number(sizeInput.value);
   const fps = Number(fpsInput.value);
   const filename = `sine-tapestry-${seed}-${palette}-${size}-${fps}fps.mp4`;
@@ -220,11 +242,11 @@ record.addEventListener('click', async () => {
     const target = document.createElement('canvas');
     output = createRenderer(target);
     captureMessage('Encoding loop…');
-    progress.max = LOOP_SECONDS * fps;
+    progress.max = snapshot.duration * fps;
     progress.value = 0;
     progress.hidden = false;
     const blob = await exportFrames({
-      width: size, height: size, fps, duration: LOOP_SECONDS, signal, yieldEvery: 1,
+      width: size, height: size, fps, duration: snapshot.duration, signal, yieldEvery: 1,
       bitrate: Math.round(24_000_000 * (size / 1080) ** 2 * (fps / 30)),
       createRecorder: options => new FrameWrap(options),
       draw: ({ ctx, phase }) => {
