@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>Spiral Julia · Browser checks</title><style>body{background:#16121e;color:#eee;font:14px system-ui;padding:24px}canvas{width:240px;height:240px}li{margin:12px}</style><h1>Spiral Julia browser checks</h1><p id="result">Running…</p><ul id="checks"></ul><canvas id="scene" width="240" height="240"></canvas><script type="module">
+import {createRenderer} from '../renderer.mjs';
+import {defaults,presets} from '../core.mjs';
+import {exportFrames} from '../../../shared/frame-export.mjs';
+const log=(message)=>{const li=document.createElement('li');li.textContent='PASS · '+message;document.querySelector('#checks').append(li);};
+const assert=(value,message)=>{if(!value)throw new Error(message);log(message);};
+try{
+const canvas=document.querySelector('canvas'),renderer=createRenderer(canvas),gl=canvas.getContext('webgl2');
+const pixels=()=>{const bytes=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,bytes);return bytes;};
+renderer.draw(defaults,0);let first=pixels();assert(first.some((v,i)=>i%4!==3&&v>30),'Shader compiles and renders non-black pixels');
+renderer.draw(defaults,1);const last=pixels();assert(first.every((v,i)=>v===last[i]),'Loop endpoint is pixel-identical');
+renderer.draw(presets.lace,0);const lace=pixels();assert(lace.some((v,i)=>v!==first[i]),'Reference-family presets produce different images');
+let captures=0,stops=0,disposed=0,saved=0,dimensions=[],phases=[],copyExact=true;
+const makeRecorder=()=>({start:async()=>{},capture:async c=>{captures++;dimensions.push([c.width,c.height]);},stop:async()=>{stops++;},save:async cb=>{saved++;cb(new Blob(['test']));},dispose:async()=>{disposed++;}});
+await exportFrames({width:240,height:240,fps:30,duration:.1,createRecorder:makeRecorder,draw:({ctx,phase})=>{phases.push(phase);renderer.draw(defaults,phase,240,240);ctx.drawImage(canvas,0,0);const gpu=pixels(),copy=ctx.getImageData(0,0,240,240).data;for(let y=0;y<240;y++)for(let x=0;x<240;x++)for(let c=0;c<4;c++)if(copy[(y*240+x)*4+c]!==gpu[((239-y)*240+x)*4+c])copyExact=false;}});
+assert(copyExact,'GPU-to-2D copy preserves every pixel (with framebuffer row inversion)');
+assert(captures===3&&dimensions.every(([w,h])=>w===240&&h===240),'Dedicated GPU-to-2D export captures exact requested dimensions');
+assert(phases.join(',')==='0,0.3333333333333333,0.6666666666666666','Export omits the duplicate endpoint');
+assert(stops===1&&disposed===1&&saved===1,'Encoder stops, saves and disposes once');
+const controller=new AbortController();let canceled=false;
+try{await exportFrames({width:240,height:240,fps:30,duration:1,createRecorder:makeRecorder,signal:controller.signal,draw:()=>controller.abort()});}catch(e){canceled=e.name==='AbortError';}
+assert(canceled&&saved===1&&disposed===2,'Cancellation disposes without saving a partial video');
+renderer.draw(presets.spiral,0);renderer.dispose();document.querySelector('#result').textContent='PASS · all browser checks';
+}catch(error){document.querySelector('#result').textContent='FAIL · '+error.message;}
+</script>
