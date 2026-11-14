@@ -20,18 +20,20 @@ uses a mipmapped ramp and derivative-filtered threads to soften details that
 compress below a pixel.
 
 Fold centers, rotation strengths and wave offsets follow periodic paths with
-integer frequencies. The geometry and its motion repeat every 24 seconds.
-Scrubbing pauses playback. The scene URL preserves seed and palette. The PNG
+integer frequencies. **Loop duration** sets the playback and recording length
+from 4 to 90 seconds, defaulting to 24. Shorter durations play faster. Changing
+duration preserves the current pose. Scrubbing pauses playback. The scene URL
+preserves seed, palette, and duration. The PNG
 export renders the current frame at 4096 × 4096 pixels. Reduced-motion
 preferences start playback paused.
 
 ## Capturing a loop
 
-**Record loop → Export MP4** renders one 24-second loop at 720, 1080, or
+**Record loop → Export MP4** renders one loop at the selected duration at 720, 1080, or
 2160 pixels square and 30 or 60 fps. It starts at phase zero and omits the
-duplicate closing frame. The renderer snapshots the current seed and palette,
+duplicate closing frame. The renderer snapshots the current seed, palette, and duration,
 then uses the shared fixed-timestep exporter with a dedicated WebGL canvas.
-The on-screen timeline holds its position during recording. Use **Cancel
+The duration control is locked during recording. Use **Cancel
 export** to stop without saving a partial video. MP4 export requires a browser
 with WebCodecs H.264 encoding and loads CCapture.js on demand.
 

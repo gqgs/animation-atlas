@@ -19,7 +19,7 @@
       <header>
         <a class="atlas" href="../../" target="_top">Animation Atlas</a>
         <h1>Sine Tapestry</h1>
-        <p>Interacting sine waves bend ribbons of color into a 24-second loop.</p>
+        <p>Interacting sine waves bend ribbons of color into a continuous loop.</p>
       </header>
 
       <section class="controls" aria-label="Playback">
@@ -27,6 +27,11 @@
           <button id="play" type="button">Pause</button>
           <button id="save" type="button">Save 4K PNG</button>
         </div>
+        <div class="label-line">
+          <label for="duration">Loop duration</label>
+          <output id="duration-value" for="duration">24 s</output>
+        </div>
+        <input id="duration" type="range" min="4" max="90" step="1" value="24">
         <div class="label-line">
           <label for="phase">Loop position</label>
           <output id="time" for="phase">0.0 / 24 s</output>
