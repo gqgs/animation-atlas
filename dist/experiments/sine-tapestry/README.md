@@ -7,8 +7,8 @@ The folds, palettes and animation are procedural.
 
 Serve the Atlas with `python3 -m http.server 8080 --directory dist` and open
 `http://localhost:8080/#scene=sine-tapestry`. For the standalone scene, open
-`http://localhost:8080/experiments/sine-tapestry/`. This directory also runs
-independently over HTTP when extracted from the source archive. The scene requires WebGL 2.
+`http://localhost:8080/experiments/sine-tapestry/`. The scene requires WebGL 2. To run it from the source archive, serve the
+extracted root over HTTP and open `/experiments/sine-tapestry/`.
 
 ## How the image is made
 
@@ -24,6 +24,16 @@ integer frequencies. The geometry and its motion repeat every 24 seconds.
 Scrubbing pauses playback. The scene URL preserves seed and palette. The PNG
 export renders the current frame at 4096 × 4096 pixels. Reduced-motion
 preferences start playback paused.
+
+## Capturing a loop
+
+**Record loop → Export MP4** renders one 24-second loop at 720, 1080, or
+2160 pixels square and 30 or 60 fps. It starts at phase zero and omits the
+duplicate closing frame. The renderer snapshots the current seed and palette,
+then uses the shared fixed-timestep exporter with a dedicated WebGL canvas.
+The on-screen timeline holds its position during recording. Use **Cancel
+export** to stop without saving a partial video. MP4 export requires a browser
+with WebCodecs H.264 encoding and loads CCapture.js on demand.
 
 ## Discovering seeds
 

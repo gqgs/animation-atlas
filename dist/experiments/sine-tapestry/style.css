@@ -95,6 +95,9 @@ output { color: var(--muted); font-variant-numeric: tabular-nums }
 #seed-form { margin-top: 9px }
 label { display: block; margin-bottom: 3px }
 h2 { margin: 0 0 3px; font-size: 1rem; font-weight: 600 }
+.capture-options { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 8px }
+#record { margin-top: 9px; width: 100%; color: var(--accent) }
+#export-progress { width: 100%; margin-top: 8px; accent-color: var(--accent) }
 #search { margin-top: 10px; width: 100%; color: var(--accent) }
 #results { display: grid; gap: 4px; padding: 0; margin: 9px 0 0; list-style: none }
 .candidate { width: 100%; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums }
