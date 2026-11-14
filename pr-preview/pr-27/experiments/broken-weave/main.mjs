@@ -113,12 +113,12 @@ function initRenderer() {
 }
 
 function draw() {
+  syncTrackControls();
   if (!renderer) return;
   const size = Math.max(1, Math.min(renderer.maxSize, 3072,
     Math.round(canvas.clientWidth * devicePixelRatio)));
   const phase = seconds / duration;
   renderer.draw({ size, parameters, seed, phase, pose: sample(phase) });
-  syncTrackControls();
 }
 
 function syncTimeline() {
