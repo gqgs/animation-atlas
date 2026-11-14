@@ -10,6 +10,7 @@ uniform vec2 resolution;
 uniform vec2 camera;
 uniform vec4 seed;
 uniform vec4 wave;
+uniform vec3 motion;
 out vec4 outColor;
 
 const float TAU = 6.28318530718;
@@ -34,8 +35,18 @@ float fringes(float x, float width) {
 void main() {
   vec2 p = (2. * gl_FragCoord.xy - resolution) / resolution.x;
   p /= .91 * camera.x;
-  float r = length(p), a = atan(p.y, p.x) - camera.y;
-  float t = wave.x, n = wave.y, flow = wave.z;
+  float radius = length(p);
+  float t = wave.x, n = wave.y, flow = wave.z, pulse = motion.z;
+  // Angular response gets heavier outward; interpolation only depends on radius,
+  // so the bands deform continuously rather than sliding as separate layers.
+  float turn = mix(camera.y, motion.x, smoothstep(.12,.45,radius));
+  turn = mix(turn, motion.y, smoothstep(.44,.94,radius));
+  float a = atan(p.y, p.x) - turn;
+  float crestPhase = 19.*radius - 2.*t + .25*sin(n*a + seed.x) + .43*seed.z;
+  float crest = sin(crestPhase);
+  // An outward-running compression, strongest across the rim and outer water.
+  float pulseGate = smoothstep(.10,.30,radius) * (1. - smoothstep(.87,1.07,radius));
+  float r = radius - pulseGate * pulse * (.030*crest + .008*sin(2.*crestPhase+.7));
   float m = n*a + seed.x;
   float drift = flow * (sin(t) + .23 * sin(2.*t + seed.y));
   // Slowly circulating light contrasts with the stationary standing-wave nodes.
@@ -84,7 +95,8 @@ void main() {
   // Outer ring of pinched lobes. Fold contours into each petal, then layer optical
   // fringes along the folds so the pattern reads as water rather than solid pieces.
   float v = (r - .746) / (.189 + .012*seed.w);
-  float twist = .43 * sin(11.*r + .65*drift) + .13 * sin(t + m) * flow;
+  float twist = .43 * sin(11.*r + .65*drift) + .13 * sin(t + m) * flow
+    + .24 * pulse * crest * pulseGate;
   float f = m + twist;
   float s = 1.85 * sin(.5*f);
   float d = (s*s + v*v + .12)*(s*s + v*v + .12) - 1.25*v*v;
@@ -117,7 +129,8 @@ void main() {
     * (.4 + .6*pow(.5+.5*cos(m + 1.2),2.));
   color += cyan * .23 * ridge(r-.872-.062*cos(m - .41*drift),.0038) * gate;
 
-  float edge = 1. - smoothstep(.88,1.066,r);
-  color *= edge * (.91 + .09*cos(a - .65 + .22*sin(t))) * wave.w;
+  float edge = 1. - smoothstep(.88,1.066,radius);
+  float focus = 1. + .22*pulse*pulseGate * cos(crestPhase + .49);
+  color *= focus * edge * (.91 + .09*cos(a - .65 + .22*sin(t))) * wave.w;
   outColor = vec4(1. - exp(-1.25*color), 1);
 }`;

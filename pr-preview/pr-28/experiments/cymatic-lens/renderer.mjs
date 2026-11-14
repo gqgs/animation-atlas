@@ -31,20 +31,20 @@ export function createRenderer(canvas) {
     if (fragment) gl.deleteShader(fragment);
   }
   const uniforms = Object.fromEntries(
-    ['resolution', 'camera', 'seed', 'wave'].map(name => [name, gl.getUniformLocation(program, name)])
+    ['resolution', 'camera', 'seed', 'wave', 'motion'].map(name => [name, gl.getUniformLocation(program, name)])
   );
   const vao = gl.createVertexArray();
   const maxSize = Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
   return {
     maxSize,
-    draw({ size, parameters, phase, pose, mode }) {
+    draw({ size, parameters, phase, pose, mode, follower }) {
       if (size > maxSize) throw new Error(`This device cannot render a ${size} × ${size} canvas.`);
       if (gl.isContextLost()) throw new Error('The WebGL context was lost.');
       if (canvas.width !== size || canvas.height !== size) canvas.width = canvas.height = size;
       if (gl.drawingBufferWidth !== size || gl.drawingBufferHeight !== size) {
         throw new Error(`The browser could not allocate a ${size} × ${size} drawing buffer.`);
       }
-      const frame = frameUniforms(parameters, phase, pose, mode);
+      const frame = frameUniforms(parameters, phase, pose, mode, follower);
       gl.useProgram(program);
       gl.bindVertexArray(vao);
       gl.viewport(0, 0, size, size);
@@ -52,6 +52,7 @@ export function createRenderer(canvas) {
       gl.uniform2fv(uniforms.camera, frame.camera);
       gl.uniform4fv(uniforms.seed, frame.seed);
       gl.uniform4fv(uniforms.wave, frame.wave);
+      gl.uniform3fv(uniforms.motion, frame.motion);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
     dispose() {

@@ -9,7 +9,10 @@ Open the scene in the Atlas, or serve `dist/` and visit `/experiments/cymatic-le
 The standalone ZIP can be served from its extracted root. WebGL 2 is required.
 
 Choose 7–15 standing-wave lobes, change the seed for new radial spacing and
-illumination, or shape the flow, light, zoom and orientation with cyclic tracks.
+illumination, or shape the flow, pulse, light, zoom and orientation with cyclic tracks. The
+pulse ripples outward. Cyclic orientation drives two damped followers, with
+more lag toward the outside. Their response is solved in repeating phase so
+the lobes can carry through a turn without adding a jump at the loop seam.
 Every pose resolves directly from loop phase. The URL stores parameters and any
 paused position. The scene starts paused with reduced motion.
 

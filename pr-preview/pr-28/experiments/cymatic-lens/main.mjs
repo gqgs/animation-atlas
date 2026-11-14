@@ -1,7 +1,7 @@
 import { exportFrames, loadFrameWrap } from '../../shared/frame-export.mjs';
 import { createParameterControl } from '../../shared/parameter-controls.mjs';
 import { parseTracks, normalizeTracks, resolveParameters, serializeTracks } from '../../shared/parameter-tracks.mjs';
-import { LOOP_SECONDS, DEFAULT_SEED, definitions, seedParameters, UINT32_MAX } from './field.mjs';
+import { LOOP_SECONDS, DEFAULT_SEED, definitions, makeOrientationFollower, seedParameters, UINT32_MAX } from './field.mjs';
 import { createRenderer } from './renderer.mjs';
 
 const byId = id => document.getElementById(id);
@@ -39,6 +39,7 @@ const settings = Object.fromEntries(Object.entries(definitions).map(([key, defin
   return [key, Number.isFinite(value) ? Number((definition.min + Math.round((clamped - definition.min) / definition.step) * definition.step).toFixed(2)) : definition.defaultValue];
 }));
 let tracks = parseTracks(initial.get('tracks'), definitions);
+let follower = makeOrientationFollower(tracks.rotation);
 const phaseAtOpen = Number(initial.get('phase'));
 let seconds = Number.isFinite(phaseAtOpen) ? duration * Math.max(0, Math.min(1, phaseAtOpen)) : 0;
 let playing = !initial.has('phase') && !matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,12 +51,17 @@ let recording = null;
 const controls = new Map();
 const sample = (phase, source = settings, animationTracks = tracks) =>
   resolveParameters(source, animationTracks, phase, definitions);
-for (const [key, label] of [['flow', 'Flow'], ['light', 'Light'], ['zoom', 'Zoom'], ['rotation', 'Orientation']]) {
+for (const [key, label] of [['flow', 'Flow'], ['pulse', 'Pulse'], ['light', 'Light'], ['zoom', 'Zoom'], ['rotation', 'Orientation']]) {
   controls.set(key, createParameterControl({
     parent: byId('wave-controls'), key, label, definition: definitions[key],
     value: settings[key], track: tracks[key],
     onValue(value) { settings[key] = value; saveSettings(); draw(); },
-    onTrack(track) { tracks = normalizeTracks({ ...tracks, [key]: track }, definitions); saveSettings(); draw(); }
+    onTrack(track) {
+      tracks = normalizeTracks({ ...tracks, [key]: track }, definitions);
+      if (key === 'rotation') follower = makeOrientationFollower(tracks.rotation);
+      saveSettings();
+      draw();
+    }
   }));
 }
 function syncTrackControls() {
@@ -114,7 +120,7 @@ function draw() {
   const size = Math.max(1, Math.min(renderer.maxSize, 1440,
     Math.round(canvas.clientWidth * devicePixelRatio)));
   const phase = seconds / duration;
-  renderer.draw({ size, parameters, phase, pose: sample(phase), mode });
+  renderer.draw({ size, parameters, phase, pose: sample(phase), mode, follower });
 }
 
 function syncTimeline() {
@@ -225,7 +231,7 @@ save.addEventListener('click', async () => {
   let output;
   try {
     output = createRenderer(target);
-    output.draw({ size: 4096, parameters, phase: seconds / duration, pose: sample(seconds / duration), mode });
+    output.draw({ size: 4096, parameters, phase: seconds / duration, pose: sample(seconds / duration), mode, follower });
     const blob = await new Promise(resolve => target.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('The browser did not encode a PNG.');
     download(blob, filename);
@@ -248,7 +254,7 @@ record.addEventListener('click', async () => {
 
   const controller = new AbortController();
   const { signal } = controller;
-  const snapshot = { parameters, duration, mode, settings: { ...settings }, tracks: normalizeTracks(tracks, definitions) };
+  const snapshot = { parameters, duration, mode, follower, settings: { ...settings }, tracks: normalizeTracks(tracks, definitions) };
   const size = Number(sizeInput.value);
   const fps = Number(fpsInput.value);
   const filename = `cymatic-lens-${seed}-${mode}-${size}-${fps}fps.mp4`;
@@ -281,7 +287,7 @@ record.addEventListener('click', async () => {
       createRecorder: options => new FrameWrap(options),
       draw: ({ ctx, phase }) => {
         output.draw({ size, parameters: snapshot.parameters, phase,
-          pose: sample(phase, snapshot.settings, snapshot.tracks), mode: snapshot.mode });
+          pose: sample(phase, snapshot.settings, snapshot.tracks), mode: snapshot.mode, follower: snapshot.follower });
         ctx.drawImage(target, 0, 0);
       },
       onProgress: (done, total) => {
