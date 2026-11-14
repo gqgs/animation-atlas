@@ -2,7 +2,7 @@ import { exportFrames, loadFrameWrap } from '../../shared/frame-export.mjs';
 import { createParameterControl } from '../../shared/parameter-controls.mjs';
 import { parseTracks, normalizeTracks, resolveParameters, serializeTracks } from '../../shared/parameter-tracks.mjs';
 import { LOOP_SECONDS, definitions, seedParameters, UINT32_MAX } from './field.mjs';
-import { createRenderer } from './renderer.mjs';
+import { createRenderer, normalizeStyle } from './renderer.mjs';
 
 const byId = id => document.getElementById(id);
 const canvas = byId('art');
@@ -22,8 +22,11 @@ const search = byId('search');
 const results = byId('results');
 const status = byId('status');
 const error = byId('render-error');
+const styleInput = byId('style');
 
 const initial = new URLSearchParams(location.search);
+let style = normalizeStyle(initial.get('style'));
+styleInput.value = style;
 const requestedSeed = Number(initial.get('seed') ?? NaN);
 let seed = Number.isInteger(requestedSeed) && requestedSeed >= 0 && requestedSeed <= UINT32_MAX
   ? requestedSeed : 814066662;
@@ -76,6 +79,7 @@ function message(value) {
 function syncControls() {
   play.disabled = !renderer || Boolean(recording);
   phaseInput.disabled = !renderer || Boolean(recording);
+  styleInput.disabled = Boolean(recording);
   seedInput.disabled = byId('seed-form').querySelector('button').disabled = Boolean(recording);
   syncTrackControls();
   durationInput.disabled = Boolean(recording);
@@ -118,7 +122,7 @@ function draw() {
   const size = Math.max(1, Math.min(renderer.maxSize, 3072,
     Math.round(canvas.clientWidth * devicePixelRatio)));
   const phase = seconds / duration;
-  renderer.draw({ size, parameters, seed, phase, pose: sample(phase) });
+  renderer.draw({ size, parameters, seed, phase, pose: sample(phase), style });
 }
 
 function syncTimeline() {
@@ -160,6 +164,8 @@ function saveSettings() {
   const url = new URL(location.href);
   url.searchParams.set('seed', seed);
   url.searchParams.set('duration', duration);
+  if (style === 'original') url.searchParams.delete('style');
+  else url.searchParams.set('style', style);
   for (const [key, value] of Object.entries(settings)) url.searchParams.set(key, value);
   const serialized = serializeTracks(tracks, definitions);
   if (serialized) url.searchParams.set('tracks', serialized);
@@ -199,6 +205,22 @@ phaseInput.addEventListener('input', () => {
   syncTimeline();
   draw();
 });
+styleInput.addEventListener('change', () => {
+  if (recording) return;
+  const previousStyle = style;
+  style = normalizeStyle(styleInput.value);
+  try {
+    if (renderer) draw();
+    else initRenderer();
+    saveSettings();
+    captureMessage('');
+  } catch (cause) {
+    style = previousStyle;
+    styleInput.value = style;
+    draw();
+    captureMessage('Could not switch rendering style. ' + cause.message);
+  }
+});
 byId('seed-form').addEventListener('submit', event => {
   event.preventDefault();
   if (seedInput.checkValidity()) applySeed(seedInput.valueAsNumber);
@@ -221,11 +243,11 @@ function download(blob, filename) {
 save.addEventListener('click', async () => {
   captureMessage('');
   const target = document.createElement('canvas');
-  const filename = `broken-weave-${seed}-${Math.round(seconds * 100)}.png`;
+  const filename = `broken-weave-${seed}-${style}-${Math.round(seconds * 100)}.png`;
   let output;
   try {
     output = createRenderer(target);
-    output.draw({ size: 4096, parameters, seed, phase: seconds / duration, pose: sample(seconds / duration) });
+    output.draw({ size: 4096, parameters, seed, phase: seconds / duration, pose: sample(seconds / duration), style });
     const blob = await new Promise(resolve => target.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('The browser did not encode a PNG.');
     download(blob, filename);
@@ -248,10 +270,10 @@ record.addEventListener('click', async () => {
 
   const controller = new AbortController();
   const { signal } = controller;
-  const snapshot = { parameters, seed, duration, settings: { ...settings }, tracks: normalizeTracks(tracks, definitions) };
+  const snapshot = { parameters, seed, duration, style, settings: { ...settings }, tracks: normalizeTracks(tracks, definitions) };
   const size = Number(sizeInput.value);
   const fps = Number(fpsInput.value);
-  const filename = `broken-weave-${seed}-${size}-${fps}fps.mp4`;
+  const filename = `broken-weave-${seed}-${style}-${size}-${fps}fps.mp4`;
   recording = controller;
   stopClock();
   syncControls();
@@ -281,7 +303,7 @@ record.addEventListener('click', async () => {
       createRecorder: options => new FrameWrap(options),
       draw: ({ ctx, phase }) => {
         output.draw({ size, parameters: snapshot.parameters, seed: snapshot.seed, phase,
-          pose: sample(phase, snapshot.settings, snapshot.tracks) });
+          pose: sample(phase, snapshot.settings, snapshot.tracks), style: snapshot.style });
         ctx.drawImage(target, 0, 0);
       },
       onProgress: (done, total) => {

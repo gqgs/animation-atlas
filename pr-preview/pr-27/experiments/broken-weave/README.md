@@ -17,6 +17,12 @@ pigments in OKLCH. Fold compression and moving pockets shift the pigments
 locally. **Color drift** controls the strength of those shifts without changing any
 ribbon paths; at zero it keeps the seed's base pigments.
 
+**Rendering style** switches between Original ribbons (unchanged default) and
+Matte gouache, where overlapping strokes follow the same moving field and use
+the same seeded pigments. The change preserves composition and phase. Style is
+saved in the URL and in PNG and MP4 exports. Gouache costs more to render;
+preview or export at a smaller size if needed.
+
 Drift, color drift, zoom, and orientation support optional cyclic tracks. The normal motion
 uses integer harmonics and all values resolve directly from loop phase, including
 for arbitrary seeks. Changing duration preserves the current pose. Settings and

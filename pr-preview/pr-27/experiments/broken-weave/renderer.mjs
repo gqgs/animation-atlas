@@ -1,5 +1,9 @@
 import { foldFrame, weavePigment } from './field.mjs';
 import { fragmentShader, vertexShader } from './shader.mjs';
+import { gouacheShader } from './gouache.mjs';
+
+export const normalizeStyle = value => value === 'gouache' ? 'gouache' : 'original';
+const shaderFor = style => style === 'gouache' ? gouacheShader : fragmentShader;
 
 function compile(gl, type, source) {
   const shader = gl.createShader(type);
@@ -13,14 +17,13 @@ function compile(gl, type, source) {
   return shader;
 }
 
-export function createRenderer(canvas) {
-  const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false });
-  if (!gl) throw new Error('This experiment requires WebGL 2.');
+const vectors = ['foldA', 'foldB', 'amplitudes', 'frequencies', 'phases', 'framing', 'pocketA', 'pocketB'];
 
+function prepareProgram(gl, style) {
   const vertex = compile(gl, gl.VERTEX_SHADER, vertexShader);
   const program = gl.createProgram();
   try {
-    const fragment = compile(gl, gl.FRAGMENT_SHADER, fragmentShader);
+    const fragment = compile(gl, gl.FRAGMENT_SHADER, shaderFor(style));
     gl.attachShader(program, vertex);
     gl.attachShader(program, fragment);
     gl.deleteShader(fragment);
@@ -35,14 +38,20 @@ export function createRenderer(canvas) {
     gl.deleteShader(vertex);
   }
 
-  gl.useProgram(program);
-  const vao = gl.createVertexArray();
-  gl.bindVertexArray(vao);
-  const vectors = ['foldA', 'foldB', 'amplitudes', 'frequencies', 'phases', 'framing', 'pocketA', 'pocketB'];
   const uniforms = Object.fromEntries(
     ['resolution', ...vectors, 'density', 'ink', 'pigmentAmount']
       .map(name => [name, gl.getUniformLocation(program, name)])
   );
+  return { program, uniforms };
+}
+
+export function createRenderer(canvas) {
+  const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false });
+  if (!gl) throw new Error('This experiment requires WebGL 2.');
+
+  const programs = new Map();
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
   gl.activeTexture(gl.TEXTURE0);
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -50,13 +59,12 @@ export function createRenderer(canvas) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.uniform1i(uniforms.ink, 0);
   const maxSize = Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS), gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
   let activeSeed;
 
   return {
     maxSize,
-    draw({ size, parameters, seed, phase, pose }) {
+    draw({ size, parameters, seed, phase, pose, style }) {
       if (size > maxSize) throw new Error(`This device cannot render a ${size} × ${size} canvas.`);
       if (gl.isContextLost()) throw new Error('The WebGL context was lost.');
       if (canvas.width !== size || canvas.height !== size) {
@@ -66,6 +74,11 @@ export function createRenderer(canvas) {
       if (gl.drawingBufferWidth !== size || gl.drawingBufferHeight !== size) {
         throw new Error(`The browser could not allocate a ${size} × ${size} drawing buffer.`);
       }
+      style = normalizeStyle(style);
+      if (!programs.has(style)) programs.set(style, prepareProgram(gl, style));
+      const { program, uniforms } = programs.get(style);
+      gl.useProgram(program);
+      gl.uniform1i(uniforms.ink, 0);
       if (seed !== activeSeed) {
         const samples = weavePigment(seed);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, samples.length / 4, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, samples);
@@ -83,7 +96,7 @@ export function createRenderer(canvas) {
     dispose() {
       gl.deleteTexture(texture);
       gl.deleteVertexArray(vao);
-      gl.deleteProgram(program);
+      for (const {program} of programs.values()) gl.deleteProgram(program);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     }
   };

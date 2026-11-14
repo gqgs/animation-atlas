@@ -62,3 +62,45 @@ test('color is seeded, periodic, and decoupled from ribbon geometry', () => {
   const shape = seedParameters(seed);
   assert.deepEqual(foldFrame(shape, .34, { pigment: 0 }), foldFrame(shape, .34, { pigment: 1.5 }));
 });
+
+test('render style is opt-in, and switching reuses the seeded texture', async () => {
+  const { createRenderer, normalizeStyle } = await import('./renderer.mjs');
+  const { fragmentShader, vertexShader } = await import('./shader.mjs');
+  const { gouacheShader } = await import('./gouache.mjs');
+  assert.equal(normalizeStyle(null), 'original');
+  assert.equal(normalizeStyle('unknown'), 'original');
+  assert.equal(normalizeStyle('gouache'), 'gouache');
+
+  const shaders = [], draws = [], removed = [];
+  let textureUploads = 0, activeProgram;
+  const gl = {
+    drawingBufferWidth: 640, drawingBufferHeight: 640,
+    createShader() { return {}; },
+    shaderSource(shader, source) { shader.source = source; shaders.push(source); },
+    compileShader() {}, getShaderParameter: () => true,
+    createProgram() { return {}; },
+    attachShader(program, shader) { program.fragment = shader.source; },
+    linkProgram() {}, getProgramParameter: () => true,
+    deleteShader() {}, deleteProgram(program) { removed.push(program.fragment); },
+    getUniformLocation() {}, createVertexArray() {}, bindVertexArray() {},
+    activeTexture() {}, createTexture() {}, bindTexture() {}, texParameteri() {},
+    MAX_VIEWPORT_DIMS: 1, MAX_RENDERBUFFER_SIZE: 2,
+    getParameter(key) { return key === 1 ? [4096, 4096] : 4096; },
+    isContextLost: () => false,
+    useProgram(program) { activeProgram = program; },
+    texImage2D() { textureUploads++; }, generateMipmap() {},
+    viewport() {}, uniform2f() {}, uniform4fv() {}, uniform1f() {}, uniform1i() {},
+    drawArrays() { draws.push(activeProgram.fragment); },
+    deleteTexture() {}, deleteVertexArray() {}, getExtension: () => null,
+  };
+  const renderer = createRenderer({ width: 640, height: 640, getContext: () => gl });
+  const frame = { size: 640, seed, phase: .34, parameters: seedParameters(seed), pose: { pigment: 1 } };
+  renderer.draw(frame);
+  renderer.draw({ ...frame, style: 'gouache' });
+  renderer.draw({ ...frame, style: 'original' });
+  assert.deepEqual(shaders, [vertexShader, fragmentShader, vertexShader, gouacheShader]);
+  assert.deepEqual(draws, [fragmentShader, gouacheShader, fragmentShader]);
+  assert.equal(textureUploads, 1);
+  renderer.dispose();
+  assert.deepEqual(removed, [fragmentShader, gouacheShader]);
+});
