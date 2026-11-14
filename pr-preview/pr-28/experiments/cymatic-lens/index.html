@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#141318">
+  <title>Cymatic Lens · Animation Atlas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section class="stage" aria-label="Artwork">
+      <div class="mat">
+        <canvas id="art" aria-label="Golden standing-wave rings and cyan light drifting in a dark round basin"></canvas>
+        <p id="render-error" role="alert" hidden></p>
+      </div>
+    </section>
+    <section class="panel" aria-label="Scene controls">
+      <header>
+        <a class="atlas" href="../../" target="_top">Animation Atlas</a>
+        <h1>Cymatic Lens</h1>
+        <p>Light gathers into rings and trembling folds on a virtual water dish.</p>
+      </header>
+
+      <section class="controls" aria-label="Playback">
+        <div class="split">
+          <button id="play" type="button">Pause</button>
+          <button id="save" type="button">Save 4K PNG</button>
+        </div>
+        <div class="label-line">
+          <label for="duration">Loop duration</label>
+          <output id="duration-value" for="duration">12 s</output>
+        </div>
+        <input id="duration" type="range" min="4" max="90" step="1" value="12">
+        <div class="label-line">
+          <label for="phase">Loop position</label>
+          <output id="time" for="phase">0.0 / 12 s</output>
+        </div>
+        <input id="phase" type="range" min="0" max="12" step=".01" value="0">
+      </section>
+
+      <section class="controls" aria-label="Composition">
+        <label for="mode">Standing-wave lobes</label>
+        <select id="mode">
+          <option value="7">7</option>
+          <option value="9">9</option>
+          <option value="11" selected>11</option>
+          <option value="13">13</option>
+          <option value="15">15</option>
+        </select>
+        <div id="wave-controls"></div>
+        <form id="seed-form">
+          <label for="seed">Composition seed</label>
+          <div class="seed-row">
+            <input id="seed" type="number" min="0" max="4294967295" step="1" required>
+            <button type="submit">Apply</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="controls" aria-labelledby="record-title">
+        <h2 id="record-title">Record loop</h2>
+        <div class="capture-options">
+          <div>
+            <label for="export-size">Output size</label>
+            <select id="export-size">
+              <option value="720">720 × 720</option>
+              <option value="1080" selected>1080 × 1080</option>
+              <option value="2160">2160 × 2160</option>
+            </select>
+          </div>
+          <div>
+            <label for="export-fps">Frame rate</label>
+            <select id="export-fps">
+              <option value="30">30 fps</option>
+              <option value="60" selected>60 fps</option>
+            </select>
+          </div>
+        </div>
+        <button id="record" type="button">Export MP4</button>
+        <progress id="export-progress" aria-label="MP4 encoding progress" hidden></progress>
+        <p id="export-status" class="status" role="status" hidden></p>
+      </section>
+
+      <footer>
+        <p>A procedural study inspired by optical cymatics, not a water simulation.</p>
+        <a href="../../downloads/cymatic-lens-source.zip">Download source</a>
+      </footer>
+    </section>
+  </main>
+  <script type="module" src="main.mjs"></script>
+</body>
+</html>
