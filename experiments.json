@@ -729,5 +729,33 @@
     ],
     "cover": "covers/aperture-vault.svg",
     "color": "amber"
+  },
+  {
+    "id": "sine-tapestry",
+    "title": "Sine Tapestry",
+    "category": "Dynamics",
+    "date": "2026-11-14",
+    "url": "experiments/sine-tapestry/index.html",
+    "description": "Interacting sine waves bend ribbons of color into a seamless loop. Compare seeded compositions, scan for promising folds, and export stills or full loops.",
+    "tags": [
+      "sine waves",
+      "domain warping",
+      "generative art",
+      "seed discovery",
+      "WebGL2"
+    ],
+    "cover": "covers/sine-tapestry.svg",
+    "source": "downloads/sine-tapestry-source.zip",
+    "note": "Adjustable loop duration · seed finder · PNG & MP4",
+    "variants": [
+      {
+        "title": "Stuart Smith · Homage to the Sine",
+        "url": "https://medium.com/artique/homage-to-the-sine-640cb9c26d2"
+      },
+      {
+        "title": "Source & seed scanner",
+        "url": "downloads/sine-tapestry-source.zip"
+      }
+    ]
   }
 ]
