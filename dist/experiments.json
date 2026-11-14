@@ -786,5 +786,22 @@
         "url": "https://medium.com/artique/homage-to-the-sine-640cb9c26d2"
       }
     ]
+  },
+  {
+    "id": "cymatic-lens",
+    "title": "Cymatic Lens",
+    "category": "Dynamics",
+    "date": "2026-11-14",
+    "url": "experiments/cymatic-lens/index.html",
+    "description": "Gold standing-wave rings and cyan caustic folds pulse across a dark virtual water dish.",
+    "tags": [
+      "cymatics",
+      "standing waves",
+      "WebGL"
+    ],
+    "cover": "covers/cymatic-lens.svg",
+    "color": "amber",
+    "source": "downloads/cymatic-lens-source.zip",
+    "note": "Standing-wave lobes · cyclic controls · 4K PNG & MP4"
   }
 ]
