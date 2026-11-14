@@ -1,9 +1,0 @@
-@import url('../sine-tapestry/style.css');
-
-.parameter-control { margin-top: .75rem; }
-.parameter-control > label:first-child,
-.parameter-bound, .parameter-easing { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .25rem .5rem; }
-.parameter-control output { color: #dcb5a0; font-variant-numeric: tabular-nums; }
-.parameter-mode { display: flex; align-items: center; gap: .4rem; font-size: .85rem; }
-.parameter-track:not([hidden]) { border-left: 1px solid #806858; padding: .35rem .55rem; margin: .4rem 0; }
-.parameter-note { font-size: .8rem; line-height: 1.4; }
