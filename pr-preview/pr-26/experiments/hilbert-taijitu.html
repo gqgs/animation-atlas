@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#070b16">
+  <meta name="description" content="An interactive Three.js Hilbert curve warped into a recursive yin-yang mandala.">
+  <title>Hilbert / Taijitu — EigenDynamics Animation Atlas</title>
+  <style>
+:root{font-synthesis:none;color-scheme:dark;--paper:#dbe4f2;--muted:#8491a9;--hair:#252c40;--gold:#ffb457;--blue:#78ceff;--base:#070a13}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--base);color:var(--paper);font-family:'DM Sans',system-ui,sans-serif}button,input{font:inherit}button{cursor:pointer;color:inherit}button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:3px}button:active{transform:scale(.97)}.eyebrow,.section-overline,.header-label,.live,.corner,.bottom-meta,.tiny-label,.heading-n,.heading-note,.field-note,.sidebar-footer button,.textbutton,.metric-panel,.preset-buttons,.toast{font-family:'DM Mono',ui-monospace,monospace;letter-spacing:.09em}
+.topbar{height:79px;display:flex;align-items:center;justify-content:space-between;padding:0 33px;border-bottom:1px solid #273044;background:#080d19}.brand{display:flex;align-items:center;gap:16px}.brand-mark{width:41px;height:41px;border:1px solid #967b62;display:grid;place-items:center;border-radius:50%;font-size:26px;color:var(--gold);box-shadow:0 0 30px #e0902520,inset 0 0 20px #e0902514}.eyebrow{font-size:9px;color:#9aabc3;letter-spacing:.2em;display:block;margin-bottom:3px}.brand h1{font:500 22px 'Playfair Display',Georgia,serif;margin:0;line-height:1.2}.brand h1 span{color:#8491a9;padding:0 4px}.header-right{display:flex;gap:19px;align-items:center}.live{font-size:10px;color:#d0dbed}.live-dot{display:inline-block;width:6px;height:6px;background:#6bd3a2;box-shadow:0 0 11px #6bd3a2;border-radius:50%;margin-right:7px}.header-label{font-size:10px;color:#697891;border-left:1px solid #30384c;padding-left:18px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 358px;min-height:calc(100vh - 79px);height:calc(100vh - 79px)}.viewport{min-height:0;min-width:0;display:flex;flex-direction:column;background:linear-gradient(140deg,#0a0e1b,#080c19);padding:18px 18px 0}.scene-shell{min-height:300px;flex:1;min-width:0;position:relative;overflow:hidden;background:radial-gradient(ellipse at 47% 48%,#18263a 0%,#0a1327 39%,#080b19 75%,#060911 100%);border:1px solid #28324c;box-shadow:inset 0 0 140px #02040b}.scene-shell:after{content:'';position:absolute;inset:13px;border:1px solid #ffffff0a;pointer-events:none}canvas{width:100%;height:100%;display:block;touch-action:none}.corner{position:absolute;pointer-events:none;color:#91a2bc;font-size:9px;display:flex;flex-direction:column;gap:5px}.corner strong{font:500 21px 'Playfair Display',Georgia,serif;color:#dbe5ee;letter-spacing:0}.corner small{color:#6b7b99;font-size:10px;letter-spacing:.02em}.corner-tl{top:34px;left:32px}.corner-tr{top:34px;right:30px;text-align:right}.corner-tr strong{font:10px 'DM Mono',monospace;letter-spacing:.09em;color:#b2cabd}.corner-bl{bottom:30px;left:32px;flex-direction:row;align-items:center;gap:13px}.coordinate-mark{font-size:25px;color:var(--gold)}.corner-br{bottom:31px;right:30px;text-align:right}.canvas-error{position:absolute;inset:20% 15%;background:#0b101eea;border:1px solid #e2727299;padding:35px;line-height:1.6;color:#ffa8a8;z-index:4;white-space:pre-wrap}
+.transport{height:62px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #242b3d}.transport-left{display:flex;gap:5px}.iconbutton{width:36px;height:35px;background:transparent;border:1px solid #303c53;border-radius:4px;font-size:18px;color:#c6d6e9}.iconbutton:hover,.textbutton:hover{background:#17253b}.timeline-wrap{flex:1;display:flex;align-items:center;gap:11px;min-width:0}.tiny-label,.timeline-wrap output{font-size:10px;color:#73829f}.timeline-wrap output{min-width:37px;text-align:right;font-family:'DM Mono',monospace}.timeline-wrap input{min-width:0;flex:1}.textbutton{border:1px solid #354058;background:#11192a;border-radius:4px;padding:12px 16px;font-size:10px;font-weight:500;color:#b9c9dd;white-space:nowrap}.bottom-meta{height:37px;display:flex;align-items:center;gap:20px;font-size:9px;color:#7f8aa2}.bottom-meta i{width:6px;height:6px;display:inline-block;border-radius:50%;margin-right:7px}.legend-warm{background:var(--gold)}.legend-blue{background:var(--blue)}.meta-desktop{margin-left:auto}
+.sidebar{display:flex;flex-direction:column;min-height:0;overflow:auto;background:#0e1321;border-left:1px solid #283146}.sidebar-head{padding:27px 26px 25px;border-bottom:1px solid #293145}.section-overline{color:#bb9873;font-size:9px;letter-spacing:.16em}.sidebar-head h2{font:500 38px/1.08 'Playfair Display',Georgia,serif;margin:16px 0 12px;letter-spacing:-.025em}.sidebar-head h2 em{color:#96c8e8}.sidebar-head p{font-size:12px;line-height:1.68;color:#8592a8;margin:0;max-width:295px}.sidebar-content{padding:0 26px}.panel{padding:22px 0 18px;border-bottom:1px solid #272f42}.section-heading{display:flex;align-items:center;gap:9px;margin-bottom:18px}.heading-n{color:#ba8d62;font-size:10px}.section-heading h3{font:600 13px 'DM Sans',sans-serif;margin:0}.heading-note{font-size:8px;color:#65758d;margin-left:auto}.field{margin-bottom:19px}.field label{font-size:12px;color:#bec9d8;display:flex;justify-content:space-between;margin-bottom:12px;gap:6px}.field output{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);font-variant-numeric:tabular-nums}.field-note{display:flex;justify-content:space-between;color:#53627b;font-size:9px;letter-spacing:0;margin-top:6px}input[type=range]{appearance:none;-webkit-appearance:none;height:3px;outline:0;background:#2b354d;accent-color:var(--gold);cursor:pointer;border-radius:2px}input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:#e6b46f;border-radius:50%;border:3px solid #101626;box-shadow:0 0 0 1px #d29d63}input[type=range]::-moz-range-thumb{width:9px;height:9px;background:#e6b46f;border:2px solid #101626;border-radius:50%}.field input[type=range]{width:100%}.switchline{display:flex;align-items:center;justify-content:space-between;margin:16px 0;font-size:12px;color:#bec9d8}.switch input{position:absolute;opacity:0}.switch span{display:block;width:32px;height:19px;background:#283145;border:1px solid #404a5f;border-radius:12px;position:relative;cursor:pointer}.switch span:after{content:'';position:absolute;width:11px;height:11px;top:3px;left:3px;background:#8494aa;border-radius:50%;transition:.15s}.switch input:checked+span{background:#775838}.switch input:checked+span:after{left:17px;background:#ffd3a0}.switch input:focus-visible+span{outline:2px solid var(--blue);outline-offset:3px}.metric-panel{padding:20px 0 22px;border-bottom:1px solid #273146}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.metrics>div{display:flex;flex-direction:column;gap:5px}.metrics strong{font:500 24px 'Playfair Display',Georgia,serif;letter-spacing:0;color:#dbb987}.metrics span{font-size:9px;color:#70819a;letter-spacing:0}.presets{padding:20px 0}.preset-buttons{display:flex;gap:7px;margin-top:13px}.preset-buttons button{background:#161e30;border:1px solid #354158;border-radius:3px;padding:8px 11px;font-size:10px;color:#c6d1e0;letter-spacing:0}.preset-buttons button:hover{border-color:#b29369}.sidebar-footer{margin-top:auto;border-top:1px solid #283146;padding:20px 26px 23px;background:#111827}.sidebar-footer strong{font:italic 26px 'Playfair Display',Georgia,serif;color:#d7b37e}.sidebar-footer p{font-size:11px;line-height:1.6;color:#7888a1;margin:7px 0 14px}.sidebar-footer button{font-size:10px;background:transparent;border:1px solid #566078;color:#bfcce0;padding:11px 14px;width:100%;text-align:left}.sidebar-footer button:hover{background:#1a273c}.toast{min-height:14px;display:block;color:#90daa7;font-size:9px;margin-top:10px;letter-spacing:0}
+@media(max-width:1100px){.layout{grid-template-columns:minmax(0,1fr) 306px}.sidebar-head,.sidebar-content,.sidebar-footer{padding-left:19px;padding-right:19px}.heading-note{display:none}.sidebar-head h2{font-size:33px}.meta-desktop{display:none}}
+@media(max-width:790px){.topbar{height:66px;padding:0 18px}.layout{height:auto;display:flex;flex-direction:column}.viewport{height:min(76vh,770px);min-height:490px;padding:9px 9px 0}.sidebar{overflow:visible}.sidebar-content{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}.sidebar-head h2{font-size:32px}.sidebar-head p{max-width:550px}.metric-panel,.presets{grid-column:1/-1}.bottom-meta{justify-content:center}.header-label{display:none}.corner-tl{top:22px;left:20px}.corner-tr{top:22px;right:20px}}
+@media(max-width:520px){.brand h1{font-size:18px}.brand-mark{width:30px;height:30px;font-size:19px}.brand{gap:9px}.eyebrow{font-size:7px}.header-right .live{font-size:8px}.sidebar-content{display:block}.viewport{height:65vh;min-height:440px}.scene-shell{min-height:250px}.corner{font-size:7px}.corner-tl{top:17px;left:17px}.corner-tl strong{font-size:15px}.corner-tr{top:17px;right:17px}.corner-tr strong{font-size:8px}.corner-bl{left:16px;bottom:15px;font-size:7px}.corner-br{right:16px;bottom:15px;font-size:7px}.transport{gap:7px}.iconbutton{width:29px;height:30px;font-size:14px}.textbutton{font-size:8px;padding:10px 8px}.tiny-label{display:none}.bottom-meta{font-size:8px;gap:15px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition-duration:.001ms!important}}
+
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">◉</span><div><span class="eyebrow">EIGENDYNAMICS / ANIMATION ATLAS</span><h1>Hilbert <span>/</span> Taijitu</h1></div></div>
+    <div class="header-right"><span class="live"><span class="live-dot"></span> THREE.JS · R180</span><span class="header-label">EXPERIMENT 012</span></div>
+  </header>
+  <div class="layout">
+    <main class="viewport">
+      <div class="scene-shell" id="scene-shell">
+        <canvas id="canvas" aria-label="Interactive recursive yin-yang made of real Hilbert space-filling curve approximations"></canvas>
+        <div class="corner corner-tl"><span>01 / CONTINUOUS GEOMETRY</span><strong>H : [0,1] → D²</strong><small>Hilbert → squircle → disk</small></div>
+        <div class="corner corner-tr"><span>RECURSION LAB / v0.1</span><strong id="shape-status">COMPUTING CURVE</strong></div>
+        <div class="corner corner-bl"><span class="coordinate-mark">⊕</span><span>DRAG TO ORBIT · SCROLL TO ZOOM</span></div>
+        <div class="corner corner-br"><span id="frame-fps">— FPS</span><span>GPU PARAMETRIC FIELD</span></div>
+        <div class="canvas-error" id="canvas-error" hidden></div>
+      </div>
+      <div class="transport">
+        <div class="transport-left"><button type="button" id="pause" class="iconbutton" aria-label="Pause animation">Ⅱ</button><button type="button" id="restart" class="iconbutton" aria-label="Restart the clock">↺</button><button type="button" id="reset-view" class="iconbutton" aria-label="Reset camera and orientation">⌖</button></div>
+        <div class="timeline-wrap"><span class="tiny-label">TIME</span><input type="range" id="time" min="0" max="30" step="0.01" value="0" aria-label="Animation time"><output id="time-value">00:00</output></div>
+        <button type="button" id="snapshot" class="textbutton">EXPORT PNG ↗</button>
+      </div>
+      <div class="bottom-meta"><span><i class="legend-warm"></i> POSITIVE / GOLD</span><span><i class="legend-blue"></i> NEGATIVE / AZURE</span><span class="meta-desktop">FINITE LEVELS · CONTINUOUS MAP · DETERMINISTIC</span></div>
+    </main>
+    <aside class="sidebar">
+      <div class="sidebar-head"><div class="section-overline">GENERATIVE STUDY № 012</div><h2>One path.<br><em>Infinite detail.</em></h2><p>One continuous Hilbert path, deformed into a disk. An S-shaped color field and smaller recursive copies make the familiar duality emerge.</p></div>
+      <div class="sidebar-content">
+        <section class="panel"><div class="section-heading"><span class="heading-n">01</span><h3>Geometry</h3><span class="heading-note">DISCRETE → CONTINUOUS</span></div>
+          <div class="field"><label for="order">Hilbert order <output id="order-value">6</output></label><input id="order" type="range" min="1" max="7" step="1" value="6"><div class="field-note"><span>2 × 2</span><span>16,384 points</span></div></div>
+          <div class="field"><label for="depth">Recursion depth <output id="depth-value">3</output></label><input id="depth" type="range" min="0" max="4" step="1" value="3"><div class="field-note"><span>root only</span><span>5 levels</span></div></div>
+          <div class="field"><label for="child-scale">Child scale <output id="child-scale-value">0.222</output></label><input id="child-scale" type="range" min="0.15" max="0.32" step="0.001" value="0.222"></div>
+          <div class="field"><label for="twist">Radial twist <output id="twist-value">2.20</output></label><input id="twist" type="range" min="0" max="6" step="0.01" value="2.2"></div>
+        </section>
+        <section class="panel"><div class="section-heading"><span class="heading-n">02</span><h3>Dynamics</h3><span class="heading-note">TRANSPORT FIELD</span></div>
+          <div class="field"><label for="speed">Flow speed <output id="speed-value">0.65</output></label><input id="speed" type="range" min="0" max="2" step="0.05" value="0.65"></div>
+          <div class="switchline"><span>Peripheral recursion</span><label class="switch"><input id="rim" type="checkbox" checked><span aria-hidden="true"></span></label></div>
+          <div class="switchline"><span>Glowing trajectories</span><label class="switch"><input id="flow" type="checkbox" checked><span aria-hidden="true"></span></label></div>
+        </section>
+        <section class="metric-panel"><span class="section-overline">CURRENT STRUCTURE</span><div class="metrics"><div><strong id="segment-count">—</strong><span>curve segments</span></div><div><strong id="disk-count">—</strong><span>recursive disks</span></div></div></section>
+        <div class="presets"><span class="section-overline">QUICK EXPERIMENTS</span><div class="preset-buttons"><button type="button" data-preset="atlas">Atlas</button><button type="button" data-preset="spiral">Vortex</button><button type="button" data-preset="pure">Pure Hilbert</button></div></div>
+      </div>
+      <footer class="sidebar-footer"><strong>Hₙ → H</strong><p>Each finite level is an approximation. Only the limit fills the entire disk; recursion is stopped at a visible resolution.</p><button type="button" id="copy-link">COPY PARAMETER LINK ↗</button><span class="toast" role="status" aria-live="polite" id="toast"></span></footer>
+    </aside>
+  </div>
+  <script type="module">
+/**
+ * Discrete Hilbert centers, continuously warped to a disk, plus an explicitly
+ * finite recursive family of embedded disks. Deterministic, DOM/Three-free.
+ * See README.md for mathematical and rendering assumptions.
+ */
+function hilbertCell(index, order) {
+  if (!Number.isInteger(order) || order < 1 || order > 8) throw new RangeError('order must be 1..8');
+  const side = 2 ** order;
+  if (!Number.isInteger(index) || index < 0 || index >= side * side) throw new RangeError('index outside curve');
+  let x = 0, y = 0, t = index;
+  for (let s = 1; s < side; s *= 2) {
+    const rx = 1 & Math.floor(t / 2);
+    const ry = 1 & (t ^ rx);
+    if (ry === 0) {
+      if (rx === 1) { x = s - 1 - x; y = s - 1 - y; }
+      [x, y] = [y, x];
+    }
+    x += s * rx;
+    y += s * ry;
+    t = Math.floor(t / 4);
+  }
+  return [x, y];
+}
+
+/** FG-squircle square-to-disk map, continuous and surjective on [-1,1]^2. */
+function squareToDisk(x, y) {
+  return [x * Math.sqrt(Math.max(0, 1 - y * y / 2)),
+          y * Math.sqrt(Math.max(0, 1 - x * x / 2))];
+}
+
+function hilbertDiskPoints(order) {
+  const side = 2 ** order;
+  const count = side ** 2;
+  const out = new Float32Array(count * 2);
+  for (let i = 0; i < count; i++) {
+    const [cx, cy] = hilbertCell(i, order);
+    const x = 2 * (cx + 0.5) / side - 1;
+    const y = 2 * (cy + 0.5) / side - 1;
+    const [dx, dy] = squareToDisk(x, y);
+    out[i * 2] = dx;
+    out[i * 2 + 1] = dy;
+  }
+  return out;
+}
+
+/** Signed horizontal distance from the conventional vertical S-shaped divider. */
+function yinDivider(x, y) {
+  const ay = Math.abs(y);
+  const q = Math.sqrt(Math.max(0, 0.25 - (ay - 0.5) ** 2));
+  return x - (y >= 0 ? q : -q);
+}
+
+/**
+ * Recursion uses a self-similar placement operator. Each child is strictly
+ * inside its parent; visual LOD may stop early without affecting the model.
+ */
+function recursiveDisks(depth, scale = 0.222) {
+  if (!Number.isInteger(depth) || depth < 0 || depth > 6) throw new RangeError('depth must be 0..6');
+  if (!(scale > 0 && scale < 0.48)) throw new RangeError('scale must be (0,.48)');
+  const disks = [];
+  function recurse(x, y, radius, angle, level, sign) {
+    disks.push({ x, y, radius, angle, level, sign });
+    if (level === depth) return;
+    for (const offset of [0.515, -0.515]) {
+      const dx = -Math.sin(angle) * offset * radius;
+      const dy = Math.cos(angle) * offset * radius;
+      recurse(x + dx, y + dy, radius * scale,
+        angle + (offset > 0 ? -0.34 : 0.34), level + 1,
+        -sign);
+    }
+  }
+  recurse(0, 0, 1, 0, 0, 1);
+  return disks;
+}
+
+function rimDisks(count = 20) {
+  if (!Number.isInteger(count) || count < 0 || count > 40) throw new RangeError('count must be 0..40');
+  return Array.from({ length: count }, (_, i) => {
+    const a = -Math.PI / 2 + i * Math.PI * 2 / count;
+    const r = 0.877;
+    return {
+      x: r * Math.cos(a), y: r * Math.sin(a),
+      radius: 0.061, angle: -a * 0.7, level: 2,
+      sign: i % 2 === 0 ? 1 : -1, rim: true,
+    };
+  });
+}
+
+/** The renderer can skip copies smaller than the chosen screen-space radius. */
+function visibleDisks(disks, pixelsPerUnit, minimumRadiusPx = 2.0) {
+  if (!Number.isFinite(pixelsPerUnit) || pixelsPerUnit <= 0) throw new RangeError('positive pixel scale required');
+  return disks.filter(d => d.level === 0 || d.radius * pixelsPerUnit >= minimumRadiusPx);
+}
+
+/** Counts only whole path segments, not GPU triangles or decorative rings. */
+function geometryStats(order, depth, withRim = true) {
+  const disks = recursiveDisks(depth);
+  const diskSegments = disks.reduce((sum, d) => sum + (4 ** Math.max(1, order - d.level) - 1), 0);
+  const rimSegments = withRim ? 20 * (4 ** 2 - 1) : 0;
+  return { disks: disks.length + (withRim ? 20 : 0), segments: diskSegments + rimSegments,
+    mainPoints: 4 ** order };
+}
+
+import * as THREE from '../vendor/0.180.0/build/three.module.js';
+
+
+/* No geometry randomness: identical settings produce identical curve paths. */
+const $ = id => document.getElementById(id);
+const canvas = $('canvas');
+const shell = $('scene-shell');
+const errorBox = $('canvas-error');
+const defaults = { order: 6, depth: 3, childScale: 0.222, twist: 2.20, speed: 0.65, rim: true, flow: true };
+const state = { ...defaults };
+let renderer, scene, camera, field, stars, frameId = 0, paused = false, t = 0, lastFrame = 0;
+let frameCounter = 0, fpsTick = 0, yaw = 0, zoom = 1, rebuildPending = false;
+const timeUniform = { value: 0 };
+const twistUniform = { value: state.twist };
+const speedUniform = { value: state.speed };
+const geomCache = new Map();
+const disposal = [];
+const orbitDisposal = [];
+const GOLD = new THREE.Color('#ffab4e');
+const BLUE = new THREE.Color('#49bdff');
+const formatInt = n => new Intl.NumberFormat('en-US').format(n);
+const fmt = t => `00:${String(Math.floor(t) % 60).padStart(2, '0')}`;
+
+const diskVS = `
+  varying vec2 vPos;
+  void main() {
+    vPos = uv * 2.4 - 1.2;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+const yinFunction = `
+  float divider(vec2 p) {
+    float rad = sqrt(max(0.0, 0.25 - pow(abs(p.y) - 0.5, 2.0)));
+    return p.x - (p.y >= 0.0 ? rad : -rad);
+  }
+  vec3 shade(vec2 p, float flip, vec3 gold, vec3 blue) {
+    float c = smoothstep(-0.018, 0.018, -divider(p));
+    return mix(blue, gold, flip > 0.0 ? c : 1.0 - c);
+  }
+`;
+const diskFS = `
+  precision highp float;
+  varying vec2 vPos;
+  uniform vec3 uGold, uBlue;
+  uniform float uTime, uSpeed, uFlip, uPhase;
+  ${yinFunction}
+  void main() {
+    float r = length(vPos);
+    if (r > 1.018) discard;
+    float d = divider(vPos);
+    vec3 base = shade(vPos, uFlip, uGold, uBlue);
+    float rim = exp(-pow((r - 0.978) * 76.0, 2.0));
+    float seam = exp(-abs(d) * 26.0);
+    float aperture = 0.18 + 0.25 * (1.0 - r);
+    float radial = 0.66 + 0.25 * cos(13.0 * r - uTime * 0.35 * uSpeed + uPhase);
+    float sheen = 0.85 + 0.15 * sin(18.0 * atan(vPos.y, vPos.x) + uTime * 0.17 * uSpeed);
+    vec3 col = base * (aperture + radial * 0.15 + rim * 1.55 + seam * 0.50) * sheen;
+    col += vec3(0.075, 0.115, 0.18) * (1.0 - smoothstep(0.0, 0.97, r));
+    float a = 0.965 * (1.0 - smoothstep(0.99, 1.02, r));
+    gl_FragColor = vec4(col, a);
+  }
+`;
+const haloFS = `
+  precision highp float;
+  varying vec2 vPos;
+  uniform vec3 uGold, uBlue;
+  uniform float uTime, uSpeed, uPhase;
+  void main() {
+    float r = length(vPos);
+    float a = atan(vPos.y, vPos.x);
+    float ring = exp(-pow((r - 1.01) * 22.0, 2.0)) * 0.27;
+    float haze = exp(-pow((r - 0.99) * 5.0, 2.0)) * 0.075;
+    float pulse = 0.8 + 0.2 * sin(uTime * uSpeed + uPhase);
+    vec3 tint = mix(uGold, uBlue, smoothstep(-0.38, 0.42, cos(a - 0.8)));
+    gl_FragColor = vec4(tint * 1.7, (ring + haze) * pulse);
+  }
+`;
+const ribbonVS = `
+  precision highp float;
+  attribute vec2 aFrom;
+  attribute vec2 aTo;
+  attribute float aEnd;
+  attribute float aSide;
+  attribute float aParam;
+  varying vec2 vPos;
+  varying float vEdge;
+  varying float vParam;
+  uniform float uTwist, uMotion, uTime, uThickness, uPhase;
+  vec2 twist(vec2 p) {
+    float r = length(p);
+    float angle = uTwist * pow(max(0.0, 1.0 - r), 1.75) +
+      0.10 * uMotion * sin(uTime * 0.42 + r * 7.0 + uPhase) * (1.0 - r);
+    float s = sin(angle), c = cos(angle);
+    return vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+  }
+  void main() {
+    vec2 a = twist(aFrom);
+    vec2 b = twist(aTo);
+    vec2 delta = b - a;
+    vec2 n = vec2(-delta.y, delta.x) / max(length(delta), 0.000001);
+    vec2 p = mix(a, b, aEnd) + n * aSide * uThickness;
+    vPos = p;
+    vEdge = aSide;
+    vParam = aParam;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 0.011, 1.0);
+  }
+`;
+const ribbonFS = `
+  precision highp float;
+  varying vec2 vPos;
+  varying float vEdge;
+  varying float vParam;
+  uniform vec3 uGold, uBlue;
+  uniform float uFlip, uTime, uMotion, uPhase, uOpacity;
+  ${yinFunction}
+  void main() {
+    float center = 1.0 - smoothstep(0.40, 1.0, abs(vEdge));
+    float pulse = pow(0.5 + 0.5 * sin(vParam * 99.0 - uTime * uMotion * 4.5 + uPhase), 8.0);
+    vec3 col = shade(vPos, uFlip, uGold, uBlue);
+    col *= 1.2 + pulse * 1.6;
+    gl_FragColor = vec4(col, center * uOpacity * (0.70 + pulse * 0.35));
+  }
+`;
+const starsVS = `
+  attribute float aSize;
+  attribute float aPhase;
+  varying float vLight;
+  uniform float uTime;
+  uniform float uDpr;
+  void main() {
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = aSize * uDpr * (0.8 + 0.2 * sin(uTime * 0.62 + aPhase));
+    vLight = 0.65 + 0.35 * sin(uTime * 0.9 + aPhase);
+  }
+`;
+const starsFS = `
+  precision mediump float;
+  varying float vLight;
+  void main() {
+    float r = length(gl_PointCoord - 0.5) * 2.0;
+    float a = exp(-r * r * 6.0) * (1.0 - smoothstep(0.8, 1.0, r));
+    gl_FragColor = vec4(0.62, 0.79, 1.0, a * vLight * 0.8);
+  }
+`;
+const nebulaFS = `
+  precision highp float;
+  varying vec2 vPos;
+  uniform float uTime, uSpeed;
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  void main() {
+    vec2 p = vPos;
+    float r = length(p);
+    float a = atan(p.y, p.x);
+    float spiral = sin(a * 4.0 + r * 11.0 - uTime * 0.025 * uSpeed);
+    float clouds = 0.5 + 0.5 * sin(p.x * 10.0 + cos(p.y * 7.0 + spiral));
+    float g = exp(-r * 1.5) * (0.1 + 0.5 * smoothstep(-0.35, 1.0, spiral)) * clouds;
+    vec3 col = mix(vec3(0.024, 0.050, 0.12), vec3(0.18, 0.075, 0.043), smoothstep(-0.5, 0.7, -p.x));
+    gl_FragColor = vec4(col * (0.14 + g * 0.52), 0.7);
+  }
+`;
+
+function ribbonGeometry(order) {
+  if (geomCache.has(order)) return geomCache.get(order);
+  const points = hilbertDiskPoints(order);
+  const count = points.length / 2 - 1;
+  const from = new Float32Array(count * 8);
+  const to = new Float32Array(count * 8);
+  const end = new Float32Array(count * 4);
+  const side = new Float32Array(count * 4);
+  const param = new Float32Array(count * 4);
+  const indices = new Uint32Array(count * 6);
+  for (let i = 0; i < count; i++) {
+    const k = i * 4;
+    for (let j = 0; j < 4; j++) {
+      from[2 * (k + j)] = points[2 * i];
+      from[2 * (k + j) + 1] = points[2 * i + 1];
+      to[2 * (k + j)] = points[2 * (i + 1)];
+      to[2 * (k + j) + 1] = points[2 * (i + 1) + 1];
+      end[k + j] = j >= 2 ? 1 : 0;
+      side[k + j] = j % 2 === 0 ? -1 : 1;
+      param[k + j] = (i + end[k + j]) / count;
+    }
+    indices.set([k, k + 1, k + 2, k + 2, k + 1, k + 3], i * 6);
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 4 * 3), 3));
+  geom.setAttribute('aFrom', new THREE.BufferAttribute(from, 2));
+  geom.setAttribute('aTo', new THREE.BufferAttribute(to, 2));
+  geom.setAttribute('aEnd', new THREE.BufferAttribute(end, 1));
+  geom.setAttribute('aSide', new THREE.BufferAttribute(side, 1));
+  geom.setAttribute('aParam', new THREE.BufferAttribute(param, 1));
+  geom.setIndex(new THREE.BufferAttribute(indices, 1));
+  geom.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1.5);
+  geomCache.set(order, geom);
+  return geom;
+}
+function uniformPack(sign, phase) {
+  return {
+    uGold: { value: GOLD }, uBlue: { value: BLUE },
+    uTime: timeUniform, uTwist: twistUniform, uMotion: speedUniform,
+    uSpeed: speedUniform, uFlip: { value: sign },
+    uPhase: { value: phase },
+  };
+}
+function trackedMaterial(options) {
+  const m = new THREE.ShaderMaterial(options);
+  disposal.push(m);
+  return m;
+}
+function addDisc(disk, order) {
+  const group = new THREE.Group();
+  group.position.set(disk.x, disk.y, 0);
+  group.rotation.z = disk.angle;
+  group.scale.setScalar(disk.radius);
+  field.add(group);
+  const phase = disk.level * 1.3 + disk.x * 2.0 + disk.y * 4.0;
+  const common = uniformPack(disk.sign, phase);
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), trackedMaterial({
+    vertexShader: diskVS, fragmentShader: haloFS,
+    uniforms: common, transparent: true, depthWrite: false, depthTest: false,
+    blending: THREE.AdditiveBlending,
+  }));
+  halo.renderOrder = 5 + disk.level * 10;
+  group.add(halo);
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.4), trackedMaterial({
+    vertexShader: diskVS, fragmentShader: diskFS,
+    uniforms: common, transparent: true, depthWrite: false, depthTest: false,
+  }));
+  plane.renderOrder = 6 + disk.level * 10;
+  group.add(plane);
+  const lineOrder = disk.rim ? 2 : Math.max(1, order - disk.level);
+  const thickness = Math.min(0.064, 0.0024 / disk.radius);
+  const lineCommon = uniformPack(disk.sign, phase);
+  const geometry = ribbonGeometry(lineOrder);
+  for (const [width, opacity, rank] of [[4.5, 0.14, 7], [1.3, 0.64, 8]]) {
+    const trail = new THREE.Mesh(geometry, trackedMaterial({
+      vertexShader: ribbonVS, fragmentShader: ribbonFS,
+      uniforms: { ...lineCommon, uThickness: { value: thickness * width }, uOpacity: { value: opacity } },
+      transparent: true, depthWrite: false, depthTest: false,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    }));
+    trail.renderOrder = rank + disk.level * 10;
+    trail.visible = state.flow || width < 2;
+    trail.userData.isGlow = width > 2;
+    group.add(trail);
+  }
+  // Plane geometries are per-disk, not part of the cached Hilbert path geometries.
+  group.userData.planeGeometries = [halo.geometry, plane.geometry];
+}
+function clearField() {
+  if (!field) return;
+  for (const disc of [...field.children]) {
+    for (const geom of disc.userData.planeGeometries || []) geom.dispose();
+    field.remove(disc);
+  }
+  for (const m of disposal) m.dispose();
+  disposal.length = 0;
+}
+function rebuild() {
+  if (!field) return;
+  clearField();
+  const all = recursiveDisks(state.depth, state.childScale);
+  if (state.rim) all.push(...rimDisks(20));
+  const aspect = Math.max(0.1, shell.clientWidth / Math.max(1, shell.clientHeight));
+  const halfH = Math.max(1.42, 1.42 / aspect);
+  const pxPerUnit = shell.clientHeight * zoom / (2 * halfH);
+  const visible = visibleDisks(all, pxPerUnit, 2);
+  // Deeper components occlude the parent rather than being buried beneath it.
+  visible.forEach(d => addDisc(d, state.order));
+  const segments = visible.reduce((sum, d) => sum + (4 ** (d.rim ? 2 : Math.max(1, state.order - d.level)) - 1), 0);
+  $('segment-count').textContent = formatInt(segments);
+  $('disk-count').textContent = formatInt(visible.length);
+  $('shape-status').textContent = `H${state.order} · ${formatInt(4 ** state.order)} SAMPLES`;
+}
+function scheduleRebuild() {
+  if (rebuildPending) return;
+  rebuildPending = true;
+  requestAnimationFrame(() => { rebuildPending = false; rebuild(); });
+}
+function randGenerator(seed) {
+  let a = seed >>> 0;
+  return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function createStarfield() {
+  const rng = randGenerator(20261021);
+  const N = 720, positions = new Float32Array(N * 3), sizes = new Float32Array(N), phases = new Float32Array(N);
+  for (let i = 0; i < N; i++) {
+    positions[i * 3] = (rng() - 0.5) * 7.6;
+    positions[i * 3 + 1] = (rng() - 0.5) * 5.3;
+    positions[i * 3 + 2] = -0.7;
+    sizes[i] = rng() < 0.04 ? 4.5 : 1.0 + 2.1 * rng();
+    phases[i] = rng() * 6.28318;
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+  const material = new THREE.ShaderMaterial({
+    vertexShader: starsVS, fragmentShader: starsFS,
+    uniforms: { uTime: timeUniform, uDpr: { value: Math.min(window.devicePixelRatio || 1, 2) } },
+    blending: THREE.AdditiveBlending, transparent: true, depthWrite: false,
+  });
+  stars = new THREE.Points(geometry, material);
+  stars.renderOrder = 0;
+  scene.add(stars);
+}
+function createNebula() {
+  // A faint WebGL background means the PNG export includes the environment.
+  const geo = new THREE.PlaneGeometry(7.3, 7.3);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: diskVS, fragmentShader: nebulaFS,
+    uniforms: {uTime:timeUniform,uSpeed:speedUniform},
+    transparent:true,depthWrite:false,depthTest:false,
+  });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.z = -0.9;
+  m.renderOrder = -1;
+  scene.add(m);
+}
+function createOrbits() {
+  const orbitGroup = new THREE.Group();
+  scene.add(orbitGroup);
+  orbitGroup.userData.planeGeometries = [];
+  for (const [r, opacity] of [[1.033, 0.17],[1.055,0.08],[1.108,0.032]]) {
+    const points = Array.from({length:384},(_,i)=>{
+      const theta = 2 * Math.PI * i / 384;
+      return new THREE.Vector3(r * Math.cos(theta), r * Math.sin(theta), -0.06);
+    });
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    const material = new THREE.LineBasicMaterial({color:0xc9b0a3, transparent:true, opacity,
+      blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false});
+    const loop = new THREE.LineLoop(geom,material);
+    loop.renderOrder = 2;
+    orbitGroup.add(loop);
+    orbitDisposal.push(material, geom);
+  }
+}
+function resize() {
+  if (!renderer) return;
+  const w = Math.max(1, shell.clientWidth), h = Math.max(1, shell.clientHeight);
+  const aspect = w / h;
+  const halfH = Math.max(1.42, 1.42 / aspect);
+  camera.left = -halfH * aspect;
+  camera.right = halfH * aspect;
+  camera.top = halfH;
+  camera.bottom = -halfH;
+  camera.zoom = zoom;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+function bindControls() {
+  const rangeIds = [['order', v=>Math.round(v), true], ['depth', v=>Math.round(v), true],
+    ['child-scale', v=>v, true], ['twist', v=>v, false], ['speed', v=>v, false]];
+  for (const [id, convert, needsRebuild] of rangeIds) {
+    const element = $(id), output = $(id + '-value');
+    element.addEventListener('input', () => {
+      const value = convert(+element.value);
+      const key = id === 'child-scale' ? 'childScale' : id;
+      state[key] = value;
+      output.textContent = id === 'order' || id === 'depth' ? String(value)
+        : value.toFixed(id === 'child-scale' ? 3 : 2);
+      twistUniform.value = state.twist;
+      speedUniform.value = state.speed;
+      if (needsRebuild) scheduleRebuild();
+      updateUrl(false);
+    });
+  }
+  for (const id of ['rim','flow']) {
+    $(id).addEventListener('change', () => {
+      state[id] = $(id).checked;
+      if (id === 'rim') scheduleRebuild();
+      else field.traverse(child => { if (child.userData?.isGlow) child.visible = state.flow; });
+      updateUrl(false);
+    });
+  }
+  $('pause').addEventListener('click', () => {
+    paused = !paused;
+    $('pause').textContent = paused ? '▶' : 'Ⅱ';
+    $('pause').setAttribute('aria-label', paused ? 'Play animation' : 'Pause animation');
+  });
+  $('restart').addEventListener('click', () => { t = 0; timeUniform.value = t; $('time').value = 0; });
+  $('reset-view').addEventListener('click', () => { yaw = 0; zoom = 1; field.rotation.z = 0; resize(); scheduleRebuild(); });
+  $('time').addEventListener('input', () => { t = Number($('time').value); timeUniform.value = t; $('time-value').textContent = fmt(t); });
+  $('snapshot').addEventListener('click', () => {
+    renderer.render(scene, camera);
+    const link = document.createElement('a');
+    link.download = `eigendynamics-hilbert-taijitu-h${state.order}-d${state.depth}.png`;
+    link.href = renderer.domElement.toDataURL('image/png');
+    link.click();
+  });
+  $('copy-link').addEventListener('click', async () => {
+    updateUrl(true);
+    try { await navigator.clipboard.writeText(location.href); toast('Parameter link copied.'); }
+    catch { toast('Copy the current browser URL.'); }
+  });
+  const presets = {
+    atlas: {order:6,depth:3,childScale:0.222,twist:2.2,speed:0.65,rim:true,flow:true},
+    spiral: {order:7,depth:2,childScale:0.24,twist:5.2,speed:1.35,rim:true,flow:true},
+    pure: {order:6,depth:0,childScale:0.222,twist:0,speed:0,rim:false,flow:false},
+  };
+  document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>{
+    Object.assign(state,presets[button.dataset.preset]);
+    reflectControls();
+    scheduleRebuild();
+    updateUrl(false);
+  }));
+  const pointer = {x:0,dragging:false};
+  canvas.addEventListener('pointerdown', e => {pointer.dragging=true;pointer.x=e.clientX;canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener('pointermove', e => {
+    if (!pointer.dragging) return;
+    yaw += (e.clientX-pointer.x)*0.003;
+    pointer.x=e.clientX;
+  });
+  canvas.addEventListener('pointerup', () => {pointer.dragging=false;});
+  canvas.addEventListener('pointercancel', () => {pointer.dragging=false;});
+  canvas.addEventListener('wheel', e=>{e.preventDefault();zoom=THREE.MathUtils.clamp(zoom*Math.exp(-e.deltaY*0.0009),0.72,2.8);resize();scheduleRebuild();},{passive:false});
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    paused=true;$('pause').textContent='▶';$('pause').setAttribute('aria-label','Play animation');
+  }
+}
+function reflectControls() {
+  for (const [id,key,places] of [['order','order',0],['depth','depth',0],
+    ['child-scale','childScale',3],['twist','twist',2],['speed','speed',2]]) {
+    $(id).value = state[key];
+    $(id+'-value').textContent = state[key].toFixed(places);
+  }
+  $('rim').checked=state.rim;$('flow').checked=state.flow;
+  twistUniform.value=state.twist;speedUniform.value=state.speed;
+}
+function updateUrl(push) {
+  const url = new URL(location.href);
+  for (const [key,val] of Object.entries(state)) url.searchParams.set(key,String(val));
+  if (push) history.replaceState(null, '', url.toString());
+}
+function readUrl() {
+  const search = new URLSearchParams(location.search);
+  for (const key of ['order','depth','childScale','twist','speed']) {
+    if (!search.has(key)) continue;
+    const n=Number(search.get(key));
+    const bounds={order:[1,7],depth:[0,4],childScale:[.15,.32],twist:[0,6],speed:[0,2]};
+    if (Number.isFinite(n)) state[key]=THREE.MathUtils.clamp(n,...bounds[key]);
+  }
+  state.order=Math.round(state.order);state.depth=Math.round(state.depth);
+  for (const key of ['rim','flow']) if (search.has(key)) state[key]=search.get(key)==='true';
+}
+function toast(message) { $('toast').textContent=message; setTimeout(()=>{$('toast').textContent='';},2400); }
+function animate(now) {
+  frameId=requestAnimationFrame(animate);
+  const dt=Math.min(0.050,(now-(lastFrame||now))/1000);
+  lastFrame=now;
+  if (!paused) t=(t+dt)%30;
+  timeUniform.value=t;
+  if (field) field.rotation.z=yaw+0.025*Math.sin(t*.24*state.speed);
+  renderer.render(scene,camera);
+  frameCounter++;
+  if (now-fpsTick>1000) {
+    $('frame-fps').textContent=`${Math.round(frameCounter*1000/Math.max(1,now-fpsTick))} FPS`;
+    frameCounter=0;fpsTick=now;
+  }
+  $('time').value=t;
+  $('time-value').textContent=fmt(t);
+}
+function start() {
+  try {
+    if (!window.WebGLRenderingContext) throw new Error('WebGL is not available in this browser.');
+    renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
+    renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+    renderer.setClearColor(0x02040b, 1);
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    scene=new THREE.Scene();
+    camera=new THREE.OrthographicCamera(-1.5,1.5,1.5,-1.5,0.1,20);
+    camera.position.set(0,0,7);camera.lookAt(0,0,0);
+    field=new THREE.Group();scene.add(field);
+    readUrl();bindControls();reflectControls();
+    createNebula();createStarfield();rebuild();createOrbits();resize();
+    new ResizeObserver(resize).observe(shell);
+    frameId=requestAnimationFrame(animate);
+    window.addEventListener('pagehide',()=>{
+      cancelAnimationFrame(frameId);clearField();
+      for (const geom of geomCache.values()) geom.dispose();
+      for (const item of orbitDisposal) item.dispose();
+      stars.geometry.dispose();stars.material.dispose();renderer.dispose();
+    },{once:true});
+  } catch (error) {
+    errorBox.hidden=false;
+    errorBox.textContent='Renderer initialization failed.\n'+(error?.message||String(error))+'\n\nServe this experiment from the repository root using a local HTTP server; do not open it with file://.';
+    console.error(error);
+  }
+}
+start();
+
+</script>
+</body>
+</html>

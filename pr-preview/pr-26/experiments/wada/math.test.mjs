@@ -1,0 +1,5 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {centers,hit,reflect,dot,norm,trace} from './math.mjs';
+test('unit spheres touch pairwise in the regular tetrahedron',()=>{const c=centers();for(let i=0;i<4;i++)for(let j=i+1;j<4;j++)assert.ok(Math.abs(Math.hypot(...c[i].map((x,k)=>x-c[j][k]))-2)<1e-12);});
+test('ray intersection solves the quadratic and rejects backward hits',()=>{assert.equal(hit([0,0,3],[0,0,-1],[0,0,0]),2);assert.equal(hit([0,0,3],[0,0,1],[0,0,0]),Infinity);assert.equal(hit([2,0,3],[0,0,-1],[0,0,0]),Infinity);});
+test('specular reflection preserves length and reverses the normal component',()=>{const d=norm([1,2,-3]),n=norm([2,1,1]),r=reflect(d,n);assert.ok(Math.abs(dot(r,r)-1)<1e-12);assert.ok(Math.abs(dot(r,n)+dot(d,n))<1e-12);});
+test('camera grid exhibits both prompt escape and long multiple reflections',()=>{let deep=0,shallow=0;for(let x=-20;x<=20;x++)for(let y=-20;y<=20;y++){const r=trace([0,0,1.85],norm([x*.012,y*.012,-1]),64);assert.ok(r.d.every(Number.isFinite));if(r.count>8)deep++;if(r.count<3)shallow++;}assert.ok(deep>0);assert.ok(shallow>0);console.log({deep,shallow});});
