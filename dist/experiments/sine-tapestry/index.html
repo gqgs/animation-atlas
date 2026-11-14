@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#141318">
+  <title>Sine Tapestry · Animation Atlas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section class="stage" aria-label="Artwork">
+      <div class="mat">
+        <canvas id="art" aria-label="Multicolored ribbons folding and twisting as sine waves interact"></canvas>
+        <p id="render-error" role="alert" hidden></p>
+      </div>
+    </section>
+    <section class="panel" aria-label="Scene controls">
+      <header>
+        <a class="atlas" href="../../" target="_top">Animation Atlas</a>
+        <h1>Sine Tapestry</h1>
+        <p>Interacting sine waves bend ribbons of color into a 24-second loop.</p>
+      </header>
+
+      <section class="controls" aria-label="Playback">
+        <div class="split">
+          <button id="play" type="button">Pause</button>
+          <button id="save" type="button">Save 4K PNG</button>
+        </div>
+        <div class="label-line">
+          <label for="phase">Loop position</label>
+          <output id="time" for="phase">0.0 / 24 s</output>
+        </div>
+        <input id="phase" type="range" min="0" max="24" step=".01" value="0">
+      </section>
+
+      <section class="controls" aria-label="Composition">
+        <label for="palette">Palette</label>
+        <select id="palette">
+          <option value="vermilion">Vermilion &amp; Jade</option>
+          <option value="lagoon">Lagoon &amp; Iris</option>
+          <option value="marigold">Marigold &amp; Rose</option>
+        </select>
+        <form id="seed-form">
+          <label for="seed">Composition seed</label>
+          <div class="seed-row">
+            <input id="seed" type="number" min="0" max="4294967295" step="1" required>
+            <button type="submit">Apply</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="controls discovery" aria-labelledby="find-title">
+        <h2 id="find-title">Seed finder</h2>
+        <p>Ranks a batch by ribbon definition, contour turns, and changes in shape over the loop.</p>
+        <button id="search" type="button">Scan 256 seeds</button>
+        <ol id="results" aria-label="Ranked seeds" hidden></ol>
+        <p id="status" class="status" role="status" hidden></p>
+      </section>
+
+      <footer>
+        <a href="https://medium.com/artique/homage-to-the-sine-640cb9c26d2" target="_blank" rel="noopener noreferrer">Stuart Smith · Homage to the Sine ↗</a>
+        <a href="../../downloads/sine-tapestry-source.zip">Download source</a>
+      </footer>
+    </section>
+  </main>
+  <script type="module" src="main.mjs"></script>
+</body>
+</html>
