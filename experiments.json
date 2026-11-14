@@ -757,5 +757,34 @@
         "url": "downloads/sine-tapestry-source.zip"
       }
     ]
+  },
+  {
+    "id": "broken-weave",
+    "title": "Broken Weave",
+    "category": "Dynamics",
+    "date": "2026-11-14",
+    "url": "experiments/broken-weave/index.html",
+    "description": "A looser Sine Tapestry: drifting folds crowd, then close around islands of color as the rest of the weave slips out of step.",
+    "tags": [
+      "sine waves",
+      "domain warping",
+      "generative art",
+      "seed discovery",
+      "WebGL2"
+    ],
+    "cover": "covers/broken-weave.svg",
+    "source": "downloads/broken-weave-source.zip",
+    "color": "amber",
+    "note": "Seeded pigment · optional gouache · 4K PNG & MP4",
+    "variants": [
+      {
+        "title": "Original · Sine Tapestry",
+        "url": "experiments/sine-tapestry/index.html"
+      },
+      {
+        "title": "Stuart Smith · Homage to the Sine",
+        "url": "https://medium.com/artique/homage-to-the-sine-640cb9c26d2"
+      }
+    ]
   }
 ]
