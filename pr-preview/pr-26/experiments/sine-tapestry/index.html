@@ -50,6 +50,30 @@
         </form>
       </section>
 
+      <section class="controls" aria-labelledby="record-title">
+        <h2 id="record-title">Record loop</h2>
+        <div class="capture-options">
+          <div>
+            <label for="export-size">Output size</label>
+            <select id="export-size">
+              <option value="720">720 × 720</option>
+              <option value="1080" selected>1080 × 1080</option>
+              <option value="2160">2160 × 2160</option>
+            </select>
+          </div>
+          <div>
+            <label for="export-fps">Frame rate</label>
+            <select id="export-fps">
+              <option value="30">30 fps</option>
+              <option value="60" selected>60 fps</option>
+            </select>
+          </div>
+        </div>
+        <button id="record" type="button">Export MP4</button>
+        <progress id="export-progress" aria-label="MP4 encoding progress" hidden></progress>
+        <p id="export-status" class="status" role="status" hidden></p>
+      </section>
+
       <section class="controls discovery" aria-labelledby="find-title">
         <h2 id="find-title">Seed finder</h2>
         <p>Ranks a batch by ribbon definition, contour turns, and changes in shape over the loop.</p>

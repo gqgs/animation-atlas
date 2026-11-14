@@ -1,10 +1,16 @@
-import { foldFrame, LOOP_SECONDS, palettePixels, palettes, seedParameters, UINT32_MAX } from './field.mjs';
-import { fragmentShader, vertexShader } from './shader.mjs';
+import { exportFrames, loadFrameWrap } from '../../shared/frame-export.mjs';
+import { LOOP_SECONDS, palettes, seedParameters, UINT32_MAX } from './field.mjs';
+import { createRenderer } from './renderer.mjs';
 
 const byId = id => document.getElementById(id);
 const canvas = byId('art');
 const play = byId('play');
 const save = byId('save');
+const record = byId('record');
+const sizeInput = byId('export-size');
+const fpsInput = byId('export-fps');
+const progress = byId('export-progress');
+const exportStatus = byId('export-status');
 const phaseInput = byId('phase');
 const time = byId('time');
 const seedInput = byId('seed');
@@ -26,7 +32,7 @@ let previous = null;
 let animation = 0;
 let batch = 2718;
 let renderer = null;
-const gl = canvas.getContext('webgl2', { alpha: false, antialias: false, depth: false });
+let recording = null;
 
 seedInput.value = seed;
 paletteInput.value = palette;
@@ -37,103 +43,47 @@ function message(value) {
   status.hidden = !value;
 }
 
+function syncControls() {
+  play.disabled = !renderer || Boolean(recording);
+  phaseInput.disabled = !renderer;
+  save.disabled = !renderer || renderer.maxSize < 4096 || Boolean(recording);
+  const canRecord = renderer && !sizeInput.selectedOptions[0].disabled;
+  record.disabled = !recording && !canRecord;
+  sizeInput.disabled = fpsInput.disabled = !renderer || Boolean(recording);
+}
+
 function setError(value) {
   error.textContent = value;
   error.hidden = !value;
-  play.disabled = save.disabled = phaseInput.disabled = Boolean(value);
-}
-
-function compile(type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw new Error(gl.getShaderInfoLog(shader));
-  }
-  return shader;
+  syncControls();
 }
 
 function initRenderer() {
-  if (!gl) {
-    setError('This experiment requires WebGL 2.');
-    return;
-  }
-
   try {
-    const vertex = compile(gl.VERTEX_SHADER, vertexShader);
-    const fragment = compile(gl.FRAGMENT_SHADER, fragmentShader);
-    const program = gl.createProgram();
-    gl.attachShader(program, vertex);
-    gl.attachShader(program, fragment);
-    gl.linkProgram(program);
-    gl.deleteShader(vertex);
-    gl.deleteShader(fragment);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      throw new Error(gl.getProgramInfoLog(program));
+    renderer = createRenderer(canvas);
+    for (const option of sizeInput.options) {
+      option.disabled = Number(option.value) > renderer.maxSize;
     }
-
-    gl.useProgram(program);
-    gl.bindVertexArray(gl.createVertexArray());
-    const uniforms = Object.fromEntries(
-      ['resolution', 'foldA', 'foldB', 'amplitudes', 'frequencies', 'phases', 'angle', 'density', 'ink']
-        .map(name => [name, gl.getUniformLocation(program, name)])
-    );
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.uniform1i(uniforms.ink, 0);
-    renderer = { uniforms, maxSize: Math.min(...gl.getParameter(gl.MAX_VIEWPORT_DIMS),
-      gl.getParameter(gl.MAX_RENDERBUFFER_SIZE)) };
-    setError('');
-    save.disabled = renderer.maxSize < 4096;
-    if (save.disabled) save.title = 'This device cannot render a 4096-pixel canvas.';
-    updatePalette();
+    if (sizeInput.selectedOptions[0].disabled) {
+      const available = [...sizeInput.options].find(option => !option.disabled);
+      if (available) sizeInput.value = available.value;
+    }
+    save.title = renderer.maxSize < 4096 ? 'This device cannot render a 4096-pixel canvas.' : '';
     draw();
+    setError('');
     schedule();
   } catch (cause) {
-    console.error(cause);
     renderer = null;
-    setError('The WebGL shader could not start.');
+    console.error(cause);
+    setError(cause.message);
   }
 }
 
-function updatePalette() {
+function draw() {
   if (!renderer) return;
-
-  const samples = palettePixels(palette);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, samples.length / 4, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, samples);
-  gl.generateMipmap(gl.TEXTURE_2D);
-}
-
-function draw(exportSize) {
-  if (!renderer) return false;
-
-  const cssSize = canvas.clientWidth;
-  const size = exportSize ?? Math.max(1, Math.min(renderer.maxSize, 3072,
-    Math.round(cssSize * devicePixelRatio)));
-  if (canvas.width !== size || canvas.height !== size) {
-    canvas.width = size;
-    canvas.height = size;
-  }
-
-  const width = gl.drawingBufferWidth;
-  const height = gl.drawingBufferHeight;
-  if (!width || !height || (exportSize && (width !== size || height !== size))) return false;
-
-  const { uniforms } = renderer;
-  const frame = foldFrame(parameters, seconds / LOOP_SECONDS);
-  gl.viewport(0, 0, width, height);
-  gl.uniform2f(uniforms.resolution, width, height);
-  for (const key of ['foldA', 'foldB', 'amplitudes', 'frequencies', 'phases']) {
-    gl.uniform4fv(uniforms[key], frame[key]);
-  }
-  gl.uniform1f(uniforms.angle, frame.angle);
-  gl.uniform1f(uniforms.density, frame.density);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
-  return true;
+  const size = Math.max(1, Math.min(renderer.maxSize, 3072,
+    Math.round(canvas.clientWidth * devicePixelRatio)));
+  renderer.draw({ size, parameters, palette, phase: seconds / LOOP_SECONDS });
 }
 
 function syncTimeline() {
@@ -151,7 +101,7 @@ function tick(now) {
 }
 
 function schedule() {
-  if (playing && renderer && !document.hidden && !animation) animation = requestAnimationFrame(tick);
+  if (playing && renderer && !recording && !document.hidden && !animation) animation = requestAnimationFrame(tick);
 }
 
 function stopClock() {
@@ -195,7 +145,6 @@ phaseInput.addEventListener('input', () => {
 paletteInput.addEventListener('change', () => {
   palette = paletteInput.value;
   saveSettings();
-  updatePalette();
   draw();
 });
 byId('seed-form').addEventListener('submit', event => {
@@ -203,27 +152,106 @@ byId('seed-form').addEventListener('submit', event => {
   if (seedInput.checkValidity()) applySeed(seedInput.valueAsNumber);
 });
 
-save.addEventListener('click', () => {
-  if (!draw(4096)) {
-    message('A 4096 × 4096 image could not be rendered on this device.');
-    draw();
+function captureMessage(value) {
+  exportStatus.textContent = value;
+  exportStatus.hidden = !value;
+}
+
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+
+save.addEventListener('click', async () => {
+  captureMessage('');
+  const target = document.createElement('canvas');
+  const filename = `sine-tapestry-${seed}-${palette}-${Math.round(seconds * 100)}.png`;
+  let output;
+  try {
+    output = createRenderer(target);
+    output.draw({ size: 4096, parameters, palette, phase: seconds / LOOP_SECONDS });
+    const blob = await new Promise(resolve => target.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('The browser did not encode a PNG.');
+    download(blob, filename);
+  } catch (cause) {
+    captureMessage(`PNG export failed. ${cause.message}`);
+  } finally {
+    output?.dispose();
+  }
+});
+
+record.addEventListener('click', async () => {
+  if (recording) {
+    recording.abort();
     return;
   }
-  const filename = `sine-tapestry-${seed}-${palette}-${Math.round(seconds * 100)}.png`;
-  canvas.toBlob(blob => {
-    if (!blob) {
-      message('PNG export failed.');
-      return;
-    }
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30_000);
-  }, 'image/png');
-  draw();
+  if (typeof VideoEncoder === 'undefined') {
+    captureMessage('MP4 export requires a browser with WebCodecs video encoding.');
+    return;
+  }
+
+  const controller = new AbortController();
+  const { signal } = controller;
+  const snapshot = { parameters, palette };
+  const size = Number(sizeInput.value);
+  const fps = Number(fpsInput.value);
+  const filename = `sine-tapestry-${seed}-${palette}-${size}-${fps}fps.mp4`;
+  recording = controller;
+  stopClock();
+  syncControls();
+  record.textContent = 'Cancel export';
+  captureMessage('Loading MP4 encoder…');
+  let output;
+
+  try {
+    let cancelLoading;
+    const canceled = new Promise((_, reject) => {
+      cancelLoading = () => reject(new DOMException('Export canceled', 'AbortError'));
+      signal.addEventListener('abort', cancelLoading, { once: true });
+    });
+    const FrameWrap = await Promise.race([loadFrameWrap(), canceled])
+      .finally(() => signal.removeEventListener('abort', cancelLoading));
+    signal.throwIfAborted();
+
+    const target = document.createElement('canvas');
+    output = createRenderer(target);
+    captureMessage('Encoding loop…');
+    progress.max = LOOP_SECONDS * fps;
+    progress.value = 0;
+    progress.hidden = false;
+    const blob = await exportFrames({
+      width: size, height: size, fps, duration: LOOP_SECONDS, signal, yieldEvery: 1,
+      bitrate: Math.round(24_000_000 * (size / 1080) ** 2 * (fps / 30)),
+      createRecorder: options => new FrameWrap(options),
+      draw: ({ ctx, phase }) => {
+        output.draw({ size, ...snapshot, phase });
+        ctx.drawImage(target, 0, 0);
+      },
+      onProgress: (done, total) => {
+        progress.max = total;
+        progress.value = done;
+      }
+    });
+    signal.throwIfAborted();
+    download(blob, filename);
+    captureMessage('MP4 export complete.');
+  } catch (cause) {
+    captureMessage(signal.aborted ? 'Export canceled.' : `MP4 export failed. ${cause.message}`);
+  } finally {
+    output?.dispose();
+    recording = null;
+    progress.hidden = true;
+    record.textContent = 'Export MP4';
+    syncControls();
+    schedule();
+  }
 });
+
+addEventListener('pagehide', () => recording?.abort());
 
 function showCandidates(candidates) {
   results.replaceChildren();
